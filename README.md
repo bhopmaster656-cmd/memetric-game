@@ -10,27 +10,43 @@
 > **Файл уже находится прямо в этом репозитории!**  
 > The file is already in this very repository — no separate download site needed.
 
-### Способ 1 — Скачать напрямую с GitHub (рекомендуется)
+> ⚠️ **Важно / Important:**  
+> Файл находится **не на ветке `main`**, а на ветке **`copilot/create-neon-wardrobe-game`**.  
+> Если вы видите только `.gitignore`, `LICENSE`, `README.md` — вы смотрите на `main`.  
+> Используйте прямую ссылку ниже или переключитесь на нужную ветку (см. ниже).  
+>
+> The file lives on the development branch, not `main`. Use the direct link below or switch branches as shown.
 
-1. Откройте страницу репозитория на GitHub:  
+### ⚡ Самый быстрый способ — прямая ссылка для скачивания
+
+Нажмите сюда, чтобы скачать файл прямо сейчас:
+
+**[⬇ Скачать NeonWardrobe.rbxlx](https://github.com/bhopmaster656-cmd/memetric-game/raw/copilot/create-neon-wardrobe-game/NeonWardrobe.rbxlx)**
+
+Или скопируйте ссылку в браузер:
+```
+https://github.com/bhopmaster656-cmd/memetric-game/raw/copilot/create-neon-wardrobe-game/NeonWardrobe.rbxlx
+```
+
+### Способ 1 — Через интерфейс GitHub (переключить ветку)
+
+1. Откройте страницу репозитория:  
    **https://github.com/bhopmaster656-cmd/memetric-game**
-2. В списке файлов нажмите на **`NeonWardrobe.rbxlx`**.
-3. На открывшейся странице нажмите кнопку **⬇ Download raw file** (правый верхний угол, иконка стрелки вниз).
-4. Браузер сохранит файл `NeonWardrobe.rbxlx` на ваш компьютер — обычно в папку **Загрузки**.
+2. Нажмите на выпадающий список веток (по умолчанию показывает **`main`**).
+3. Выберите ветку **`copilot/create-neon-wardrobe-game`**.
+4. Теперь в списке файлов появится **`NeonWardrobe.rbxlx`** — нажмите на него.
+5. Нажмите кнопку **⬇ Download raw file** (правый верхний угол).
 
-> Прямая ссылка для скачивания:  
-> `https://github.com/bhopmaster656-cmd/memetric-game/raw/HEAD/NeonWardrobe.rbxlx`
+### Способ 2 — Скачать ZIP-архив нужной ветки
 
-### Способ 2 — Скачать весь репозиторий (ZIP-архив)
-
-1. На главной странице репозитория нажмите зелёную кнопку **`<> Code`**.
-2. Выберите **"Download ZIP"**.
-3. Распакуйте архив — внутри вы найдёте файл `NeonWardrobe.rbxlx`.
+1. На странице репозитория переключитесь на ветку **`copilot/create-neon-wardrobe-game`** (см. выше).
+2. Нажмите зелёную кнопку **`<> Code`** → **"Download ZIP"**.
+3. Распакуйте архив — внутри будет `NeonWardrobe.rbxlx`.
 
 ### Способ 3 — Клонировать через Git
 
 ```bash
-git clone https://github.com/bhopmaster656-cmd/memetric-game.git
+git clone -b copilot/create-neon-wardrobe-game https://github.com/bhopmaster656-cmd/memetric-game.git
 cd memetric-game
 # Файл NeonWardrobe.rbxlx уже здесь
 ```
