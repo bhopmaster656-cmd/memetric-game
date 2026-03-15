@@ -5,6 +5,38 @@
 
 ---
 
+## 📥 Где взять файл NeonWardrobe.rbxlx? / Where to get NeonWardrobe.rbxlx?
+
+> **Файл уже находится прямо в этом репозитории!**  
+> The file is already in this very repository — no separate download site needed.
+
+### Способ 1 — Скачать напрямую с GitHub (рекомендуется)
+
+1. Откройте страницу репозитория на GitHub:  
+   **https://github.com/bhopmaster656-cmd/memetric-game**
+2. В списке файлов нажмите на **`NeonWardrobe.rbxlx`**.
+3. На открывшейся странице нажмите кнопку **⬇ Download raw file** (правый верхний угол, иконка стрелки вниз).
+4. Браузер сохранит файл `NeonWardrobe.rbxlx` на ваш компьютер — обычно в папку **Загрузки**.
+
+> Прямая ссылка для скачивания:  
+> `https://github.com/bhopmaster656-cmd/memetric-game/raw/HEAD/NeonWardrobe.rbxlx`
+
+### Способ 2 — Скачать весь репозиторий (ZIP-архив)
+
+1. На главной странице репозитория нажмите зелёную кнопку **`<> Code`**.
+2. Выберите **"Download ZIP"**.
+3. Распакуйте архив — внутри вы найдёте файл `NeonWardrobe.rbxlx`.
+
+### Способ 3 — Клонировать через Git
+
+```bash
+git clone https://github.com/bhopmaster656-cmd/memetric-game.git
+cd memetric-game
+# Файл NeonWardrobe.rbxlx уже здесь
+```
+
+---
+
 ## 🚀 Как запустить игру (пошаговая инструкция) / How to run the game
 
 ### Шаг 1 — Скачать и установить Roblox Studio
@@ -29,9 +61,7 @@
 2. В левом верхнем углу нажмите **File → Open from File…**
 3. Выберите файл `NeonWardrobe.rbxlx` и нажмите **Открыть**.
 
-> 💡 **Скачать файл с GitHub:**  
-> Если вы видите это на GitHub — нажмите на `NeonWardrobe.rbxlx` в списке файлов,  
-> затем нажмите кнопку **⬇ Download raw file** (справа сверху) и сохраните на компьютер.
+> 💡 **Где взять файл?** — смотрите раздел **«📥 Где взять файл NeonWardrobe.rbxlx?»** выше.
 
 ---
 
