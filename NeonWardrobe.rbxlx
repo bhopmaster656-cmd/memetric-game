@@ -1,0 +1,1511 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+
+	<!-- ═══════════════════════════════════════════════════════ WORKSPACE -->
+	<Item class="Workspace" referent="RBX001">
+		<Properties>
+			<string name="Name">Workspace</string>
+			<float name="Gravity">196.2</float>
+			<bool name="FilteringEnabled">true</bool>
+			<bool name="StreamingEnabled">false</bool>
+		</Properties>
+		<Item class="SpawnLocation" referent="RBX002">
+			<Properties>
+				<string name="Name">SpawnLocation</string>
+				<bool name="Anchored">true</bool>
+				<bool name="Neutral">true</bool>
+				<int name="Duration">0</int>
+				<CoordinateFrame name="CFrame">
+					<X>30</X><Y>5</Y><Z>30</Z>
+					<R00>1</R00><R01>0</R01><R02>0</R02>
+					<R10>0</R10><R11>1</R11><R12>0</R12>
+					<R20>0</R20><R21>0</R21><R22>1</R22>
+				</CoordinateFrame>
+				<Vector3 name="Size"><X>6</X><Y>1</Y><Z>6</Z></Vector3>
+				<Color3 name="Color"><R>0</R><G>1</G><B>0.4</B></Color3>
+				<!-- 272 = Enum.Material.SmoothPlastic -->
+				<token name="Material">272</token>
+				<!-- 0 = Enum.SurfaceType.Smooth -->
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+		</Item>
+	</Item>
+
+	<!-- ═══════════════════════════════════════════════════════ LIGHTING -->
+	<Item class="Lighting" referent="RBX010">
+		<Properties>
+			<string name="Name">Lighting</string>
+			<float name="Brightness">2</float>
+			<Color3 name="Ambient"><R>0.1</R><G>0.05</G><B>0.2</B></Color3>
+			<Color3 name="OutdoorAmbient"><R>0.05</R><G>0.02</G><B>0.1</B></Color3>
+			<Color3 name="FogColor"><R>0.05</R><G>0</G><B>0.15</B></Color3>
+			<float name="FogEnd">220</float>
+			<float name="FogStart">80</float>
+			<string name="TimeOfDay">00:00:00</string>
+			<float name="GeographicLatitude">0</float>
+		</Properties>
+		<Item class="BloomEffect" referent="RBX011">
+			<Properties>
+				<string name="Name">BloomEffect</string>
+				<bool name="Enabled">true</bool>
+				<float name="Intensity">1.5</float>
+				<float name="Size">24</float>
+				<float name="Threshold">0.95</float>
+			</Properties>
+		</Item>
+		<Item class="ColorCorrectionEffect" referent="RBX012">
+			<Properties>
+				<string name="Name">ColorCorrection</string>
+				<bool name="Enabled">true</bool>
+				<float name="Brightness">-0.05</float>
+				<float name="Contrast">0.1</float>
+				<float name="Saturation">0.3</float>
+				<Color3 name="TintColor"><R>0.9</R><G>0.8</G><B>1</B></Color3>
+			</Properties>
+		</Item>
+	</Item>
+
+	<!-- ══════════════════════════════════════════════ REPLICATED STORAGE -->
+	<Item class="ReplicatedStorage" referent="RBX020">
+		<Properties><string name="Name">ReplicatedStorage</string></Properties>
+
+		<!-- Modules -->
+		<Item class="Folder" referent="RBX021">
+			<Properties><string name="Name">Modules</string></Properties>
+
+			<!-- GameConfig -->
+			<Item class="ModuleScript" referent="RBX022">
+				<Properties>
+					<string name="Name">GameConfig</string>
+					<ProtectedString name="Source"><![CDATA[
+-- GameConfig: Central configuration for NEON WARDROBE
+local GameConfig = {
+	FLOOR_REQUIREMENTS = { [1]=0, [2]=100, [3]=500 },
+	FLOOR_NAMES        = { [1]="Main Club", [2]="VIP Zone", [3]="Celebrity Floor" },
+	-- Teleport destinations (above each floor's surface)
+	FLOOR_POSITIONS    = {
+		[1] = Vector3.new(30, 8, 30),
+		[2] = Vector3.new(0,  40, 0),
+		[3] = Vector3.new(0,  72, 0),
+	},
+
+	BATTLE_DURATION          = 15,
+	BATTLE_COOLDOWN          = 30,
+	BATTLE_CHALLENGE_RANGE   = 25,
+
+	BATTLE_THEMES = {
+		"Cosmic Rave",
+		"Morning After Party",
+		"90s Villain",
+		"Neon Dreams",
+		"Street Fashion Week",
+		"Cyber Kawaii",
+		"Underground Club",
+		"Retro Futurism",
+		"Robot Dance Off",
+		"Galactic Glam",
+	},
+
+	BATTLE_WIN_REPUTATION    = 25,
+	BATTLE_LOSE_REPUTATION   = 5,
+	AUDIENCE_VOTE_REPUTATION = 3,
+	STARTING_CURRENCY        = 100,
+	BATTLE_WIN_CURRENCY      = 50,
+	BATTLE_LOSE_CURRENCY     = 10,
+
+	MOODS = { "Angry", "Happy", "Mysterious", "Cool", "Cute", "Fierce" },
+
+	MOOD_COLORS = {
+		Angry      = Color3.fromRGB(255, 50,  50),
+		Happy      = Color3.fromRGB(255, 220, 50),
+		Mysterious = Color3.fromRGB(150, 0,   255),
+		Cool       = Color3.fromRGB(0,   200, 255),
+		Cute       = Color3.fromRGB(255, 150, 200),
+		Fierce     = Color3.fromRGB(255, 100, 0),
+	},
+
+	MOOD_EMOJIS = {
+		Angry      = "😠",
+		Happy      = "😄",
+		Mysterious = "🔮",
+		Cool       = "😎",
+		Cute       = "🌸",
+		Fierce     = "🔥",
+	},
+}
+
+return GameConfig
+]]></ProtectedString>
+				</Properties>
+			</Item>
+
+			<!-- MoodData -->
+			<Item class="ModuleScript" referent="RBX023">
+				<Properties>
+					<string name="Name">MoodData</string>
+					<ProtectedString name="Source"><![CDATA[
+-- MoodData: Outfit items and mood definitions
+local MoodData = {
+	ITEMS = {
+		{ Name="Neon Jacket",    Mood="Cool",       Price=50,  Floor=1 },
+		{ Name="Cyber Helmet",   Mood="Mysterious", Price=80,  Floor=1 },
+		{ Name="Kawaii Dress",   Mood="Cute",       Price=60,  Floor=1 },
+		{ Name="Battle Boots",   Mood="Fierce",     Price=70,  Floor=1 },
+		{ Name="Grunge Tee",     Mood="Angry",      Price=40,  Floor=1 },
+		{ Name="Party Hat",      Mood="Happy",      Price=30,  Floor=1 },
+		{ Name="Hologram Wings", Mood="Mysterious", Price=150, Floor=2 },
+		{ Name="Neon Sneakers",  Mood="Cool",       Price=90,  Floor=2 },
+		{ Name="Fire Gauntlets", Mood="Fierce",     Price=120, Floor=2 },
+		{ Name="Rainbow Crown",  Mood="Happy",      Price=200, Floor=3 },
+		{ Name="Shadow Cloak",   Mood="Angry",      Price=110, Floor=2 },
+		{ Name="Cloud Sneakers", Mood="Cute",       Price=85,  Floor=2 },
+	},
+
+	-- Zone unlocks based on combined mood pair
+	ZONE_ACCESS = {
+		["Cool+Mysterious"]    = "VIP Lounge",
+		["Fierce+Angry"]       = "Battle Arena",
+		["Cute+Happy"]         = "Kawaii Corner",
+		["Cool+Fierce"]        = "Celebrity Spot",
+		["Happy+Cute"]         = "Kawaii Corner",
+		["Mysterious+Cool"]    = "VIP Lounge",
+	},
+}
+
+return MoodData
+]]></ProtectedString>
+				</Properties>
+			</Item>
+		</Item><!-- /Modules -->
+
+		<!-- RemoteEvents -->
+		<Item class="Folder" referent="RBX030">
+			<Properties><string name="Name">RemoteEvents</string></Properties>
+			<Item class="RemoteEvent" referent="RBX031">
+				<Properties><string name="Name">StartBattle</string></Properties>
+			</Item>
+			<Item class="RemoteEvent" referent="RBX032">
+				<Properties><string name="Name">BattleResult</string></Properties>
+			</Item>
+			<Item class="RemoteEvent" referent="RBX033">
+				<Properties><string name="Name">UpdateCurrency</string></Properties>
+			</Item>
+			<Item class="RemoteEvent" referent="RBX034">
+				<Properties><string name="Name">UnlockFloor</string></Properties>
+			</Item>
+			<Item class="RemoteEvent" referent="RBX035">
+				<Properties><string name="Name">UpdateMood</string></Properties>
+			</Item>
+			<Item class="RemoteEvent" referent="RBX036">
+				<Properties><string name="Name">RequestElevator</string></Properties>
+			</Item>
+		</Item><!-- /RemoteEvents -->
+	</Item><!-- /ReplicatedStorage -->
+
+	<!-- ══════════════════════════════════════════ SERVER SCRIPT SERVICE -->
+	<Item class="ServerScriptService" referent="RBX040">
+		<Properties><string name="Name">ServerScriptService</string></Properties>
+
+		<!-- WorldBuilder -->
+		<Item class="Script" referent="RBX041">
+			<Properties>
+				<string name="Name">WorldBuilder</string>
+				<bool name="Disabled">false</bool>
+				<ProtectedString name="Source"><![CDATA[
+-- WorldBuilder: Procedurally constructs the NEON WARDROBE three-floor building.
+-- Runs once on the server at game start.
+
+local Workspace = game:GetService("Workspace")
+
+local PINK   = Color3.fromRGB(255, 0,   150)
+local CYAN   = Color3.fromRGB(0,   200, 255)
+local PURPLE = Color3.fromRGB(150, 0,   255)
+local GOLD   = Color3.fromRGB(255, 200, 50)
+local DARK   = Color3.fromRGB(15,  10,  30)
+local DFLOOR = Color3.fromRGB(12,  12,  25)
+local DPURP  = Color3.fromRGB(20,  10,  40)
+local DBLUE  = Color3.fromRGB(10,  20,  50)
+local DGOLD  = Color3.fromRGB(35,  25,  5)
+local EGRAY  = Color3.fromRGB(60,  60,  80)
+
+-- ---------- helpers ----------
+
+local function p(parent, name, size, pos, col, mat, anchored)
+	local part = Instance.new("Part")
+	part.Name         = name
+	part.Size         = size
+	part.CFrame       = CFrame.new(pos)
+	part.Color        = col
+	part.Material     = mat or Enum.Material.SmoothPlastic
+	part.Anchored     = (anchored ~= false)
+	part.TopSurface   = Enum.SurfaceType.Smooth
+	part.BottomSurface= Enum.SurfaceType.Smooth
+	part.Parent       = parent
+	return part
+end
+
+local function light(part, col, bright, range)
+	local l = Instance.new("PointLight")
+	l.Color      = col
+	l.Brightness = bright or 2
+	l.Range      = range  or 20
+	l.Parent     = part
+end
+
+local function sign(part, text, col, face)
+	local sg  = Instance.new("SurfaceGui")
+	sg.Face             = face or Enum.NormalId.Front
+	sg.SizingMode       = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	sg.PixelsPerStud    = 20
+	sg.Parent           = part
+	local lbl = Instance.new("TextLabel")
+	lbl.Size                 = UDim2.fromScale(1, 1)
+	lbl.BackgroundTransparency = 1
+	lbl.Text                 = text
+	lbl.TextColor3           = col or Color3.new(1,1,1)
+	lbl.TextScaled           = true
+	lbl.Font                 = Enum.Font.GothamBold
+	lbl.Parent               = sg
+end
+
+-- ---------- building root ----------
+
+local bld = Instance.new("Model")
+bld.Name   = "NeonWardrobe"
+bld.Parent = Workspace
+
+-- ════════════ FLOOR 1 — Main Club (Y 0-31) ════════════
+local f1 = Instance.new("Model")
+f1.Name   = "Floor1_MainClub"
+f1.Parent = bld
+
+p(f1,"Floor",   Vector3.new(100,2,100), Vector3.new( 0,  1,  0), DFLOOR)
+p(f1,"Ceiling", Vector3.new(100,2,100), Vector3.new( 0, 30,  0), DPURP)
+p(f1,"WallN",   Vector3.new(100,29,2),  Vector3.new( 0, 16,-51), DPURP)
+p(f1,"WallS",   Vector3.new(100,29,2),  Vector3.new( 0, 16, 51), DPURP)
+p(f1,"WallE",   Vector3.new(2, 29,100), Vector3.new(51, 16,  0), DPURP)
+p(f1,"WallW",   Vector3.new(2, 29,100), Vector3.new(-51,16,  0), DPURP)
+
+-- entrance gap: two side pillars + top beam instead of full south wall
+p(f1,"DoorL",   Vector3.new(30,29,2), Vector3.new(-30,16, 51), DPURP)
+p(f1,"DoorR",   Vector3.new(30,29,2), Vector3.new( 30,16, 51), DPURP)
+p(f1,"DoorTop", Vector3.new(40,10,2), Vector3.new(  0,26, 51), DPURP)
+
+-- main neon sign on north wall
+local ms = p(f1,"MainSign",Vector3.new(42,6,1),Vector3.new(0,24,-50),PINK,Enum.Material.Neon)
+light(ms, PINK, 3, 30)
+sign(ms, "* NEON WARDROBE *", PINK)
+
+-- neon floor strips (cyan lines running front-to-back)
+for i = -4, 4 do
+	local s = p(f1,"Strip"..i, Vector3.new(90,0.2,0.4), Vector3.new(0,2.12,i*10), CYAN, Enum.Material.Neon)
+	light(s, CYAN, 0.7, 6)
+end
+
+-- battle arena (centre glowing pad)
+local arena = p(f1,"BattleArena", Vector3.new(22,0.3,22), Vector3.new(0,2.2,0), PURPLE, Enum.Material.Neon)
+light(arena, PURPLE, 2, 26)
+local aS = p(f1,"ArenaSign", Vector3.new(18,3,1), Vector3.new(0,10,-12), Color3.fromRGB(255,50,150), Enum.Material.Neon)
+light(aS, Color3.fromRGB(255,50,150), 2, 15)
+sign(aS, "BATTLE ZONE", Color3.fromRGB(255,50,150))
+
+-- shop zone (left, orange)
+local shopFloor = p(f1,"ShopFloor", Vector3.new(25,0.3,40), Vector3.new(-35,2.2,0), Color3.fromRGB(255,150,0), Enum.Material.Neon)
+light(shopFloor, Color3.fromRGB(255,150,0), 1, 15)
+local shopS = p(f1,"ShopSign", Vector3.new(20,3,1), Vector3.new(-35,13,-21), Color3.fromRGB(255,150,0), Enum.Material.Neon)
+light(shopS, Color3.fromRGB(255,150,0), 2, 15)
+sign(shopS, "STYLE SHOP", Color3.fromRGB(255,150,0))
+
+-- spawn pad (right back — matches SpawnLocation)
+local spPad = p(f1,"SpawnPad", Vector3.new(10,0.3,10), Vector3.new(30,2.2,30), Color3.fromRGB(0,255,100), Enum.Material.Neon)
+light(spPad, Color3.fromRGB(0,255,100), 1, 10)
+
+-- ════════════ FLOOR 2 — VIP Zone (Y 32-63) ════════════
+local f2 = Instance.new("Model")
+f2.Name   = "Floor2_VIPZone"
+f2.Parent = bld
+
+p(f2,"Floor",   Vector3.new(80,2,80), Vector3.new( 0,33,  0), DFLOOR)
+p(f2,"Ceiling", Vector3.new(80,2,80), Vector3.new( 0,62,  0), DBLUE)
+p(f2,"WallN",   Vector3.new(80,27,2), Vector3.new( 0,48,-41), DBLUE)
+p(f2,"WallS",   Vector3.new(80,27,2), Vector3.new( 0,48, 41), DBLUE)
+p(f2,"WallE",   Vector3.new(2,27,80), Vector3.new(41,48,  0), DBLUE)
+p(f2,"WallW",   Vector3.new(2,27,80), Vector3.new(-41,48, 0), DBLUE)
+
+local vipS = p(f2,"VIPSign", Vector3.new(30,5,1), Vector3.new(0,57,-40), CYAN, Enum.Material.Neon)
+light(vipS, CYAN, 3, 30)
+sign(vipS, "VIP EXCLUSIVE", CYAN)
+
+-- checkerboard floor tiles
+for i = -3, 3 do
+	for j = -3, 3 do
+		if (i+j) % 2 == 0 then
+			local t = p(f2,"Tile"..i.."_"..j, Vector3.new(10,0.2,10), Vector3.new(i*10,35.1,j*10), CYAN, Enum.Material.Neon)
+			t.Transparency = 0.75
+		end
+	end
+end
+
+local lounge = p(f2,"LoungeArea", Vector3.new(30,0.3,20), Vector3.new(-20,35.2,0), PURPLE, Enum.Material.Neon)
+light(lounge, PURPLE, 1, 15)
+
+local vipShop = p(f2,"VIPShop",     Vector3.new(20,0.3,30), Vector3.new(25,35.2,0), Color3.fromRGB(0,100,255), Enum.Material.Neon)
+local vipShopS = p(f2,"VIPShopSign",Vector3.new(18,3,1),    Vector3.new(25,45,-16), Color3.fromRGB(0,100,255), Enum.Material.Neon)
+sign(vipShopS, "VIP BOUTIQUE", Color3.fromRGB(0,100,255))
+
+-- ════════════ FLOOR 3 — Celebrity Zone (Y 64-93) ════════════
+local f3 = Instance.new("Model")
+f3.Name   = "Floor3_Celebrity"
+f3.Parent = bld
+
+p(f3,"Floor",   Vector3.new(50,2,50), Vector3.new( 0,65,  0), DFLOOR)
+p(f3,"Ceiling", Vector3.new(50,2,50), Vector3.new( 0,92,  0), DGOLD)
+p(f3,"WallN",   Vector3.new(50,25,2), Vector3.new( 0,79,-26), DGOLD)
+p(f3,"WallS",   Vector3.new(50,25,2), Vector3.new( 0,79, 26), DGOLD)
+p(f3,"WallE",   Vector3.new(2,25,50), Vector3.new(26,79,  0), DGOLD)
+p(f3,"WallW",   Vector3.new(2,25,50), Vector3.new(-26,79, 0), DGOLD)
+
+local cS = p(f3,"CelebSign", Vector3.new(35,6,1), Vector3.new(0,84,-25), GOLD, Enum.Material.Neon)
+light(cS, GOLD, 4, 35)
+sign(cS, "CELEBRITY FLOOR", GOLD)
+
+for i = -2, 2 do
+	local star = p(f3,"GoldStar"..i, Vector3.new(7,0.3,7), Vector3.new(i*10,67.1,0), GOLD, Enum.Material.Neon)
+	light(star, GOLD, 1.5, 10)
+end
+
+local trophy = p(f3,"TrophyBase", Vector3.new(10,0.5,10), Vector3.new(0,67.2,-15), GOLD, Enum.Material.Neon)
+light(trophy, GOLD, 2, 15)
+local tS = p(f3,"TrophySign", Vector3.new(10,3,1), Vector3.new(0,75,-21), GOLD, Enum.Material.Neon)
+sign(tS, "HALL OF FAME", GOLD)
+
+-- ════════════ ELEVATOR ════════════
+local elev = Instance.new("Model")
+elev.Name   = "Elevator"
+elev.Parent = bld
+
+-- shaft (open on west side so players can see cab)
+p(elev,"ShaftN", Vector3.new(10,95,2),  Vector3.new(40,50,-5),  Color3.fromRGB(40,40,60))
+p(elev,"ShaftS", Vector3.new(10,95,2),  Vector3.new(40,50, 5),  Color3.fromRGB(40,40,60))
+p(elev,"ShaftE", Vector3.new(2, 95,10), Vector3.new(45,50, 0),  Color3.fromRGB(40,40,60))
+
+-- elevator cabin (starts on floor 1)
+local cab = p(elev,"ElevatorCab", Vector3.new(8,8,8), Vector3.new(40,6,0), EGRAY)
+cab.Anchored = true
+light(cab, CYAN, 2, 15)
+
+-- call-button panels (ProximityPrompt on each floor)
+local function elevBtn(yPos, floorNum)
+	local btn = p(elev,"ElevBtn_F"..floorNum, Vector3.new(1,2,0.5), Vector3.new(36,yPos,0), Color3.fromRGB(30,30,60))
+	sign(btn, "LIFT\nF"..floorNum, CYAN)
+	local pp = Instance.new("ProximityPrompt")
+	pp.ActionText           = "Use Elevator"
+	pp.ObjectText           = "Floor "..floorNum.." Lift"
+	pp.HoldDuration         = 0
+	pp.MaxActivationDistance= 8
+	pp.KeyboardKeyCode      = Enum.KeyCode.E
+	pp.Parent               = btn
+	return btn
+end
+elevBtn(16, 1)
+elevBtn(47, 2)
+elevBtn(79, 3)
+
+-- ════════════ EXTERIOR ════════════
+local ext = Instance.new("Model")
+ext.Name   = "Exterior"
+ext.Parent = bld
+
+p(ext,"FacadeN",  Vector3.new(104,95,4),  Vector3.new(  0,50,-54), DARK)
+p(ext,"FacadeE",  Vector3.new(4, 95,104), Vector3.new( 54,50,  0), DARK)
+p(ext,"FacadeW",  Vector3.new(4, 95,104), Vector3.new(-54,50,  0), DARK)
+p(ext,"Roof",     Vector3.new(112,4,112), Vector3.new(  0,98,  0), Color3.fromRGB(10,5,20))
+
+-- exterior neon signage
+local exS1 = p(ext,"ExtSign1", Vector3.new(60,8,1), Vector3.new(0,80,-53), PINK, Enum.Material.Neon)
+light(exS1, PINK, 5, 40)
+sign(exS1, "** NEON WARDROBE **", PINK)
+
+local exS2 = p(ext,"ExtSign2", Vector3.new(35,4,1), Vector3.new(0,65,-53), CYAN, Enum.Material.Neon)
+light(exS2, CYAN, 3, 25)
+sign(exS2, "OPEN 24/7", CYAN)
+
+-- entrance door frame
+p(ext,"EntL",   Vector3.new(30,18,4), Vector3.new(-30,10,-54), DARK)
+p(ext,"EntR",   Vector3.new(30,18,4), Vector3.new( 30,10,-54), DARK)
+p(ext,"EntTop", Vector3.new(40,8, 4), Vector3.new(  0,23,-54), DARK)
+local entTrim = p(ext,"EntTrim", Vector3.new(40,2,4), Vector3.new(0,18,-54), PURPLE, Enum.Material.Neon)
+light(entTrim, PURPLE, 3, 20)
+
+-- ground plane and neon roads
+p(ext,"Ground", Vector3.new(300,2,300), Vector3.new(0,-1,100), Color3.fromRGB(10,8,20))
+for i = -3, 3 do
+	local road = p(ext,"Road"..i, Vector3.new(3,0.1,200), Vector3.new(i*20,0.05,150), CYAN, Enum.Material.Neon)
+	road.Transparency = 0.8
+end
+
+print("[WorldBuilder] NEON WARDROBE built successfully!")
+print("[WorldBuilder] Floor 1: Main Club      Y=2..31  (100x100)")
+print("[WorldBuilder] Floor 2: VIP Zone       Y=33..63 (80x80)")
+print("[WorldBuilder] Floor 3: Celebrity Floor Y=65..93 (50x50)")
+]]></ProtectedString>
+			</Properties>
+		</Item><!-- /WorldBuilder -->
+
+		<!-- GameManager -->
+		<Item class="Script" referent="RBX042">
+			<Properties>
+				<string name="Name">GameManager</string>
+				<bool name="Disabled">false</bool>
+				<ProtectedString name="Source"><![CDATA[
+-- GameManager: Player data, leaderstats, currency and reputation.
+-- Exposes _G.GameManager for other server scripts.
+
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GameConfig        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local remotes           = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+local playerData = {}   -- [userId] -> { reputation, currency, currentFloor, mood, ... }
+
+-- ── init/cleanup ──────────────────────────────────────────────────
+
+local function initPlayer(player)
+	playerData[player.UserId] = {
+		reputation   = 0,
+		currency     = GameConfig.STARTING_CURRENCY,
+		currentFloor = 1,
+		mood         = "Cool",
+		battlesWon   = 0,
+		battlesLost  = 0,
+	}
+
+	-- Leaderstats (visible in player list)
+	local ls = Instance.new("Folder")
+	ls.Name   = "leaderstats"
+	ls.Parent = player
+
+	local repVal = Instance.new("IntValue")
+	repVal.Name   = "Reputation"
+	repVal.Value  = 0
+	repVal.Parent = ls
+
+	local coinVal = Instance.new("IntValue")
+	coinVal.Name   = "NeonCoins"
+	coinVal.Value  = GameConfig.STARTING_CURRENCY
+	coinVal.Parent = ls
+
+	local floorVal = Instance.new("IntValue")
+	floorVal.Name   = "Floor"
+	floorVal.Value  = 1
+	floorVal.Parent = ls
+
+	remotes.UpdateCurrency:FireClient(player, GameConfig.STARTING_CURRENCY)
+	print("[GameManager] Initialised: " .. player.Name)
+end
+
+local function cleanPlayer(player)
+	playerData[player.UserId] = nil
+end
+
+-- ── public API ────────────────────────────────────────────────────
+
+local function getData(player)
+	return playerData[player.UserId]
+end
+
+local function addReputation(player, amount)
+	local d = getData(player)
+	if not d then return end
+	d.reputation = d.reputation + amount
+	local ls = player:FindFirstChild("leaderstats")
+	if ls then ls.Reputation.Value = d.reputation end
+
+	-- Floor unlock check
+	for floorNum = 2, 3 do
+		local req = GameConfig.FLOOR_REQUIREMENTS[floorNum]
+		if d.reputation >= req and d.currentFloor < floorNum then
+			d.currentFloor = floorNum
+			if ls then ls.Floor.Value = floorNum end
+			remotes.UnlockFloor:FireClient(player, {
+				floorUnlocked = floorNum,
+				floorName     = GameConfig.FLOOR_NAMES[floorNum],
+			})
+			print("[GameManager] " .. player.Name .. " unlocked Floor " .. floorNum)
+		end
+	end
+end
+
+local function addCurrency(player, amount)
+	local d = getData(player)
+	if not d then return end
+	d.currency = d.currency + amount
+	local ls = player:FindFirstChild("leaderstats")
+	if ls then ls.NeonCoins.Value = d.currency end
+	remotes.UpdateCurrency:FireClient(player, d.currency)
+end
+
+-- Handle mood update from client
+remotes.UpdateMood.OnServerEvent:Connect(function(player, mood)
+	local d = getData(player)
+	if d then d.mood = mood end
+end)
+
+-- ── hooks ─────────────────────────────────────────────────────────
+Players.PlayerAdded:Connect(initPlayer)
+Players.PlayerRemoving:Connect(cleanPlayer)
+for _, p in ipairs(Players:GetPlayers()) do initPlayer(p) end
+
+-- Expose global API for BattleSystem / ProgressionSystem
+_G.GameManager = {
+	getData       = getData,
+	addReputation = addReputation,
+	addCurrency   = addCurrency,
+}
+
+print("[GameManager] Initialised!")
+]]></ProtectedString>
+			</Properties>
+		</Item><!-- /GameManager -->
+
+		<!-- BattleSystem -->
+		<Item class="Script" referent="RBX043">
+			<Properties>
+				<string name="Name">BattleSystem</string>
+				<bool name="Disabled">false</bool>
+				<ProtectedString name="Source"><![CDATA[
+-- BattleSystem: 15-second Look Battle mini-game.
+
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GameConfig        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local remotes           = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+-- Wait until GameManager is ready
+repeat task.wait(0.1) until _G.GameManager
+
+local activeBattles = {}
+local cooldowns     = {}
+
+-- ── helpers ───────────────────────────────────────────────────────
+
+local function pickTheme()
+	return GameConfig.BATTLE_THEMES[math.random(#GameConfig.BATTLE_THEMES)]
+end
+
+local function valid(player)
+	return player and player.Parent ~= nil
+end
+
+-- ── start battle ──────────────────────────────────────────────────
+
+local function startBattle(challenger, opponent)
+	local now = tick()
+	-- Cooldown guard
+	if cooldowns[challenger.UserId] and now < cooldowns[challenger.UserId] then
+		remotes.StartBattle:FireClient(challenger, { error = "You are on cooldown! Please wait." })
+		return
+	end
+	if cooldowns[opponent.UserId] and now < cooldowns[opponent.UserId] then
+		remotes.StartBattle:FireClient(challenger, { error = opponent.Name .. " is on cooldown." })
+		return
+	end
+
+	local battleId = tostring(challenger.UserId) .. "_" .. tostring(now)
+	local theme    = pickTheme()
+
+	activeBattles[battleId] = {
+		challenger      = challenger,
+		opponent        = opponent,
+		theme           = theme,
+		challengerVotes = 0,
+		opponentVotes   = 0,
+		voters          = {},
+	}
+
+	-- Notify participants
+	remotes.StartBattle:FireClient(challenger, {
+		battleId       = battleId, role = "challenger",
+		theme          = theme,    duration = GameConfig.BATTLE_DURATION,
+		opponentName   = opponent.Name,
+	})
+	remotes.StartBattle:FireClient(opponent, {
+		battleId       = battleId, role = "opponent",
+		theme          = theme,    duration = GameConfig.BATTLE_DURATION,
+		challengerName = challenger.Name,
+	})
+
+	-- Notify nearby spectators
+	local cHRP = challenger.Character and challenger.Character:FindFirstChild("HumanoidRootPart")
+	if cHRP then
+		for _, pl in ipairs(Players:GetPlayers()) do
+			if pl ~= challenger and pl ~= opponent and pl.Character then
+				local h = pl.Character:FindFirstChild("HumanoidRootPart")
+				if h and (h.Position - cHRP.Position).Magnitude < 60 then
+					remotes.StartBattle:FireClient(pl, {
+						battleId       = battleId, role = "spectator",
+						theme          = theme,    duration = GameConfig.BATTLE_DURATION,
+						challengerName = challenger.Name,
+						opponentName   = opponent.Name,
+					})
+				end
+			end
+		end
+	end
+
+	print("[BattleSystem] Battle " .. battleId .. " | Theme: " .. theme)
+
+	-- ── end battle after BATTLE_DURATION ──────────────────────────
+	task.delay(GameConfig.BATTLE_DURATION, function()
+		local battle = activeBattles[battleId]
+		if not battle then return end
+
+		local chal = battle.challenger
+		local opp  = battle.opponent
+		local chalOK = valid(chal)
+		local oppOK  = valid(opp)
+
+		if not chalOK and not oppOK then
+			activeBattles[battleId] = nil
+			return
+		end
+
+		-- Determine winner by vote count (random tie-break)
+		local winner, loser
+		if chalOK and oppOK then
+			if battle.challengerVotes > battle.opponentVotes then
+				winner, loser = chal, opp
+			elseif battle.opponentVotes > battle.challengerVotes then
+				winner, loser = opp, chal
+			else
+				-- True tie: fair random selection
+				if math.random() >= 0.5 then
+					winner, loser = chal, opp
+				else
+					winner, loser = opp, chal
+				end
+			end
+		elseif chalOK then
+			winner = chal
+		else
+			winner = opp
+		end
+
+		local GM = _G.GameManager
+
+		if valid(winner) then
+			if GM then
+				GM.addReputation(winner, GameConfig.BATTLE_WIN_REPUTATION)
+				GM.addCurrency(winner,   GameConfig.BATTLE_WIN_CURRENCY)
+			end
+			remotes.BattleResult:FireClient(winner, {
+				result           = "win",
+				reputationGained = GameConfig.BATTLE_WIN_REPUTATION,
+				currencyGained   = GameConfig.BATTLE_WIN_CURRENCY,
+			})
+		end
+
+		if loser and valid(loser) then
+			if GM then
+				GM.addReputation(loser, GameConfig.BATTLE_LOSE_REPUTATION)
+				GM.addCurrency(loser,   GameConfig.BATTLE_LOSE_CURRENCY)
+			end
+			remotes.BattleResult:FireClient(loser, {
+				result           = "lose",
+				reputationGained = GameConfig.BATTLE_LOSE_REPUTATION,
+			})
+		end
+
+		-- Cooldowns
+		if chalOK then cooldowns[chal.UserId] = tick() + GameConfig.BATTLE_COOLDOWN end
+		if oppOK  then cooldowns[opp.UserId]  = tick() + GameConfig.BATTLE_COOLDOWN end
+
+		activeBattles[battleId] = nil
+		print("[BattleSystem] Battle ended: " .. battleId
+			.. " | Winner: " .. (winner and winner.Name or "none"))
+	end)
+end
+
+-- ── remote handler ────────────────────────────────────────────────
+
+remotes.StartBattle.OnServerEvent:Connect(function(player, action, data)
+	if action == "challenge" and data and data.targetName then
+		local target = Players:FindFirstChild(data.targetName)
+		if target then
+			startBattle(player, target)
+		else
+			remotes.StartBattle:FireClient(player, { error = "Player not found." })
+		end
+
+	elseif action == "vote" and data and data.battleId then
+		local battle = activeBattles[data.battleId]
+		if not battle or battle.voters[player.UserId] then return end
+		-- Participants (challenger / opponent) cannot vote for themselves
+		if battle.challenger.UserId == player.UserId
+		or battle.opponent.UserId   == player.UserId then return end
+		battle.voters[player.UserId] = true
+		if data.votedFor == "challenger" then
+			battle.challengerVotes = battle.challengerVotes + 1
+		else
+			battle.opponentVotes = battle.opponentVotes + 1
+		end
+		local GM = _G.GameManager
+		if GM then GM.addReputation(player, GameConfig.AUDIENCE_VOTE_REPUTATION) end
+	end
+end)
+
+print("[BattleSystem] Initialised!")
+]]></ProtectedString>
+			</Properties>
+		</Item><!-- /BattleSystem -->
+
+		<!-- ProgressionSystem -->
+		<Item class="Script" referent="RBX044">
+			<Properties>
+				<string name="Name">ProgressionSystem</string>
+				<bool name="Disabled">false</bool>
+				<ProtectedString name="Source"><![CDATA[
+-- ProgressionSystem: Elevator usage and floor-access validation.
+
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace         = game:GetService("Workspace")
+local GameConfig        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local remotes           = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+repeat task.wait(0.1) until _G.GameManager
+
+-- ── teleport player to a floor ────────────────────────────────────
+
+local function useElevator(player, targetFloor)
+	local d   = _G.GameManager.getData(player)
+	if not d then return end
+
+	local req = GameConfig.FLOOR_REQUIREMENTS[targetFloor]
+	if not req then return end
+
+	if d.reputation < req then
+		remotes.UnlockFloor:FireClient(player, {
+			error = string.format(
+				"Floor %d needs %d Reputation. You have %d.",
+				targetFloor, req, d.reputation)
+		})
+		return
+	end
+
+	local pos = GameConfig.FLOOR_POSITIONS[targetFloor]
+	if not pos then return end
+
+	local char = player.Character
+	if char then
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			hrp.CFrame       = CFrame.new(pos + Vector3.new(0, 3, 0))
+			d.currentFloor   = targetFloor
+			local ls = player:FindFirstChild("leaderstats")
+			if ls then ls.Floor.Value = targetFloor end
+			print("[ProgressionSystem] " .. player.Name .. " -> Floor " .. targetFloor)
+		end
+	end
+end
+
+-- ── client sends target floor number ──────────────────────────────
+
+remotes.RequestElevator.OnServerEvent:Connect(function(player, payload)
+	if type(payload) == "number" then
+		useElevator(player, payload)
+	end
+end)
+
+-- ── wire up ProximityPrompts created by WorldBuilder ──────────────
+
+task.spawn(function()
+	task.wait(3)   -- give WorldBuilder time to finish
+	local bld  = Workspace:WaitForChild("NeonWardrobe", 15)
+	if not bld then return end
+	local elevModel = bld:WaitForChild("Elevator", 10)
+	if not elevModel then return end
+
+	for _, obj in ipairs(elevModel:GetDescendants()) do
+		if obj:IsA("ProximityPrompt") then
+			obj.Triggered:Connect(function(player)
+				-- Tell the client to open the elevator panel
+				remotes.RequestElevator:FireClient(player, "open")
+			end)
+		end
+	end
+	print("[ProgressionSystem] Elevator prompts connected.")
+end)
+
+-- ── every 60 s: announce the server's top-reputation player ───────
+
+task.spawn(function()
+	while true do
+		task.wait(60)
+		local all = Players:GetPlayers()
+		if #all == 0 then continue end
+
+		local best, bestRep = nil, -1
+		for _, pl in ipairs(all) do
+			local d = _G.GameManager.getData(pl)
+			if d and d.reputation > bestRep then
+				bestRep = d.reputation
+				best    = pl
+			end
+		end
+
+		if best and bestRep >= GameConfig.FLOOR_REQUIREMENTS[3] then
+			for _, pl in ipairs(all) do
+				remotes.StartBattle:FireClient(pl, {
+					announcement = best.Name .. " reigns the Celebrity Floor with "
+						.. bestRep .. " Rep!",
+				})
+			end
+		end
+	end
+end)
+
+print("[ProgressionSystem] Initialised!")
+]]></ProtectedString>
+			</Properties>
+		</Item><!-- /ProgressionSystem -->
+	</Item><!-- /ServerScriptService -->
+
+	<!-- ════════════════════════════════════════════════ STARTER PLAYER -->
+	<Item class="StarterPlayer" referent="RBX050">
+		<Properties><string name="Name">StarterPlayer</string></Properties>
+		<Item class="StarterPlayerScripts" referent="RBX051">
+			<Properties><string name="Name">StarterPlayerScripts</string></Properties>
+
+			<!-- MainClient: all client-side logic in one LocalScript -->
+			<Item class="LocalScript" referent="RBX052">
+				<Properties>
+					<string name="Name">MainClient</string>
+					<bool name="Disabled">false</bool>
+					<ProtectedString name="Source"><![CDATA[
+-- MainClient: UI creation, battle client, outfit/mood system, elevator.
+-- Single LocalScript to avoid race conditions between multiple scripts.
+
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService        = game:GetService("RunService")
+local TweenService      = game:GetService("TweenService")
+
+local player    = Players.LocalPlayer
+local playerGui = player.PlayerGui
+
+-- Modules & remotes
+local modules  = ReplicatedStorage:WaitForChild("Modules")
+local remotes  = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+local GameConfig = require(modules:WaitForChild("GameConfig"))
+require(modules:WaitForChild("MoodData"))   -- preload
+
+local startBattleEv = remotes:WaitForChild("StartBattle")
+local battleResultEv= remotes:WaitForChild("BattleResult")
+local updateCoinEv  = remotes:WaitForChild("UpdateCurrency")
+local unlockFloorEv = remotes:WaitForChild("UnlockFloor")
+local requestElevEv = remotes:WaitForChild("RequestElevator")
+local updateMoodEv  = remotes:WaitForChild("UpdateMood")
+
+-- ════════════════════════════════ COLOUR PALETTE ═════════════════
+
+local C = {
+	bg      = Color3.fromRGB( 10,  5,  25),
+	bgDark  = Color3.fromRGB(  5,  0,  15),
+	pink    = Color3.fromRGB(255,  0, 150),
+	cyan    = Color3.fromRGB(  0,200, 255),
+	purple  = Color3.fromRGB(150,  0, 255),
+	gold    = Color3.fromRGB(255,200,  50),
+	white   = Color3.fromRGB(255,255, 255),
+	dim     = Color3.fromRGB(180,180, 220),
+	green   = Color3.fromRGB(  0,255, 100),
+	red     = Color3.fromRGB(255, 50,  50),
+	orange  = Color3.fromRGB(255,150,   0),
+}
+
+-- ═══════════════════════════════════ UI HELPERS ══════════════════
+
+local function mkFrame(parent, name, size, pos, bg, alpha)
+	local f = Instance.new("Frame")
+	f.Name, f.Size, f.Position = name, size, pos
+	f.BackgroundColor3       = bg    or C.bg
+	f.BackgroundTransparency = alpha or 0
+	f.BorderSizePixel        = 0
+	f.Parent                 = parent
+	return f
+end
+
+local function mkLabel(parent, name, text, size, pos, col, fs, font, xAlign)
+	local l = Instance.new("TextLabel")
+	l.Name, l.Text, l.Size, l.Position = name, text, size, pos
+	l.BackgroundTransparency = 1
+	l.TextColor3  = col   or C.white
+	l.TextSize    = fs    or 16
+	l.Font        = font  or Enum.Font.GothamBold
+	l.TextXAlignment = xAlign or Enum.TextXAlignment.Center
+	l.Parent      = parent
+	return l
+end
+
+local function mkBtn(parent, name, text, size, pos, bg, col)
+	local b = Instance.new("TextButton")
+	b.Name, b.Text, b.Size, b.Position = name, text, size, pos
+	b.BackgroundColor3 = bg  or C.pink
+	b.TextColor3       = col or C.white
+	b.TextSize         = 16
+	b.Font             = Enum.Font.GothamBold
+	b.BorderSizePixel  = 0
+	b.AutoButtonColor  = true
+	b.Parent           = parent
+	return b
+end
+
+local function corner(parent, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 8)
+	c.Parent = parent
+end
+
+local function stroke(parent, col, thick)
+	local s = Instance.new("UIStroke")
+	s.Color     = col   or C.pink
+	s.Thickness = thick or 2
+	s.Parent    = parent
+end
+
+local function grad(parent, a, b, rot)
+	local g = Instance.new("UIGradient")
+	g.Color    = ColorSequence.new(a, b)
+	g.Rotation = rot or 90
+	g.Parent   = parent
+end
+
+-- ═══════════════════════════════════ MAIN HUD ════════════════════
+
+local mainHUD = playerGui:WaitForChild("MainHUD")
+
+-- Top bar
+local topBar = mkFrame(mainHUD,"TopBar", UDim2.new(1,0,0,52), UDim2.new(0,0,0,0), C.bgDark, 0.25)
+
+-- Reputation pill (top-left)
+local repPill = mkFrame(topBar,"RepPill", UDim2.new(0,215,1,-10), UDim2.new(0,5,0,5), Color3.fromRGB(30,0,50), 0)
+corner(repPill,6); stroke(repPill, C.purple, 1)
+local repLabel = mkLabel(repPill,"RepLabel","Rep: 0", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.purple, 15)
+
+-- Currency pill (top-right)
+local coinPill = mkFrame(topBar,"CoinPill", UDim2.new(0,215,1,-10), UDim2.new(1,-220,0,5), Color3.fromRGB(40,30,0), 0)
+corner(coinPill,6); stroke(coinPill, C.gold, 1)
+local currencyLabel = mkLabel(coinPill,"CurrencyLabel","100 Coins", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.gold, 15)
+
+-- Floor pill (top-centre)
+local floorPill = mkFrame(topBar,"FloorPill", UDim2.new(0,240,1,-10), UDim2.new(0.5,-120,0,5), Color3.fromRGB(0,25,40), 0)
+corner(floorPill,6); stroke(floorPill, C.cyan, 1)
+local floorLabel = mkLabel(floorPill,"FloorLabel","Floor 1 - Main Club", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.cyan, 14)
+
+-- Notification banner
+local notifLabel = mkLabel(mainHUD,"NotificationLabel","",
+	UDim2.new(0.7,0,0,36), UDim2.new(0.15,0,0,58), C.gold, 18)
+notifLabel.TextStrokeTransparency = 0.4
+notifLabel.TextStrokeColor3       = Color3.new(0,0,0)
+
+-- Mood pill (bottom-left)
+local moodPill = mkFrame(mainHUD,"MoodPill", UDim2.new(0,180,0,46), UDim2.new(0,10,1,-60), Color3.fromRGB(40,0,30), 0)
+corner(moodPill,8); stroke(moodPill, C.pink, 1)
+local moodLabel = mkLabel(moodPill,"MoodLabel","Mood: Cool", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.pink, 15)
+
+-- Challenge button (bottom-right)
+local challengeBtn = mkBtn(mainHUD,"ChallengeBtn","CHALLENGE",
+	UDim2.new(0,155,0,48), UDim2.new(1,-165,1,-60), C.pink)
+corner(challengeBtn); grad(challengeBtn, C.pink, Color3.fromRGB(200,0,255))
+
+-- Elevator button (right, mid-screen)
+local elevatorBtn = mkBtn(mainHUD,"ElevatorBtn","ELEVATOR",
+	UDim2.new(0,130,0,42), UDim2.new(1,-142,0.5,-21), Color3.fromRGB(20,20,50))
+corner(elevatorBtn); stroke(elevatorBtn, C.cyan, 1); elevatorBtn.TextColor3 = C.cyan
+
+-- Outfit button (bottom-left, above mood)
+local outfitBtn = mkBtn(mainHUD,"OutfitBtn","OUTFIT",
+	UDim2.new(0,130,0,42), UDim2.new(0,10,1,-115), Color3.fromRGB(20,10,40))
+corner(outfitBtn); stroke(outfitBtn, C.purple, 1); outfitBtn.TextColor3 = C.purple
+
+-- ═══════════════════════════════════ BATTLE UI ═══════════════════
+
+local battleUI = playerGui:WaitForChild("BattleUI")
+
+local bFrame = mkFrame(battleUI,"BattleFrame",
+	UDim2.new(0,520,0,370), UDim2.new(0.5,-260,0.5,-185), C.bgDark, 0)
+bFrame.Visible = false
+corner(bFrame,12); stroke(bFrame, C.pink)
+
+-- Title bar
+local bTitleBar = mkFrame(bFrame,"TitleBar", UDim2.new(1,0,0,48), UDim2.new(0,0,0,0), Color3.fromRGB(40,0,25), 0)
+corner(bTitleBar,12)
+mkLabel(bTitleBar,"Title","LOOK BATTLE", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.pink, 26)
+
+-- Timer box
+local timerBox = mkFrame(bFrame,"TimerBox", UDim2.new(0,90,0,52), UDim2.new(0.5,-45,0,52), Color3.fromRGB(0,30,50), 0.35)
+corner(timerBox,8); stroke(timerBox, C.cyan, 1)
+local timerLabel = mkLabel(timerBox,"TimerLabel","15", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.cyan, 34)
+
+-- Theme box
+local themeBox = mkFrame(bFrame,"ThemeBox", UDim2.new(0.85,0,0,38), UDim2.new(0.075,0,0,112), Color3.fromRGB(30,20,0), 0.4)
+corner(themeBox,6); stroke(themeBox, C.gold, 1)
+local themeLabel = mkLabel(themeBox,"ThemeLabel","Theme: ...", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.gold, 18)
+
+-- Status
+local statusLabel = mkLabel(bFrame,"StatusLabel","",
+	UDim2.new(0.9,0,0,28), UDim2.new(0.05,0,0,158), C.dim, 14)
+
+-- Vote frame (spectators only)
+local voteFrame = mkFrame(bFrame,"VoteFrame", UDim2.new(1,-20,0,108), UDim2.new(0,10,0,196), Color3.new(0,0,0), 1)
+voteFrame.Visible = false
+mkLabel(voteFrame,"VoteLbl","VOTE FOR THE BEST LOOK:", UDim2.new(1,0,0,22), UDim2.new(0,0,0,0), C.dim, 13)
+local challengerVoteBtn = mkBtn(voteFrame,"ChallengerBtn","Vote: Challenger",
+	UDim2.new(0.46,0,0,54), UDim2.new(0.01,0,0,24), Color3.fromRGB(50,0,80))
+corner(challengerVoteBtn,6); challengerVoteBtn.TextColor3 = C.purple
+local opponentVoteBtn = mkBtn(voteFrame,"OpponentBtn","Vote: Opponent",
+	UDim2.new(0.46,0,0,54), UDim2.new(0.53,0,0,24), Color3.fromRGB(0,30,60))
+corner(opponentVoteBtn,6); opponentVoteBtn.TextColor3 = C.cyan
+
+-- Emote frame (battle participants)
+local emoteFrame = mkFrame(bFrame,"EmoteFrame", UDim2.new(1,-20,0,108), UDim2.new(0,10,0,196), Color3.new(0,0,0), 1)
+emoteFrame.Visible = false
+mkLabel(emoteFrame,"EmoteLbl","USE EMOTES TO WIN THE CROWD!", UDim2.new(1,0,0,22), UDim2.new(0,0,0,0), C.pink, 13)
+
+local EMOTES = {"Dance","Pose","Flex","Cute","Crown","Zap"}
+local emoteBtns = {}
+for i, em in ipairs(EMOTES) do
+	local col = (i-1) % 3
+	local row = math.floor((i-1) / 3)
+	local eb = mkBtn(emoteFrame,"Emote"..i, em,
+		UDim2.new(0.31,0,0,34), UDim2.new(0.01+col*0.33,0,0,25+row*37),
+		Color3.fromRGB(30,20,50))
+	eb.TextSize = 13; corner(eb,4)
+	emoteBtns[i] = eb
+end
+
+-- Close button
+local closeBattleBtn = mkBtn(bFrame,"CloseBtn","X",
+	UDim2.new(0,32,0,32), UDim2.new(1,-36,0,4), Color3.fromRGB(60,20,20))
+corner(closeBattleBtn,6)
+
+-- ════════════════════════════════ ELEVATOR UI ════════════════════
+
+local elevUI = playerGui:WaitForChild("ElevatorUI")
+
+local eFrame = mkFrame(elevUI,"ElevFrame",
+	UDim2.new(0,290,0,330), UDim2.new(1,-308,0.5,-165), C.bgDark, 0)
+eFrame.Visible = false
+corner(eFrame,12); stroke(eFrame, C.cyan)
+
+local eTitleBar = mkFrame(eFrame,"ETitleBar", UDim2.new(1,0,0,50), UDim2.new(0,0,0,0), Color3.fromRGB(0,25,40), 0)
+corner(eTitleBar,12)
+mkLabel(eTitleBar,"ETitleLbl","ELEVATOR", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.cyan, 24)
+mkLabel(eFrame,"ESubLbl","Select destination:",
+	UDim2.new(0.9,0,0,24), UDim2.new(0.05,0,0,56), C.dim, 14)
+
+local FLOOR_COLORS = {C.pink, Color3.fromRGB(0,100,255), C.gold}
+local FLOOR_LABELS = {"1 - Main Club","2 - VIP Zone","3 - Celebrity Floor"}
+local floorBtns    = {}
+for i = 1, 3 do
+	local fb = mkBtn(eFrame,"FloorBtn_"..i, "Floor "..FLOOR_LABELS[i],
+		UDim2.new(0.85,0,0,58), UDim2.new(0.075,0,0,88+(i-1)*70), FLOOR_COLORS[i])
+	fb.TextSize = 15; corner(fb)
+	local lockLbl = mkLabel(fb,"Lock", i>1 and "LOCKED" or "",
+		UDim2.new(0,60,1,0), UDim2.new(1,-64,0,0), C.white, 12)
+	lockLbl.TextXAlignment = Enum.TextXAlignment.Center
+	floorBtns[i] = fb
+end
+local closeElevBtn = mkBtn(eFrame,"CloseBtn","Close",
+	UDim2.new(0.4,0,0,36), UDim2.new(0.3,0,1,-46), Color3.fromRGB(40,20,40))
+corner(closeElevBtn,6)
+
+-- ═══════════════════════════════════ OUTFIT UI ═══════════════════
+
+local outfitPanel = mkFrame(mainHUD,"OutfitPanel",
+	UDim2.new(0,320,0,430), UDim2.new(0,10,0.5,-215), C.bgDark, 0)
+outfitPanel.Visible = false
+corner(outfitPanel,12); stroke(outfitPanel, C.purple)
+
+local oTitleBar = mkFrame(outfitPanel,"OTitleBar", UDim2.new(1,0,0,46), UDim2.new(0,0,0,0), Color3.fromRGB(25,0,40), 0)
+corner(oTitleBar,12)
+mkLabel(oTitleBar,"OTitleLbl","NEON WARDROBE", UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), C.purple, 20)
+mkLabel(outfitPanel,"OSubLbl","Choose your MOOD style:",
+	UDim2.new(0.9,0,0,22), UDim2.new(0.05,0,0,52), C.dim, 13)
+
+local MOOD_BG = {
+	Angry      = Color3.fromRGB(80, 15, 15),
+	Happy      = Color3.fromRGB(75, 65,  0),
+	Mysterious = Color3.fromRGB(45,  0, 75),
+	Cool       = Color3.fromRGB( 0, 45, 75),
+	Cute       = Color3.fromRGB(70, 25, 55),
+	Fierce     = Color3.fromRGB(75, 35,  0),
+}
+local moodBtns = {}
+for i, mood in ipairs(GameConfig.MOODS) do
+	local col = (i-1) % 2
+	local row = math.floor((i-1) / 2)
+	local mb = mkBtn(outfitPanel,"Mood_"..mood, mood,
+		UDim2.new(0.44,0,0,46), UDim2.new(0.04+col*0.52,0,0,80+row*54),
+		MOOD_BG[mood] or C.bgDark)
+	mb.TextSize = 15; corner(mb,6)
+	stroke(mb, GameConfig.MOOD_COLORS[mood] or C.white, 1)
+	moodBtns[mood] = mb
+end
+
+local moodInfoLbl = mkLabel(outfitPanel,"MoodInfo","Current mood: Cool",
+	UDim2.new(0.9,0,0,28), UDim2.new(0.05,0,0,315), C.pink, 15)
+local closeOutfitBtn = mkBtn(outfitPanel,"CloseBtn","Close",
+	UDim2.new(0.4,0,0,36), UDim2.new(0.3,0,1,-46), Color3.fromRGB(40,20,40))
+corner(closeOutfitBtn,6)
+
+-- ═══════════════════════════════════════════ STATE ══════════════
+
+local currentBattle   = nil
+local battleTimerConn = nil
+local currentMood     = "Cool"
+local unlockedFloors  = 1       -- highest floor the player has access to
+local elevOpen        = false
+
+-- ═══════════════════════════════════ HELPERS ════════════════════
+
+local function notify(msg, col, dur)
+	notifLabel.Text       = msg
+	notifLabel.TextColor3 = col or C.gold
+	task.delay(dur or 4, function()
+		if notifLabel.Text == msg then notifLabel.Text = "" end
+	end)
+end
+
+local function refreshElevatorUI()
+	for i = 1, 3 do
+		local fb = floorBtns[i]
+		if fb then
+			local lock = fb:FindFirstChild("Lock")
+			if lock then
+				lock.Text = (i <= unlockedFloors) and "" or "LOCKED"
+			end
+			fb.BackgroundTransparency = (i <= unlockedFloors) and 0 or 0.45
+		end
+	end
+end
+
+-- ═════════════════════════════════ BATTLE LOGIC ════════════════
+
+local function startCountdown(duration)
+	if battleTimerConn then battleTimerConn:Disconnect() end
+	local t0 = tick()
+	battleTimerConn = RunService.Heartbeat:Connect(function()
+		local rem = math.max(0, duration - (tick() - t0))
+		timerLabel.Text = tostring(math.ceil(rem))
+		if rem <= 5 then
+			timerLabel.TextColor3 = C.red
+		elseif rem <= 10 then
+			timerLabel.TextColor3 = C.orange
+		else
+			timerLabel.TextColor3 = C.cyan
+		end
+		if rem <= 0 then
+			battleTimerConn:Disconnect()
+			battleTimerConn = nil
+		end
+	end)
+end
+
+local function showBattle(data)
+	bFrame.Visible = true
+	themeLabel.Text = "Theme: " .. (data.theme or "?")
+	startCountdown(data.duration or GameConfig.BATTLE_DURATION)
+
+	if data.role == "spectator" then
+		statusLabel.Text    = "Watching: " .. (data.challengerName or "?") .. " vs " .. (data.opponentName or "?")
+		voteFrame.Visible   = true
+		emoteFrame.Visible  = false
+		challengerVoteBtn.Text = "Vote: " .. (data.challengerName or "Challenger")
+		opponentVoteBtn.Text   = "Vote: " .. (data.opponentName   or "Opponent")
+		challengerVoteBtn.BackgroundColor3 = Color3.fromRGB(50,0,80)
+		opponentVoteBtn.BackgroundColor3   = Color3.fromRGB(0,30,60)
+	else
+		statusLabel.Text   = "YOU ARE " .. string.upper(data.role or "BATTLING") .. "!"
+		voteFrame.Visible  = false
+		emoteFrame.Visible = true
+	end
+end
+
+local function hideBattle(result)
+	if battleTimerConn then
+		battleTimerConn:Disconnect()
+		battleTimerConn = nil
+	end
+	currentBattle = nil
+
+	if result then
+		if result.result == "win" then
+			notify("YOU WIN! +" .. (result.reputationGained or 0)
+				.. " Rep | +" .. (result.currencyGained or 0) .. " Coins!", C.green, 6)
+		else
+			notify("Better luck next time! +" .. (result.reputationGained or 0) .. " Rep", C.orange, 4)
+		end
+	end
+
+	local tw = TweenService:Create(bFrame, TweenInfo.new(0.4), {BackgroundTransparency=1})
+	tw:Play()
+	tw.Completed:Connect(function()
+		bFrame.Visible              = false
+		bFrame.BackgroundTransparency = 0
+	end)
+end
+
+-- Remote: battle start
+startBattleEv.OnClientEvent:Connect(function(data)
+	if not data then return end
+	if data.error then
+		notify(data.error, C.red)
+		return
+	end
+	if data.announcement then
+		notify(data.announcement, C.gold, 8)
+		return
+	end
+	currentBattle = data
+	showBattle(data)
+	if data.role ~= "spectator" then
+		notify("BATTLE! Theme: " .. (data.theme or ""), C.pink, 3)
+	end
+end)
+
+-- Remote: battle result
+battleResultEv.OnClientEvent:Connect(function(result)
+	hideBattle(result)
+end)
+
+-- Vote buttons (spectator)
+challengerVoteBtn.MouseButton1Click:Connect(function()
+	if currentBattle and currentBattle.role == "spectator" then
+		startBattleEv:FireServer("vote",{battleId=currentBattle.battleId, votedFor="challenger"})
+		challengerVoteBtn.BackgroundColor3 = C.green
+		notify("Voted for " .. (currentBattle.challengerName or "Challenger") .. "!", C.green, 2)
+	end
+end)
+opponentVoteBtn.MouseButton1Click:Connect(function()
+	if currentBattle and currentBattle.role == "spectator" then
+		startBattleEv:FireServer("vote",{battleId=currentBattle.battleId, votedFor="opponent"})
+		opponentVoteBtn.BackgroundColor3 = C.green
+		notify("Voted for " .. (currentBattle.opponentName or "Opponent") .. "!", C.green, 2)
+	end
+end)
+
+-- Emote buttons (battler) — purely cosmetic; they animate the button and
+-- show a notification but do NOT send votes (only spectators may vote).
+for i, eb in ipairs(emoteBtns) do
+	eb.MouseButton1Click:Connect(function()
+		if currentBattle and currentBattle.role ~= "spectator" then
+			local orig = eb.BackgroundColor3
+			eb.BackgroundColor3 = C.pink
+			task.delay(0.15, function() eb.BackgroundColor3 = orig end)
+			notify("Emote " .. EMOTES[i] .. "! Crowd impressed.", C.pink, 1)
+		end
+	end)
+end
+
+closeBattleBtn.MouseButton1Click:Connect(function() hideBattle(nil) end)
+
+-- Challenge button
+challengeBtn.MouseButton1Click:Connect(function()
+	local myChar = player.Character
+	if not myChar then return end
+	local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+	if not myHRP then return end
+
+	local nearest, nearestDist = nil, GameConfig.BATTLE_CHALLENGE_RANGE
+	for _, other in ipairs(Players:GetPlayers()) do
+		if other ~= player and other.Character then
+			local h = other.Character:FindFirstChild("HumanoidRootPart")
+			if h then
+				local d = (myHRP.Position - h.Position).Magnitude
+				if d < nearestDist then
+					nearestDist = d; nearest = other
+				end
+			end
+		end
+	end
+
+	if nearest then
+		startBattleEv:FireServer("challenge", {targetName = nearest.Name})
+		notify("Challenging " .. nearest.Name .. "!", C.pink, 2)
+	else
+		notify("Walk up to a player to challenge them!", C.orange, 3)
+	end
+end)
+
+-- ═══════════════════════════════════ ELEVATOR ═══════════════════
+
+elevatorBtn.MouseButton1Click:Connect(function()
+	elevOpen       = not elevOpen
+	eFrame.Visible = elevOpen
+end)
+
+closeElevBtn.MouseButton1Click:Connect(function()
+	eFrame.Visible = false; elevOpen = false
+end)
+
+for i = 1, 3 do
+	floorBtns[i].MouseButton1Click:Connect(function()
+		requestElevEv:FireServer(i)
+		eFrame.Visible = false; elevOpen = false
+		notify("Traveling to Floor " .. i .. "...", C.cyan, 3)
+	end)
+end
+
+-- Server tells client to open the elevator panel (ProximityPrompt trigger)
+requestElevEv.OnClientEvent:Connect(function(msg)
+	if msg == "open" then
+		eFrame.Visible = true; elevOpen = true
+	end
+end)
+
+-- ══════════════════════════════ OUTFIT / MOOD ════════════════════
+
+local function applyMoodEffect(mood)
+	local char = player.Character
+	if char then
+		local moodColor = GameConfig.MOOD_COLORS[mood] or C.white
+		for _, desc in ipairs(char:GetDescendants()) do
+			if desc:IsA("BasePart") and desc.Name ~= "HumanoidRootPart" then
+				local hl = desc:FindFirstChild("NeonGlow")
+				if not hl then
+					hl = Instance.new("SelectionBox")
+					hl.Name               = "NeonGlow"
+					hl.Adornee            = desc
+					hl.LineThickness      = 0.04
+					hl.SurfaceTransparency= 0.9
+					hl.Parent             = desc
+				end
+				hl.Color3        = moodColor
+				hl.SurfaceColor3 = moodColor
+			end
+		end
+	end
+	moodLabel.Text  = "Mood: " .. mood
+	moodInfoLbl.Text= "Current mood: " .. mood
+	updateMoodEv:FireServer(mood)
+end
+
+local function selectMood(mood)
+	currentMood = mood
+	for m, mb in pairs(moodBtns) do
+		mb.BackgroundTransparency = (m == mood) and 0 or 0.3
+	end
+	applyMoodEffect(mood)
+	notify("Mood set to: " .. mood, GameConfig.MOOD_COLORS[mood], 3)
+end
+
+for mood, mb in pairs(moodBtns) do
+	mb.MouseButton1Click:Connect(function() selectMood(mood) end)
+end
+
+outfitBtn.MouseButton1Click:Connect(function()
+	outfitPanel.Visible = not outfitPanel.Visible
+end)
+closeOutfitBtn.MouseButton1Click:Connect(function()
+	outfitPanel.Visible = false
+end)
+
+-- ════════════════════════════ SERVER REMOTE UPDATES ══════════════
+
+updateCoinEv.OnClientEvent:Connect(function(amount)
+	currencyLabel.Text = tostring(amount) .. " Coins"
+end)
+
+unlockFloorEv.OnClientEvent:Connect(function(data)
+	if type(data) == "table" then
+		if data.floorUnlocked then
+			unlockedFloors = math.max(unlockedFloors, data.floorUnlocked)
+			refreshElevatorUI()
+			floorLabel.Text = "Floor " .. data.floorUnlocked .. " - " .. (data.floorName or "")
+			notify("FLOOR " .. data.floorUnlocked .. " UNLOCKED! (" .. (data.floorName or "") .. ")", C.green, 8)
+		elseif data.error then
+			notify(data.error, C.red, 5)
+		end
+	end
+end)
+
+-- Keep Rep label in sync via leaderstats
+task.spawn(function()
+	local ls = player:WaitForChild("leaderstats", 15)
+	if not ls then return end
+	local repVal   = ls:WaitForChild("Reputation", 5)
+	local floorVal = ls:WaitForChild("Floor",      5)
+
+	if repVal then
+		repVal.Changed:Connect(function(v)
+			repLabel.Text = "Rep: " .. tostring(v)
+		end)
+		repLabel.Text = "Rep: " .. tostring(repVal.Value)
+	end
+
+	if floorVal then
+		floorVal.Changed:Connect(function(v)
+			floorLabel.Text = "Floor " .. v .. " - " .. (GameConfig.FLOOR_NAMES[v] or "")
+		end)
+	end
+end)
+
+-- Apply mood glow when character loads
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	applyMoodEffect(currentMood)
+end)
+if player.Character then
+	task.delay(1, function() applyMoodEffect(currentMood) end)
+end
+
+-- Initial elevator UI state
+refreshElevatorUI()
+
+print("[MainClient] NEON WARDROBE client ready!")
+]]></ProtectedString>
+				</Properties>
+			</Item><!-- /MainClient -->
+		</Item><!-- /StarterPlayerScripts -->
+	</Item><!-- /StarterPlayer -->
+
+	<!-- ══════════════════════════════════════════════════ STARTER GUI -->
+	<Item class="StarterGui" referent="RBX060">
+		<Properties><string name="Name">StarterGui</string></Properties>
+
+		<!-- MainHUD: all widgets built by MainClient -->
+		<Item class="ScreenGui" referent="RBX061">
+			<Properties>
+				<string name="Name">MainHUD</string>
+				<bool name="ResetOnSpawn">false</bool>
+				<bool name="Enabled">true</bool>
+				<int name="DisplayOrder">5</int>
+			</Properties>
+		</Item>
+
+		<!-- BattleUI: battle frame built by MainClient -->
+		<Item class="ScreenGui" referent="RBX062">
+			<Properties>
+				<string name="Name">BattleUI</string>
+				<bool name="ResetOnSpawn">false</bool>
+				<bool name="Enabled">true</bool>
+				<int name="DisplayOrder">10</int>
+			</Properties>
+		</Item>
+
+		<!-- ElevatorUI: elevator panel built by MainClient -->
+		<Item class="ScreenGui" referent="RBX063">
+			<Properties>
+				<string name="Name">ElevatorUI</string>
+				<bool name="ResetOnSpawn">false</bool>
+				<bool name="Enabled">true</bool>
+				<int name="DisplayOrder">8</int>
+			</Properties>
+		</Item>
+	</Item><!-- /StarterGui -->
+
+</roblox>
