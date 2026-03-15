@@ -120,7 +120,8 @@ end
 --------------------------------------------------------------------
 -- End raid
 --------------------------------------------------------------------
-function endRaid(raid) -- luacheck: ignore (forward declaration)
+-- Defined here; called from the delayed task.delay above.
+function endRaid(raid)
 	raid.Active = false
 	local winner = raid.ScoreA >= raid.ScoreB and "TeamA" or "TeamB"
 

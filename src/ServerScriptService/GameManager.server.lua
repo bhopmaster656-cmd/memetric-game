@@ -40,6 +40,11 @@ local DistrictUpdateEvent = createRemote("RemoteEvent", "DistrictUpdate")
 local PlayerDataEvent     = createRemote("RemoteEvent", "PlayerData")
 local NotificationEvent   = createRemote("RemoteEvent", "Notification")
 
+-- Server-only bindable event (used to signal energy banking to DistrictSystem)
+local BankEnergyEvent     = Instance.new("BindableEvent")
+BankEnergyEvent.Name      = "BankEnergy"
+BankEnergyEvent.Parent    = ReplicatedStorage
+
 -- Remote Functions
 local GetPlayerDataFunc   = createRemote("RemoteFunction", "GetPlayerData")
 local GetDistrictsFunc    = createRemote("RemoteFunction", "GetDistricts")
@@ -127,6 +132,9 @@ EndRunEvent.OnServerEvent:Connect(function(player)
 		Duration = duration,
 		MaxCombo = session.Multiplier,
 	})
+
+	-- Bank earned energy into the district system via server-side BindableEvent
+	BankEnergyEvent:Fire(player, session.CurrentDistrict, session.Energy)
 end)
 
 --------------------------------------------------------------------

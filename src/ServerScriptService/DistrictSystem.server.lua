@@ -13,7 +13,7 @@ local DistrictData = require(ReplicatedStorage:WaitForChild("DistrictData"))
 -- Wait for remotes
 --------------------------------------------------------------------
 local DistrictUpdateEvent = ReplicatedStorage:WaitForChild("DistrictUpdate")
-local RunEndedEvent       = ReplicatedStorage:WaitForChild("RunEnded")
+local BankEnergyEvent     = ReplicatedStorage:WaitForChild("BankEnergy")
 local NotificationEvent   = ReplicatedStorage:WaitForChild("Notification")
 
 --------------------------------------------------------------------
@@ -57,14 +57,11 @@ local function contributeEnergy(player, districtName, amount)
 end
 
 --------------------------------------------------------------------
--- Listen for run completions to bank energy
+-- Listen for run completions to bank energy (via BindableEvent from GameManager)
 --------------------------------------------------------------------
-RunEndedEvent.OnServerEvent:Connect(function(player, runData)
-	-- runData is fired from client with energy earned; server also tracks this
-	-- Use the server session energy instead for security
-	-- This is a simplified version
-	if typeof(runData) == "table" and runData.Energy and runData.District then
-		contributeEnergy(player, runData.District, runData.Energy)
+BankEnergyEvent.Event:Connect(function(player, districtName, energy)
+	if player and districtName and energy then
+		contributeEnergy(player, districtName, energy)
 	end
 end)
 

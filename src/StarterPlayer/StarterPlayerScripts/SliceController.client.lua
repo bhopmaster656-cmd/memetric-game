@@ -251,8 +251,8 @@ local function onInputEnded(input, gameProcessed)
 		local swipeAngle = math.deg(math.atan2(swipeDelta.Y, swipeDelta.X))
 
 		-- Raycast from the center of the swipe to find blocks
-		local midPoint = (swipeEnd + Vector2.new(input.Position.X, input.Position.Y)) / 2
-		local ray = camera:ViewportPointToRay(swipeStart.X + swipeDelta.X / 2, swipeStart.Y + swipeDelta.Y / 2)
+		local midPoint = (swipeStart + swipeEnd) / 2
+		local ray = camera:ViewportPointToRay(midPoint.X, midPoint.Y)
 
 		-- Check collision with active blocks
 		local closestBlock = nil
