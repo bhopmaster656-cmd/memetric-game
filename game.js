@@ -73,21 +73,21 @@ async function savePlayerData() {
 
 // ───── Shop Catalog ───────────────────────────────────────────────────────────
 const SKINS = [
-  { id: 'default',   name: '\u0414\u0435\u0444\u043e\u043b\u0442',    emoji: '\ud83d\ude0e', price: 0,    color: '#ff00ff' },
-  { id: 'nyan',      name: '\u041d\u044f\u043d \u041a\u044d\u0442',   emoji: '\ud83c\udf08', price: 200,  color: '#ff88ff' },
-  { id: 'doge',      name: '\u0414\u043e\u0433\u0435',      emoji: '\ud83d\udc15', price: 350,  color: '#ffcc00' },
-  { id: 'trollface', name: '\u0422\u0440\u043e\u043b\u043b\u0444\u0435\u0439\u0441', emoji: '\ud83d\ude08', price: 500,  color: '#ff4400' },
-  { id: 'pepe',      name: '\u041f\u0435\u043f\u0435',      emoji: '\ud83d\udc38', price: 500,  color: '#00ff88' },
-  { id: 'bonk',      name: '\u0411\u043e\u043d\u043a',      emoji: '\ud83d\udd28', price: 750,  color: '#ff0055' },
-  { id: 'chad',      name: '\u0427\u0430\u0434',       emoji: '\ud83d\ude24', price: 1000, color: '#00ccff' },
-  { id: 'sparkle',   name: '\u0421\u043f\u0430\u0440\u043a\u043b',    emoji: '\u2728', price: 1200, color: '#ffffff' },
+  { id: 'default',   name: 'Дефолт',    emoji: '😎', price: 0,    color: '#ff00ff' },
+  { id: 'nyan',      name: 'Нян Кэт',   emoji: '🌈', price: 200,  color: '#ff88ff' },
+  { id: 'doge',      name: 'Доге',      emoji: '🐕', price: 350,  color: '#ffcc00' },
+  { id: 'trollface', name: 'Троллфейс', emoji: '😈', price: 500,  color: '#ff4400' },
+  { id: 'pepe',      name: 'Пепе',      emoji: '🐸', price: 500,  color: '#00ff88' },
+  { id: 'bonk',      name: 'Бонк',      emoji: '🔨', price: 750,  color: '#ff0055' },
+  { id: 'chad',      name: 'Чад',       emoji: '😤', price: 1000, color: '#00ccff' },
+  { id: 'sparkle',   name: 'Спаркл',    emoji: '✨', price: 1200, color: '#ffffff' },
 ];
 
 const COIN_PACKS = [
-  { id: 'coins_small',  label: '\ud83e\ude99 \u00d7 100',  sub: '\u0421\u0442\u0430\u0440\u0442\u043e\u0432\u044b\u0439 \u043d\u0430\u0431\u043e\u0440', coins: 100,  price: '15 \u20bd' },
-  { id: 'coins_medium', label: '\ud83e\ude99 \u00d7 500',  sub: '\u0412\u044b\u0433\u043e\u0434\u043d\u044b\u0439 \u043d\u0430\u0431\u043e\u0440',  coins: 500,  price: '49 \u20bd' },
-  { id: 'coins_large',  label: '\ud83e\ude99 \u00d7 1500', sub: '\u0411\u043e\u043b\u044c\u0448\u043e\u0439 \u043d\u0430\u0431\u043e\u0440',   coins: 1500, price: '99 \u20bd' },
-  { id: 'coins_mega',   label: '\ud83e\ude99 \u00d7 5000', sub: '\u041c\u0435\u0433\u0430 \u043d\u0430\u0431\u043e\u0440',      coins: 5000, price: '249 \u20bd' },
+  { id: 'coins_small',  label: '🪙 × 100',  sub: 'Стартовый набор', coins: 100,  price: '15 ₽' },
+  { id: 'coins_medium', label: '🪙 × 500',  sub: 'Выгодный набор',  coins: 500,  price: '49 ₽' },
+  { id: 'coins_large',  label: '🪙 × 1500', sub: 'Большой набор',   coins: 1500, price: '99 ₽' },
+  { id: 'coins_mega',   label: '🪙 × 5000', sub: 'Мега набор',      coins: 5000, price: '249 ₽' },
 ];
 
 function applyPurchase(productID, notify) {
@@ -97,7 +97,7 @@ function applyPurchase(productID, notify) {
   saveData.coins = Math.min(saveData.coins, 99999);
   savePlayerData();
   updateShopUI();
-  if (notify) showNotification(`+${pack.coins} \u043c\u043e\u043d\u0435\u0442 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043e!`);
+  if (notify) showNotification(`+${pack.coins} монет получено!`);
 }
 
 // ───── Canvas / Game State ────────────────────────────────────────────────────
@@ -139,19 +139,19 @@ const SPEED_INC     = 0.0012;
 
 // ─── Zone colour themes ───────────────────────────────────────────────────────
 const ZONES = [
-  { name: '\u041f\u0423\u0420\u041f\u0423\u0420\u041d\u0410\u042f \u0417\u041e\u041d\u0410',
+  { name: 'ПУРПУРНАЯ ЗОНА',
     bg1: '#0d0020', bg2: '#1a003a', acc: '#ff00ff', acc2: '#8800ff',
     bld: 'rgba(80,0,120,0.35)',  gnd: '#ff00ff', coin: '#ffe000' },
-  { name: '\u041a\u0418\u0411\u0415\u0420 \u0417\u041e\u041d\u0410',
+  { name: 'КИБЕР ЗОНА',
     bg1: '#001a1a', bg2: '#002525', acc: '#00ffff', acc2: '#0088ff',
     bld: 'rgba(0,80,120,0.35)', gnd: '#00ffff', coin: '#00ffaa' },
-  { name: '\u041e\u0413\u041d\u0415\u041d\u041d\u0410\u042f \u0417\u041e\u041d\u0410',
+  { name: 'ОГНЕННАЯ ЗОНА',
     bg1: '#1a0500', bg2: '#2a0a00', acc: '#ff6600', acc2: '#ff0000',
     bld: 'rgba(120,30,0,0.35)', gnd: '#ff6600', coin: '#ffcc00' },
-  { name: '\u0417\u041e\u041b\u041e\u0422\u0410\u042f \u0417\u041e\u041d\u0410',
+  { name: 'ЗОЛОТАЯ ЗОНА',
     bg1: '#1a1200', bg2: '#2a2000', acc: '#ffcc00', acc2: '#ff8800',
     bld: 'rgba(80,60,0,0.35)',  gnd: '#ffcc00', coin: '#ffffff' },
-  { name: '\u0420\u0410\u0414\u0423\u0413\u0410 \u0417\u041e\u041d\u0410',
+  { name: 'РАДУГА ЗОНА',
     bg1: '#05000f', bg2: '#0a0030', acc: '#ff00aa', acc2: '#aa00ff',
     bld: 'rgba(60,0,100,0.35)', gnd: '#ff00aa', coin: '#ffe000' },
 ];
@@ -897,7 +897,7 @@ function drawPad(o) {
   ctx.beginPath(); ctx.moveTo(o.x + 8, o.y + 3); ctx.lineTo(o.x + o.w - 8, o.y + 3); ctx.stroke();
   ctx.fillStyle = '#000'; ctx.font = `bold ${Math.round(o.h * 0.75)}px serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('\u25b2', o.x + o.w / 2, o.y + o.h / 2);
+  ctx.fillText('▲', o.x + o.w / 2, o.y + o.h / 2);
   ctx.shadowBlur = 0; ctx.restore();
 }
 
@@ -965,7 +965,7 @@ function drawHUDCanvas(zone) {
   ctx.fillStyle = 'rgba(255,255,255,0.32)';
   ctx.font = `${Math.round(W * 0.024)}px 'Arial Black', Impact, sans-serif`;
   ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-  ctx.fillText(`\u041f\u043e\u043f\u044b\u0442\u043a\u0430 #${attempts}`, W - 12, H - 8);
+  ctx.fillText(`Попытка #${attempts}`, W - 12, H - 8);
   ctx.textAlign = 'left';
 }
 
@@ -986,13 +986,13 @@ function hexToRgba(hex, alpha) {
 // ───── HUD & UI ───────────────────────────────────────────────────────────────
 function updateHUD() {
   document.getElementById('hud-score').textContent = Math.floor(score);
-  document.getElementById('hud-coins').textContent = `\ud83e\ude99 ${coinCount}`;
-  const hearts = '\u2764\ufe0f'.repeat(lives) + '\ud83d\udda4'.repeat(Math.max(0, 3 - lives));
+  document.getElementById('hud-coins').textContent = `🪙 ${coinCount}`;
+  const hearts = '❤️'.repeat(lives) + '🖤'.repeat(Math.max(0, 3 - lives));
   document.getElementById('hud-lives').textContent = hearts;
   if (combo >= 5) {
     const comboEl = document.getElementById('hud-combo');
     comboEl.classList.remove('hidden');
-    comboEl.textContent = `\u00d7${combo}`;
+    comboEl.textContent = `×${combo}`;
     comboEl.style.animation = 'none';
     void comboEl.offsetWidth;
     comboEl.style.animation = '';
@@ -1002,7 +1002,7 @@ function updateHUD() {
 }
 
 function updateMenuUI() {
-  document.getElementById('menu-highscore').textContent = `\u0420\u0435\u043a\u043e\u0440\u0434: ${saveData.highscore}`;
+  document.getElementById('menu-highscore').textContent = `Рекорд: ${saveData.highscore}`;
 }
 
 // ───── Screen Management ──────────────────────────────────────────────────────
@@ -1054,7 +1054,7 @@ function triggerGameOver() {
 
   document.getElementById('go-score').textContent     = Math.floor(score);
   document.getElementById('go-coins').textContent     = coinCount;
-  document.getElementById('go-highscore').textContent = newHS ? '\ud83c\udfc6 \u041d\u043e\u0432\u044b\u0439 \u0440\u0435\u043a\u043e\u0440\u0434!' : `\u0420\u0435\u043a\u043e\u0440\u0434: ${saveData.highscore}`;
+  document.getElementById('go-highscore').textContent = newHS ? '🏆 Новый рекорд!' : `Рекорд: ${saveData.highscore}`;
   document.getElementById('go-attempts').textContent  = saveData.attempts || 1;
   document.getElementById('btn-revive').style.display = reviveUsed ? 'none' : '';
   updateMenuUI();
@@ -1096,7 +1096,7 @@ function showRewardedAd(onRewarded) {
       onClose:    () => { document.getElementById('ad-overlay').classList.add('hidden'); },
       onError:    () => {
         document.getElementById('ad-overlay').classList.add('hidden');
-        showNotification('\u0420\u0435\u043a\u043b\u0430\u043c\u0430 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0437\u0436\u0435.');
+        showNotification('Реклама недоступна. Попробуйте позже.');
       },
     }
   });
@@ -1104,13 +1104,13 @@ function showRewardedAd(onRewarded) {
 
 // ───── Payments ───────────────────────────────────────────────────────────────
 async function buyCoins(productID) {
-  if (!yPayments) { showNotification('\u041f\u043b\u0430\u0442\u0435\u0436\u0438 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b \u0432 \u044d\u0442\u043e\u043c \u0440\u0435\u0436\u0438\u043c\u0435.'); return; }
+  if (!yPayments) { showNotification('Платежи недоступны в этом режиме.'); return; }
   try {
     const purchase = await yPayments.purchase({ id: productID });
     applyPurchase(productID, true);
     try { await yPayments.consumePurchase(purchase.purchaseToken); } catch (_) {}
   } catch (e) {
-    if (e && e.code !== 'USER_CANCELED') showNotification('\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u043f\u043b\u0430\u0442\u044b. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430.');
+    if (e && e.code !== 'USER_CANCELED') showNotification('Ошибка оплаты. Попробуйте снова.');
   }
 }
 
@@ -1122,9 +1122,9 @@ async function submitScore(sc) {
 
 async function loadLeaderboard() {
   const listEl = document.getElementById('leaderboard-list');
-  listEl.innerHTML = '<div class="lb-entry">\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430...</div>';
+  listEl.innerHTML = '<div class="lb-entry">Загрузка...</div>';
   if (!yLeaderboard) {
-    listEl.innerHTML = '<div class="lb-entry">\u0422\u0430\u0431\u043b\u0438\u0446\u0430 \u043b\u0438\u0434\u0435\u0440\u043e\u0432 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430 \u0432 \u044d\u0442\u043e\u043c \u0440\u0435\u0436\u0438\u043c\u0435.</div>';
+    listEl.innerHTML = '<div class="lb-entry">Таблица лидеров недоступна в этом режиме.</div>';
     return;
   }
   try {
@@ -1138,13 +1138,13 @@ async function loadLeaderboard() {
       el.className = 'lb-entry';
       el.innerHTML = `
         <span class="lb-rank ${rc}">#${entry.rank}</span>
-        <span class="lb-name">${entry.player.publicName || '\u0418\u0433\u0440\u043e\u043a'}</span>
+        <span class="lb-name">${entry.player.publicName || 'Игрок'}</span>
         <span class="lb-score">${entry.score}</span>
       `;
       listEl.appendChild(el);
     });
   } catch (_) {
-    listEl.innerHTML = '<div class="lb-entry">\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0442\u0430\u0431\u043b\u0438\u0446\u0443 \u043b\u0438\u0434\u0435\u0440\u043e\u0432.</div>';
+    listEl.innerHTML = '<div class="lb-entry">Не удалось загрузить таблицу лидеров.</div>';
   }
 }
 
@@ -1163,9 +1163,9 @@ function updateShopUI() {
     card.innerHTML = `
       <span class="skin-emoji">${skin.emoji}</span>
       <span>${skin.name}</span>
-      ${equipped ? '<span style="color:#ffe000">\u2713 \u041e\u0434\u0435\u0442</span>'
-       : owned   ? '<span style="color:#00ffff">\u041e\u0434\u0435\u0442\u044c</span>'
-                 : `<span class="skin-price">\ud83e\ude99 ${skin.price}</span>`}
+      ${equipped ? '<span style="color:#ffe000">✓ Одет</span>'
+       : owned   ? '<span style="color:#00ffff">Одеть</span>'
+                 : `<span class="skin-price">🪙 ${skin.price}</span>`}
     `;
     card.addEventListener('click', () => onSkinClick(skin));
     grid.appendChild(card);
@@ -1193,7 +1193,7 @@ function onSkinClick(skin) {
     saveData.equippedSkin = skin.id;
     savePlayerData();
     updateShopUI();
-    showNotification(`${skin.emoji} ${skin.name} \u043e\u0434\u0435\u0442!`);
+    showNotification(`${skin.emoji} ${skin.name} одет!`);
   } else {
     if (saveData.coins >= skin.price) {
       saveData.coins -= skin.price;
@@ -1201,9 +1201,9 @@ function onSkinClick(skin) {
       saveData.equippedSkin = skin.id;
       savePlayerData();
       updateShopUI();
-      showNotification(`${skin.emoji} ${skin.name} \u043a\u0443\u043f\u043b\u0435\u043d!`);
+      showNotification(`${skin.emoji} ${skin.name} куплен!`);
     } else {
-      showNotification(`\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043c\u043e\u043d\u0435\u0442! \u041d\u0443\u0436\u043d\u043e \ud83e\ude99 ${skin.price}`);
+      showNotification(`Недостаточно монет! Нужно 🪙 ${skin.price}`);
     }
   }
 }
@@ -1248,7 +1248,7 @@ document.getElementById('btn-revive').addEventListener('click', () => {
   if (gameState !== 'gameover') return;
   showRewardedAd(() => {
     revivePlayer();
-    showNotification('\ud83d\udc9a \u0412\u043e\u0437\u0440\u043e\u0436\u0434\u0435\u043d\u0438\u0435! \u0423\u0434\u0430\u0447\u0438!');
+    showNotification('💚 Возрождение! Удачи!');
   });
 });
 
