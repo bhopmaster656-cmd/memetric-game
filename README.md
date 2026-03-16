@@ -1,6 +1,25 @@
 # 🏙️ Evergreen County — Roblox Life Simulator
 
+[![Build EvergreenCounty.rbxlx](https://github.com/bhopmaster656-cmd/memetric-game/actions/workflows/build.yml/badge.svg)](https://github.com/bhopmaster656-cmd/memetric-game/actions/workflows/build.yml)
+
 **Evergreen County** — это симулятор жизни для Roblox: открытый мир, живая экономика, профессии, строительство, сезоны и выживание. Проект собирается с помощью [Rojo](https://rojo.space/) и открывается в Roblox Studio.
+
+---
+
+## ⬇️ Скачать готовый файл
+
+> **Значок выше показывает ✅ зелёный?** Тогда файл уже готов!
+
+**[👉 Открыть страницу Actions и скачать артефакт](https://github.com/bhopmaster656-cmd/memetric-game/actions/workflows/build.yml)**
+
+1. Нажми на ссылку выше → откроется список сборок
+2. Кликни на **самую верхнюю строку со значком ✅** (зелёная галочка)
+3. Прокрути страницу вниз до раздела **Artifacts**
+4. Нажми **`EvergreenCounty-rbxlx`** — начнётся скачивание ZIP-архива
+5. Распакуй архив → внутри будет `EvergreenCounty.rbxlx`
+6. Дважды кликни на файл — он откроется в **Roblox Studio**
+
+> ⚠️ Если значок оранжевый или серый — прочитай раздел [«Первый запуск CI»](#️-первый-запуск-ci--обязательный-шаг-одобрения) ниже.
 
 ---
 
