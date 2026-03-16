@@ -123,6 +123,7 @@ screenGui.Name = "MainMenuGui"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 10
 screenGui.Parent = playerGui
 
 -- Background overlay
@@ -241,19 +242,23 @@ createLabel({
 playBtn.MouseButton1Click:Connect(function()
 	-- Start a run
 	bg.Visible = false
+	bg:SetAttribute("RunActive", true)
 	StartRunEvent:FireServer()
 	RunStateChanged:Fire(true)
 end)
 
 shopBtn.MouseButton1Click:Connect(function()
+	bg.Visible = false
 	ToggleShop:Fire()
 end)
 
 districtBtn.MouseButton1Click:Connect(function()
+	bg.Visible = false
 	ToggleDistrictMap:Fire()
 end)
 
 raidBtn.MouseButton1Click:Connect(function()
+	bg.Visible = false
 	ToggleRaidUI:Fire()
 end)
 
@@ -263,8 +268,47 @@ end)
 RunEndedEvent.OnClientEvent:Connect(function(stats)
 	-- Show results briefly, then return to menu
 	task.wait(2)
+	bg:SetAttribute("RunActive", false)
 	bg.Visible = true
 end)
+
+--------------------------------------------------------------------
+-- Show menu again when all sub-menus close
+--------------------------------------------------------------------
+local menuIsRunning = false
+
+RunStateChanged.Event:Connect(function(running)
+	menuIsRunning = running
+end)
+
+RunEndedEvent.OnClientEvent:Connect(function()
+	menuIsRunning = false
+end)
+
+local function onSubMenuToggled()
+	-- If no sub-menu is visible, bring main menu back
+	-- Each sub-menu fires its toggle event on close too, so we
+	-- listen with a tiny delay to let the toggle execute first.
+	task.defer(function()
+		if menuIsRunning then return end
+
+		local shopGui = playerGui:FindFirstChild("ShopGui")
+		local districtGui = playerGui:FindFirstChild("DistrictMapGui")
+		local raidGui = playerGui:FindFirstChild("RaidUIGui")
+
+		local shopOpen = shopGui and shopGui:FindFirstChild("ShopContainer") and shopGui.ShopContainer.Visible
+		local districtOpen = districtGui and districtGui:FindFirstChild("MapContainer") and districtGui.MapContainer.Visible
+		local raidOpen = raidGui and raidGui:FindFirstChild("RaidContainer") and raidGui.RaidContainer.Visible
+
+		if not shopOpen and not districtOpen and not raidOpen then
+			bg.Visible = true
+		end
+	end)
+end
+
+ToggleShop.Event:Connect(onSubMenuToggled)
+ToggleDistrictMap.Event:Connect(onSubMenuToggled)
+ToggleRaidUI.Event:Connect(onSubMenuToggled)
 
 --------------------------------------------------------------------
 -- Title animation (pulse glow)

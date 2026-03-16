@@ -33,6 +33,7 @@ screenGui.Name = "HUDGui"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 20
 screenGui.Parent = playerGui
 
 -- Container (hidden until run starts)

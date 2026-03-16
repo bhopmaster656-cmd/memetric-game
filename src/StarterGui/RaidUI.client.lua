@@ -18,9 +18,11 @@ local playerGui = player:WaitForChild("PlayerGui")
 --------------------------------------------------------------------
 -- Wait for remotes
 --------------------------------------------------------------------
-local JoinRaidEvent   = ReplicatedStorage:WaitForChild("JoinRaid")
-local RaidUpdateEvent = ReplicatedStorage:WaitForChild("RaidUpdate")
-local ToggleRaidUI    = ReplicatedStorage:WaitForChild("ToggleRaidUI")
+local JoinRaidEvent    = ReplicatedStorage:WaitForChild("JoinRaid")
+local RaidUpdateEvent  = ReplicatedStorage:WaitForChild("RaidUpdate")
+local ToggleRaidUI     = ReplicatedStorage:WaitForChild("ToggleRaidUI")
+local ToggleShop       = ReplicatedStorage:WaitForChild("ToggleShop")
+local ToggleDistrictMap = ReplicatedStorage:WaitForChild("ToggleDistrictMap")
 
 --------------------------------------------------------------------
 -- State
@@ -37,6 +39,7 @@ screenGui.Name = "RaidUIGui"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 30
 screenGui.Parent = playerGui
 
 -- Main container
@@ -90,6 +93,14 @@ closeBtn.Parent = container
 
 closeBtn.MouseButton1Click:Connect(function()
 	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local mainBg = mainMenuGui:FindFirstChild("Background")
+		if mainBg and not mainBg:GetAttribute("RunActive") then
+			mainBg.Visible = true
+		end
+	end
 end)
 
 -- Info text
@@ -249,10 +260,29 @@ RaidUpdateEvent.OnClientEvent:Connect(function(update)
 end)
 
 --------------------------------------------------------------------
+-- Helper: close other menus
+--------------------------------------------------------------------
+local function closeOtherMenus()
+	local shopGui = playerGui:FindFirstChild("ShopGui")
+	if shopGui then
+		local shopContainer = shopGui:FindFirstChild("ShopContainer")
+		if shopContainer then shopContainer.Visible = false end
+	end
+	local districtGui = playerGui:FindFirstChild("DistrictMapGui")
+	if districtGui then
+		local mapContainer = districtGui:FindFirstChild("MapContainer")
+		if mapContainer then mapContainer.Visible = false end
+	end
+end
+
+--------------------------------------------------------------------
 -- Toggle
 --------------------------------------------------------------------
 ToggleRaidUI.Event:Connect(function()
 	container.Visible = not container.Visible
+	if container.Visible then
+		closeOtherMenus()
+	end
 end)
 
 print("[NEON SLICE] RaidUI loaded ✓")

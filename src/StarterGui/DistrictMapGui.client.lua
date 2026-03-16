@@ -21,6 +21,8 @@ local playerGui = player:WaitForChild("PlayerGui")
 local SelectDistrictEvent = ReplicatedStorage:WaitForChild("SelectDistrict")
 local DistrictUpdateEvent = ReplicatedStorage:WaitForChild("DistrictUpdate")
 local ToggleDistrictMap   = ReplicatedStorage:WaitForChild("ToggleDistrictMap")
+local ToggleShop          = ReplicatedStorage:WaitForChild("ToggleShop")
+local ToggleRaidUI        = ReplicatedStorage:WaitForChild("ToggleRaidUI")
 local GetDistrictsFunc    = ReplicatedStorage:WaitForChild("GetDistricts")
 
 --------------------------------------------------------------------
@@ -37,6 +39,7 @@ screenGui.Name = "DistrictMapGui"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 30
 screenGui.Parent = playerGui
 
 -- Main container
@@ -90,6 +93,14 @@ closeBtn.Parent = container
 
 closeBtn.MouseButton1Click:Connect(function()
 	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local bg = mainMenuGui:FindFirstChild("Background")
+		if bg and not bg:GetAttribute("RunActive") then
+			bg.Visible = true
+		end
+	end
 end)
 
 -- Map area (grid of district tiles)
@@ -145,6 +156,14 @@ selectCorner.Parent = selectBtn
 selectBtn.MouseButton1Click:Connect(function()
 	SelectDistrictEvent:FireServer(selectedDistrict)
 	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local bg = mainMenuGui:FindFirstChild("Background")
+		if bg and not bg:GetAttribute("RunActive") then
+			bg.Visible = true
+		end
+	end
 end)
 
 --------------------------------------------------------------------
@@ -248,11 +267,28 @@ local function buildMap()
 end
 
 --------------------------------------------------------------------
+-- Helper: close other menus
+--------------------------------------------------------------------
+local function closeOtherMenus()
+	local shopGui = playerGui:FindFirstChild("ShopGui")
+	if shopGui then
+		local shopContainer = shopGui:FindFirstChild("ShopContainer")
+		if shopContainer then shopContainer.Visible = false end
+	end
+	local raidGui = playerGui:FindFirstChild("RaidUIGui")
+	if raidGui then
+		local raidContainer = raidGui:FindFirstChild("RaidContainer")
+		if raidContainer then raidContainer.Visible = false end
+	end
+end
+
+--------------------------------------------------------------------
 -- Toggle
 --------------------------------------------------------------------
 ToggleDistrictMap.Event:Connect(function()
 	container.Visible = not container.Visible
 	if container.Visible then
+		closeOtherMenus()
 		-- Fetch latest ownership
 		local ok, districts = pcall(function()
 			return GetDistrictsFunc:InvokeServer()

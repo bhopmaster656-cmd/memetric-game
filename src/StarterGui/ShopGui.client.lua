@@ -18,10 +18,12 @@ local playerGui = player:WaitForChild("PlayerGui")
 --------------------------------------------------------------------
 -- Wait for remotes
 --------------------------------------------------------------------
-local PurchaseEvent   = ReplicatedStorage:WaitForChild("PurchaseRequest")
+local PurchaseEvent    = ReplicatedStorage:WaitForChild("PurchaseRequest")
 local EquipKatanaEvent = ReplicatedStorage:WaitForChild("EquipKatana")
 local PlayerDataEvent  = ReplicatedStorage:WaitForChild("PlayerData")
 local ToggleShop       = ReplicatedStorage:WaitForChild("ToggleShop")
+local ToggleDistrictMap = ReplicatedStorage:WaitForChild("ToggleDistrictMap")
+local ToggleRaidUI     = ReplicatedStorage:WaitForChild("ToggleRaidUI")
 local NotificationEvent = ReplicatedStorage:WaitForChild("Notification")
 
 --------------------------------------------------------------------
@@ -39,6 +41,7 @@ screenGui.Name = "ShopGui"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 30
 screenGui.Parent = playerGui
 
 -- Main container
@@ -112,6 +115,14 @@ closeBtn.Parent = container
 
 closeBtn.MouseButton1Click:Connect(function()
 	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local mainBg = mainMenuGui:FindFirstChild("Background")
+		if mainBg and not mainBg:GetAttribute("RunActive") then
+			mainBg.Visible = true
+		end
+	end
 end)
 
 -- Scrolling frame for katana cards
@@ -261,11 +272,28 @@ local function buildCards()
 end
 
 --------------------------------------------------------------------
+-- Helper: close other menus
+--------------------------------------------------------------------
+local function closeOtherMenus()
+	local districtGui = playerGui:FindFirstChild("DistrictMapGui")
+	if districtGui then
+		local mapContainer = districtGui:FindFirstChild("MapContainer")
+		if mapContainer then mapContainer.Visible = false end
+	end
+	local raidGui = playerGui:FindFirstChild("RaidUIGui")
+	if raidGui then
+		local raidContainer = raidGui:FindFirstChild("RaidContainer")
+		if raidContainer then raidContainer.Visible = false end
+	end
+end
+
+--------------------------------------------------------------------
 -- Toggle visibility
 --------------------------------------------------------------------
 ToggleShop.Event:Connect(function()
 	container.Visible = not container.Visible
 	if container.Visible then
+		closeOtherMenus()
 		buildCards()
 	end
 end)

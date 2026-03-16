@@ -37,8 +37,11 @@ toggleRaidUI.Parent = ReplicatedStorage
 --------------------------------------------------------------------
 -- Keyboard shortcuts
 --------------------------------------------------------------------
+local isRunning = false
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
+	if isRunning then return end
 
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleShop:Fire()
@@ -47,6 +50,19 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	elseif input.KeyCode == Enum.KeyCode.R then
 		toggleRaidUI:Fire()
 	end
+end)
+
+--------------------------------------------------------------------
+-- Track run state to disable shortcuts during gameplay
+--------------------------------------------------------------------
+local RunStateEvent = ReplicatedStorage:WaitForChild("RunStateChanged")
+RunStateEvent.Event:Connect(function(running)
+	isRunning = running
+end)
+
+local RunEndedEvent = ReplicatedStorage:WaitForChild("RunEnded")
+RunEndedEvent.OnClientEvent:Connect(function()
+	isRunning = false
 end)
 
 print("[NEON SLICE] InputHandler loaded ✓")
