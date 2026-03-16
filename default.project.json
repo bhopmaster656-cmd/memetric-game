@@ -1,0 +1,207 @@
+{
+  "name": "EvergreenCounty",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "GameConfig": {
+        "$path": "src/ReplicatedStorage/GameConfig.lua"
+      },
+      "Modules": {
+        "$path": "src/ReplicatedStorage/Modules"
+      },
+      "RemoteEvents": {
+        "$className": "Folder",
+        "UpdateStats": { "$className": "RemoteEvent" },
+        "UpdateMoney": { "$className": "RemoteEvent" },
+        "UpdateReputation": { "$className": "RemoteEvent" },
+        "UpdateWeather": { "$className": "RemoteEvent" },
+        "UpdateSeason": { "$className": "RemoteEvent" },
+        "UpdateMarketPrices": { "$className": "RemoteEvent" },
+        "PurchaseItem": { "$className": "RemoteFunction" },
+        "SellItem": { "$className": "RemoteFunction" },
+        "SetProfession": { "$className": "RemoteFunction" },
+        "StartBuildMode": { "$className": "RemoteEvent" },
+        "PlaceObject": { "$className": "RemoteFunction" },
+        "RemoveObject": { "$className": "RemoteFunction" },
+        "RequestVehicle": { "$className": "RemoteFunction" },
+        "RepairVehicle": { "$className": "RemoteFunction" },
+        "ArrestPlayer": { "$className": "RemoteEvent" },
+        "NotifyPlayer": { "$className": "RemoteEvent" },
+        "OpenShop": { "$className": "RemoteEvent" },
+        "InviteCoop": { "$className": "RemoteEvent" },
+        "AcceptCoop": { "$className": "RemoteFunction" },
+        "UpdateInventory": { "$className": "RemoteEvent" },
+        "UseItem": { "$className": "RemoteFunction" },
+        "HarvestResource": { "$className": "RemoteFunction" },
+        "PlantCrop": { "$className": "RemoteFunction" },
+        "FeedAnimal": { "$className": "RemoteFunction" },
+        "RequestLoan": { "$className": "RemoteFunction" },
+        "PayTax": { "$className": "RemoteEvent" },
+        "SpawnVehicle": { "$className": "RemoteFunction" },
+        "ListMarketItem": { "$className": "RemoteFunction" },
+        "BuyMarketItem": { "$className": "RemoteFunction" }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$properties": {
+        "LoadStringEnabled": false
+      },
+      "GameInit": {
+        "$path": "src/ServerScriptService/GameInit.server.lua"
+      },
+      "PlayerDataManager": {
+        "$path": "src/ServerScriptService/PlayerDataManager.server.lua"
+      },
+      "EconomyManager": {
+        "$path": "src/ServerScriptService/EconomyManager.server.lua"
+      },
+      "WeatherManager": {
+        "$path": "src/ServerScriptService/WeatherManager.server.lua"
+      },
+      "ProfessionManager": {
+        "$path": "src/ServerScriptService/ProfessionManager.server.lua"
+      },
+      "CriminalSystem": {
+        "$path": "src/ServerScriptService/CriminalSystem.server.lua"
+      },
+      "VehicleManager": {
+        "$path": "src/ServerScriptService/VehicleManager.server.lua"
+      },
+      "BuildingManager": {
+        "$path": "src/ServerScriptService/BuildingManager.server.lua"
+      },
+      "NPCManager": {
+        "$path": "src/ServerScriptService/NPCManager.server.lua"
+      },
+      "TaxManager": {
+        "$path": "src/ServerScriptService/TaxManager.server.lua"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "CharacterController": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/CharacterController.client.lua"
+        },
+        "VehicleClient": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/VehicleClient.client.lua"
+        },
+        "SoundManager": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/SoundManager.client.lua"
+        }
+      },
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts",
+        "StatsMonitor": {
+          "$path": "src/StarterPlayer/StarterCharacterScripts/StatsMonitor.client.lua"
+        }
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ResetPlayerGuiOnSpawn": false,
+        "ScreenOrientation": "LandscapeSensor"
+      },
+      "HUD": {
+        "$className": "ScreenGui",
+        "$properties": {
+          "DisplayOrder": 20,
+          "ResetOnSpawn": false,
+          "ZIndexBehavior": "Sibling"
+        },
+        "Script": {
+          "$path": "src/StarterGui/HUD/Script.client.lua"
+        }
+      },
+      "MainMenu": {
+        "$className": "ScreenGui",
+        "$properties": {
+          "DisplayOrder": 100,
+          "ResetOnSpawn": false,
+          "ZIndexBehavior": "Sibling"
+        },
+        "Script": {
+          "$path": "src/StarterGui/MainMenu/Script.client.lua"
+        }
+      },
+      "ShopGui": {
+        "$className": "ScreenGui",
+        "$properties": {
+          "DisplayOrder": 30,
+          "ResetOnSpawn": false,
+          "ZIndexBehavior": "Sibling",
+          "Enabled": false
+        },
+        "Script": {
+          "$path": "src/StarterGui/ShopGui/Script.client.lua"
+        }
+      },
+      "ProfessionGui": {
+        "$className": "ScreenGui",
+        "$properties": {
+          "DisplayOrder": 30,
+          "ResetOnSpawn": false,
+          "ZIndexBehavior": "Sibling",
+          "Enabled": false
+        },
+        "Script": {
+          "$path": "src/StarterGui/ProfessionGui/Script.client.lua"
+        }
+      },
+      "BuildingGui": {
+        "$className": "ScreenGui",
+        "$properties": {
+          "DisplayOrder": 30,
+          "ResetOnSpawn": false,
+          "ZIndexBehavior": "Sibling",
+          "Enabled": false
+        },
+        "Script": {
+          "$path": "src/StarterGui/BuildingGui/Script.client.lua"
+        }
+      },
+      "MarketGui": {
+        "$className": "ScreenGui",
+        "$properties": {
+          "DisplayOrder": 30,
+          "ResetOnSpawn": false,
+          "ZIndexBehavior": "Sibling",
+          "Enabled": false
+        },
+        "Script": {
+          "$path": "src/StarterGui/MarketGui/Script.client.lua"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "Gravity": 196.2,
+        "StreamingEnabled": true,
+        "StreamingIntegrityMode": "PauseOutsideLoadedArea"
+      }
+    },
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Ambient": [0.5, 0.5, 0.5],
+        "Brightness": 2,
+        "ClockTime": 10,
+        "FogEnd": 2000,
+        "GlobalShadows": true,
+        "OutdoorAmbient": [0.5, 0.5, 0.5],
+        "ShadowSoftness": 0.2
+      }
+    }
+  }
+}
