@@ -2,6 +2,8 @@
 
 **Cut, ride and rock in the neon city.**
 
+> 🇷🇺 **[Инструкция на русском (SETUP_RU.md)](SETUP_RU.md)** — подробная пошаговая инструкция по запуску игры.
+
 A cyberpunk social action game for Roblox where street gangs compete in parkour with katanas. Players are "Riders" who glide across rails at incredible speeds, slicing through neon blocks and collecting energy to capture city districts.
 
 ## Features
@@ -17,49 +19,53 @@ A cyberpunk social action game for Roblox where street gangs compete in parkour 
 - **Full HUD** — Score, combo, energy bar, speed indicator, and results screen
 - **Loading screen** — Animated cyberpunk loading sequence
 
-## Getting Started
+## Quick Start (3 steps)
 
-### Prerequisites
+### 1. Install tools
 
-- [Roblox Studio](https://www.roblox.com/create) (free)
-- [Rojo](https://rojo.space/) (free, for syncing files to Studio)
+- Install [Roblox Studio](https://www.roblox.com/create) (free)
+- Install [Rojo](https://github.com/rojo-rbx/rojo/releases) (download the latest release for your OS)
+- Install the Rojo plugin in Studio: run `rojo plugin install`, or find **Rojo** in Studio → Plugins → Manage Plugins
 
-### Setup
-
-1. **Install Rojo** — Get the [Rojo VS Code extension](https://marketplace.visualstudio.com/items?itemName=evaera.vscode-rojo) or the standalone CLI.
-
-2. **Install the Rojo Roblox Studio plugin** — In Roblox Studio, install the Rojo plugin from the Plugin Manager or download it from [rojo.space](https://rojo.space/).
-
-3. **Clone this repository:**
-   ```bash
-   git clone https://github.com/bhopmaster656-cmd/memetric-game.git
-   cd memetric-game
-   ```
-
-4. **Start the Rojo server:**
-   ```bash
-   rojo serve
-   ```
-
-5. **Connect from Roblox Studio:**
-   - Open Roblox Studio and create a new Baseplate place (or open an existing one).
-   - Click the **Rojo** plugin button in the toolbar.
-   - Click **Connect** to sync the project files into Studio.
-
-6. **Play!** — Press the Play button in Roblox Studio to test the game.
-
-### Alternative: Build a place file
+### 2. Build the game file
 
 ```bash
-rojo build -o NeonSlice.rbxlx
+git clone https://github.com/bhopmaster656-cmd/memetric-game.git
+cd memetric-game
+rojo build default.project.json -o NeonSlice.rbxlx
 ```
 
-Then open `NeonSlice.rbxlx` directly in Roblox Studio.
+**Or use the helper scripts:**
+- Windows: `scripts\build.bat`
+- Mac/Linux: `./scripts/build.sh`
+
+### 3. Play!
+
+Open `NeonSlice.rbxlx` in Roblox Studio → Press **▶ Play**.
+
+That's it! 🎉
+
+---
+
+## Alternative: Live Sync (for development)
+
+If you want to edit files and see changes instantly in Studio:
+
+```bash
+rojo serve
+```
+
+Then in Roblox Studio: create a new Baseplate → click the **Rojo** plugin → click **Connect**.
+
+Helper scripts: `scripts\serve.bat` (Windows) or `./scripts/serve.sh` (Mac/Linux).
 
 ## Project Structure
 
 ```
 default.project.json          — Rojo project configuration
+aftman.toml                   — Automatic Rojo version management
+Makefile                      — Build commands (make build, make serve)
+scripts/                      — Helper scripts for Windows/Mac/Linux
 src/
 ├── ReplicatedStorage/        — Shared modules (Config, BlockTypes, KatanaData, etc.)
 ├── ReplicatedFirst/          — Loading screen (runs before everything else)
@@ -85,6 +91,16 @@ src/
 - **Add katanas:** Edit `src/ReplicatedStorage/KatanaData.lua` to add new katana definitions.
 - **Add districts:** Edit `src/ReplicatedStorage/DistrictData.lua` to create new city areas.
 - **Tune gameplay:** Adjust speeds, scoring, and spawn rates in `src/ReplicatedStorage/Config.lua`.
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `rojo: command not found` | Download Rojo from [releases](https://github.com/rojo-rbx/rojo/releases) and add to PATH |
+| Rojo plugin won't connect | Make sure `rojo serve` is running, check that port 34872 is not blocked |
+| No sounds in game | Replace `rbxassetid://0` placeholders with real audio asset IDs |
+| DataStore errors in Studio | Go to Game Settings → Security → Enable Studio Access to API Services |
+| Character doesn't move | Press **▶ START RUN** in the main menu — movement is automatic |
 
 ## License
 
