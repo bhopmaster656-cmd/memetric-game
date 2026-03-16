@@ -1,0 +1,76 @@
+name: Build EvergreenCounty.rbxlx
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build with Rojo
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Aftman
+        uses: ok-nick/setup-aftman@v0.4.2
+
+      - name: Install Rojo (via Aftman)
+        run: aftman install
+
+      - name: Build EvergreenCounty.rbxlx
+        run: rojo build default.project.json -o EvergreenCounty.rbxlx
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EvergreenCounty-rbxlx
+          path: EvergreenCounty.rbxlx
+          retention-days: 90
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Aftman
+        uses: ok-nick/setup-aftman@v0.4.2
+
+      - name: Install Rojo (via Aftman)
+        run: aftman install
+
+      - name: Build EvergreenCounty.rbxlx
+        run: rojo build default.project.json -o EvergreenCounty.rbxlx
+
+      - name: Create or update "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-build
+          name: "Latest Build"
+          body: |
+            Автоматически собранная версия игры Evergreen County.
+
+            **Как использовать:**
+            1. Скачай `EvergreenCounty.rbxlx` ниже.
+            2. Дважды кликни на файл — он откроется в Roblox Studio.
+            3. Нажми **▶ Play** (F5) чтобы начать тестирование.
+
+            Подробные инструкции: [README.md](https://github.com/${{ github.repository }}#readme)
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          make_latest: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          files: EvergreenCounty.rbxlx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
