@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Средневековый Город — Градостроительный Симулятор</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="game-container">
+
+    <!-- ── Main canvas ──────────────────────────────────────────────────── -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- ── HUD – top resource & city bar ──────────────────────────────── -->
+    <div id="hud-top">
+        <div class="resource-bar">
+            <span class="resource" id="res-gold"  title="Золото">🪙 <span>500</span></span>
+            <span class="resource" id="res-food"  title="Еда">🌾 <span>60</span></span>
+            <span class="resource" id="res-wood"  title="Дерево">🪵 <span>40</span></span>
+            <span class="resource" id="res-stone" title="Камень">🪨 <span>20</span></span>
+            <span class="resource" id="res-tools" title="Инструменты">⚒️ <span>10</span></span>
+            <span class="resource" id="res-goods" title="Товары">📦 <span>0</span></span>
+        </div>
+        <div class="city-info">
+            <span id="city-name" title="Нажмите, чтобы переименовать">🏰 Мой Город</span>
+            <span id="city-pop"       title="Население">👥 <span>0</span></span>
+            <span id="city-happiness" title="Счастье">😊 <span>80%</span></span>
+            <span id="game-date"      title="Игровой день">📅 <span>День 1</span></span>
+        </div>
+        <div class="controls">
+            <button id="btn-pause"  title="Пауза/Продолжить">⏸️</button>
+            <button id="btn-speed"  title="Изменить скорость">1x</button>
+        </div>
+    </div>
+
+    <!-- ── Left panel – building menu ─────────────────────────────────── -->
+    <div id="panel-left">
+        <h3>Постройки</h3>
+
+        <div class="building-categories">
+            <button class="cat-btn active" data-cat="housing">🏠 Жильё</button>
+            <button class="cat-btn"        data-cat="food">🌾 Еда</button>
+            <button class="cat-btn"        data-cat="industry">⚒️ Производство</button>
+            <button class="cat-btn"        data-cat="commerce">💰 Торговля</button>
+            <button class="cat-btn"        data-cat="civic">🏛️ Гражданские</button>
+        </div>
+
+        <div id="building-list"></div>
+
+        <button id="btn-road"    class="road-btn"    title="Нарисовать дорогу (зажмите и тяните)">🛤️ Дорога</button>
+        <button id="btn-demolish" class="demolish-btn" title="Режим сноса">💣 Снос</button>
+    </div>
+
+    <!-- ── Right panel – city/residents/events/laws ──────────────────── -->
+    <div id="panel-right">
+        <div id="panel-tabs">
+            <button class="tab-btn active" data-tab="city">Город</button>
+            <button class="tab-btn"        data-tab="residents">Жители</button>
+            <button class="tab-btn"        data-tab="events">События</button>
+            <button class="tab-btn"        data-tab="laws">Законы</button>
+        </div>
+        <div id="tab-content">
+            <div class="empty-msg">Загрузка…</div>
+        </div>
+    </div>
+
+    <!-- ── Bottom panel – selected building info ──────────────────────── -->
+    <div id="panel-bottom">
+        <div id="selected-info"></div>
+        <button id="btn-close-info">✕</button>
+    </div>
+
+    <!-- ── Event dialog ────────────────────────────────────────────────── -->
+    <div id="event-dialog">
+        <div id="event-content">
+            <h2 id="event-title"></h2>
+            <p  id="event-desc"></p>
+            <div id="event-choices"></div>
+        </div>
+    </div>
+
+    <!-- ── Resident profile modal ──────────────────────────────────────── -->
+    <div id="resident-profile">
+        <button id="close-profile">✕</button>
+        <div id="profile-content"></div>
+    </div>
+
+    <!-- ── Notifications ───────────────────────────────────────────────── -->
+    <div id="notifications"></div>
+
+</div><!-- #game-container -->
+
+<!-- ── Scripts (order matters) ─────────────────────────────────────────── -->
+<script src="js/constants.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/names.js"></script>
+<script src="js/world.js"></script>
+<script src="js/building.js"></script>
+<script src="js/resident.js"></script>
+<script src="js/economy.js"></script>
+<script src="js/events.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/input.js"></script>
+<script src="js/game.js"></script>
+
+</body>
+</html>
