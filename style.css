@@ -227,6 +227,11 @@ html, body {
   color: #ffe000;
   min-height: 1.4em;
 }
+.go-attempts {
+  font-size: clamp(0.8rem, 3vw, 1rem);
+  color: rgba(255,255,255,0.5);
+  margin-top: 0.25rem;
+}
 
 /* ===== SHOP ===== */
 .coin-balance {
