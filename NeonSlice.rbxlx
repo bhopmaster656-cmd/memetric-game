@@ -1,0 +1,4405 @@
+<roblox version="4">
+  <Item class="ReplicatedFirst" referent="0">
+    <Properties>
+      <string name="Name">ReplicatedFirst</string>
+    </Properties>
+    <Item class="LocalScript" referent="1">
+      <Properties>
+        <string name="Name">LoadingScreen</string>
+        <string name="Source"><![CDATA[--[[
+	LoadingScreen.client.lua
+	Displays a neon-themed loading screen while the game assets load.
+	Placed in ReplicatedFirst so it runs before other scripts.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local ContentProvider = game:GetService("ContentProvider")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------
+-- Colours
+--------------------------------------------------------------------
+local NEON_CYAN   = Color3.fromRGB(0, 255, 255)
+local NEON_PURPLE = Color3.fromRGB(155, 89, 182)
+local NEON_PINK   = Color3.fromRGB(255, 71, 148)
+local BG_DARK     = Color3.fromRGB(15, 15, 30)
+
+--------------------------------------------------------------------
+-- Build loading screen
+--------------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LoadingScreenGui"
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 100
+screenGui.Parent = playerGui
+
+-- Disable default loading screen
+ReplicatedFirst:RemoveDefaultLoadingScreen()
+
+-- Background
+local bg = Instance.new("Frame")
+bg.BackgroundColor3 = BG_DARK
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BorderSizePixel = 0
+bg.Parent = screenGui
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Text = "NEON SLICE"
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = NEON_CYAN
+title.TextSize = 56
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, 0, 0, 70)
+title.Position = UDim2.new(0.5, 0, 0.35, 0)
+title.AnchorPoint = Vector2.new(0.5, 0.5)
+title.Parent = bg
+
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Color = NEON_PURPLE
+titleStroke.Thickness = 2
+titleStroke.Parent = title
+
+-- Loading bar background
+local barBg = Instance.new("Frame")
+barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+barBg.BackgroundTransparency = 0.3
+barBg.BorderSizePixel = 0
+barBg.Size = UDim2.new(0.4, 0, 0, 8)
+barBg.Position = UDim2.new(0.5, 0, 0.55, 0)
+barBg.AnchorPoint = Vector2.new(0.5, 0.5)
+barBg.Parent = bg
+
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(0, 4)
+barCorner.Parent = barBg
+
+-- Loading bar fill
+local barFill = Instance.new("Frame")
+barFill.BackgroundColor3 = NEON_CYAN
+barFill.BorderSizePixel = 0
+barFill.Size = UDim2.new(0, 0, 1, 0)
+barFill.Parent = barBg
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 4)
+fillCorner.Parent = barFill
+
+-- Status text
+local statusText = Instance.new("TextLabel")
+statusText.Text = "Loading..."
+statusText.Font = Enum.Font.Gotham
+statusText.TextColor3 = NEON_PINK
+statusText.TextSize = 16
+statusText.BackgroundTransparency = 1
+statusText.Size = UDim2.new(1, 0, 0, 30)
+statusText.Position = UDim2.new(0.5, 0, 0.6, 0)
+statusText.AnchorPoint = Vector2.new(0.5, 0)
+statusText.Parent = bg
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Text = "Cut, ride and rock in the neon city"
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextColor3 = Color3.fromRGB(120, 120, 150)
+subtitle.TextSize = 14
+subtitle.BackgroundTransparency = 1
+subtitle.Size = UDim2.new(1, 0, 0, 25)
+subtitle.Position = UDim2.new(0.5, 0, 0.42, 0)
+subtitle.AnchorPoint = Vector2.new(0.5, 0)
+subtitle.Parent = bg
+
+--------------------------------------------------------------------
+-- Animate loading
+--------------------------------------------------------------------
+local steps = {
+	{text = "Initializing neon grid...", progress = 0.2},
+	{text = "Loading katana arsenal...", progress = 0.4},
+	{text = "Mapping city districts...", progress = 0.6},
+	{text = "Calibrating slice engine...", progress = 0.8},
+	{text = "Ready to ride!", progress = 1.0},
+}
+
+-- Title color cycle
+task.spawn(function()
+	local colors = {NEON_CYAN, NEON_PURPLE, NEON_PINK}
+	local i = 1
+	while screenGui.Parent do
+		TweenService:Create(title, TweenInfo.new(1.5, Enum.EasingStyle.Sine), {
+			TextColor3 = colors[i],
+		}):Play()
+		i = (i % #colors) + 1
+		task.wait(1.5)
+	end
+end)
+
+-- Progress through loading steps
+for _, step in ipairs(steps) do
+	statusText.Text = step.text
+	TweenService:Create(barFill, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+		Size = UDim2.new(step.progress, 0, 1, 0),
+	}):Play()
+	task.wait(0.8)
+end
+
+-- Wait for the game to be loaded
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+
+-- Fade out
+task.wait(0.5)
+TweenService:Create(bg, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {
+	BackgroundTransparency = 1,
+}):Play()
+TweenService:Create(title, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+TweenService:Create(statusText, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+TweenService:Create(subtitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
+TweenService:Create(barBg, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
+TweenService:Create(barFill, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
+
+task.wait(1)
+screenGui:Destroy()
+
+print("[NEON SLICE] LoadingScreen complete ✓")
+]]></string>
+      </Properties>
+    </Item>
+  </Item>
+  <Item class="ReplicatedStorage" referent="2">
+    <Properties>
+      <string name="Name">ReplicatedStorage</string>
+    </Properties>
+    <Item class="ModuleScript" referent="3">
+      <Properties>
+        <string name="Name">BlockTypes</string>
+        <string name="Source"><![CDATA[--[[
+	BlockTypes.lua
+	Definitions for the neon blocks that fly towards the player.
+	Each type specifies visual properties and slice behaviour.
+]]
+
+local Config = require(script.Parent:WaitForChild("Config"))
+
+local BlockTypes = {}
+
+BlockTypes.Types = {
+	Standard = {
+		Name = "Standard",
+		Color = Config.NEON_PURPLE,
+		Points = Config.POINTS_PER_SLICE,
+		Energy = Config.ENERGY_PER_SLICE,
+		Size = Config.BLOCK_SIZE,
+		SliceDirection = "Any", -- horizontal, vertical, diagonal, or any
+		Material = Enum.Material.Neon,
+		SpawnWeight = 50,
+	},
+	Horizontal = {
+		Name = "Horizontal",
+		Color = Config.NEON_BLUE,
+		Points = Config.POINTS_PER_SLICE * 1.5,
+		Energy = Config.ENERGY_PER_SLICE,
+		Size = Vector3.new(6, 2, 1),
+		SliceDirection = "Horizontal",
+		Material = Enum.Material.Neon,
+		SpawnWeight = 20,
+	},
+	Vertical = {
+		Name = "Vertical",
+		Color = Config.NEON_PINK,
+		Points = Config.POINTS_PER_SLICE * 1.5,
+		Energy = Config.ENERGY_PER_SLICE,
+		Size = Vector3.new(2, 6, 1),
+		SliceDirection = "Vertical",
+		Material = Enum.Material.Neon,
+		SpawnWeight = 20,
+	},
+	Bonus = {
+		Name = "Bonus",
+		Color = Config.NEON_YELLOW,
+		Points = Config.POINTS_PER_SLICE * 3,
+		Energy = Config.ENERGY_PER_SLICE * 3,
+		Size = Vector3.new(3, 3, 1),
+		SliceDirection = "Any",
+		Material = Enum.Material.Neon,
+		SpawnWeight = 8,
+	},
+	Hazard = {
+		Name = "Hazard",
+		Color = Color3.fromRGB(255, 50, 50),
+		Points = 0,
+		Energy = 0,
+		Size = Vector3.new(4, 4, 1),
+		SliceDirection = "None", -- must be dodged, not sliced
+		Material = Enum.Material.Neon,
+		SpawnWeight = 10,
+	},
+}
+
+-- Weighted random selection helper
+function BlockTypes.GetRandomType()
+	local totalWeight = 0
+	for _, data in pairs(BlockTypes.Types) do
+		totalWeight = totalWeight + data.SpawnWeight
+	end
+
+	local roll = math.random() * totalWeight
+	local cumulative = 0
+	for name, data in pairs(BlockTypes.Types) do
+		cumulative = cumulative + data.SpawnWeight
+		if roll <= cumulative then
+			return name, data
+		end
+	end
+
+	-- Fallback
+	return "Standard", BlockTypes.Types.Standard
+end
+
+return BlockTypes
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="4">
+      <Properties>
+        <string name="Name">Config</string>
+        <string name="Source"><![CDATA[--[[
+	Config.lua
+	Shared configuration constants for NEON SLICE.
+	Accessed by both server and client scripts.
+]]
+
+local Config = {}
+
+-- Game identity
+Config.GAME_NAME = "NEON SLICE"
+Config.VERSION = "1.0.0"
+
+-- Track / runner settings
+Config.BASE_SPEED = 80            -- studs per second while running
+Config.MAX_SPEED = 160            -- maximum speed after boosts
+Config.SPEED_BOOST_AMOUNT = 20    -- speed gained per perfect slice
+Config.SPEED_LOSS_ON_HIT = 30     -- speed lost when hit by a block
+Config.LANE_COUNT = 3             -- left / center / right
+Config.LANE_WIDTH = 8             -- studs between lane centres
+Config.TRACK_SEGMENT_LENGTH = 200 -- studs per procedural segment
+
+-- Block spawning
+Config.BLOCK_SPAWN_DISTANCE = 150 -- studs ahead of the player
+Config.BLOCK_MIN_INTERVAL = 0.4   -- seconds between blocks at base speed
+Config.BLOCK_MAX_INTERVAL = 1.2
+Config.BLOCK_SIZE = Vector3.new(4, 4, 1)
+Config.SLICE_LINE_TOLERANCE = 2.5 -- studs of allowed error for a cut
+
+-- Scoring
+Config.POINTS_PER_SLICE = 10
+Config.COMBO_MULTIPLIER_STEP = 5  -- every N consecutive slices increases multiplier
+Config.MAX_COMBO_MULTIPLIER = 8
+Config.ENERGY_PER_SLICE = 1
+
+-- Raid settings
+Config.RAID_TEAM_SIZE = 3         -- players per team (3v3)
+Config.RAID_DURATION = 120        -- seconds
+Config.RAID_QUEUE_TIMEOUT = 60    -- seconds to wait for match
+
+-- District settings
+Config.DISTRICT_CAPTURE_ENERGY = 500 -- total energy needed to capture a district
+Config.DISTRICT_BONUS_XP = 1.25       -- 25 percent XP bonus for owning a district
+
+-- Katana defaults
+Config.DEFAULT_KATANA = "NeonBlade"
+
+-- Trail settings
+Config.TRAIL_LIFETIME = 0.5
+Config.TRAIL_MIN_LENGTH = 0.1
+
+-- Camera
+Config.CAMERA_OFFSET = Vector3.new(0, 12, -18)
+Config.CAMERA_FOV = 75
+
+-- Colours (cyberpunk palette)
+Config.NEON_PURPLE = Color3.fromRGB(155, 89, 182)
+Config.NEON_BLUE   = Color3.fromRGB(52, 152, 219)
+Config.NEON_PINK   = Color3.fromRGB(255, 71, 148)
+Config.NEON_CYAN   = Color3.fromRGB(0, 255, 255)
+Config.NEON_YELLOW = Color3.fromRGB(241, 196, 15)
+Config.BG_DARK     = Color3.fromRGB(15, 15, 30)
+
+return Config
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="5">
+      <Properties>
+        <string name="Name">DistrictData</string>
+        <string name="Source"><![CDATA[--[[
+	DistrictData.lua
+	Definitions for the city districts that guilds can capture.
+]]
+
+local Config = require(script.Parent:WaitForChild("Config"))
+
+local DistrictData = {}
+
+DistrictData.Districts = {
+	Newtown = {
+		DisplayName = "Newtown",
+		Description = "The neon-lit starting district. Friendly streets and easy runs.",
+		ThemeColor = Config.NEON_CYAN,
+		Position = Vector3.new(0, 0, 0),
+		Difficulty = 1,
+		CaptureThreshold = Config.DISTRICT_CAPTURE_ENERGY,
+		BonusXP = Config.DISTRICT_BONUS_XP,
+	},
+	Downtown = {
+		DisplayName = "Downtown",
+		Description = "Towering skyscrapers and dense traffic. Fast runs, tight lanes.",
+		ThemeColor = Config.NEON_PURPLE,
+		Position = Vector3.new(500, 0, 0),
+		Difficulty = 2,
+		CaptureThreshold = Config.DISTRICT_CAPTURE_ENERGY * 1.5,
+		BonusXP = Config.DISTRICT_BONUS_XP + 0.1,
+	},
+	IndustrialZone = {
+		DisplayName = "Industrial Zone",
+		Description = "Gritty factories and grinding gears. Hazard blocks appear more often.",
+		ThemeColor = Config.NEON_YELLOW,
+		Position = Vector3.new(0, 0, 500),
+		Difficulty = 3,
+		CaptureThreshold = Config.DISTRICT_CAPTURE_ENERGY * 2,
+		BonusXP = Config.DISTRICT_BONUS_XP + 0.2,
+	},
+	NeonHeights = {
+		DisplayName = "Neon Heights",
+		Description = "The highest rooftops of the city. Only the elite ride here.",
+		ThemeColor = Config.NEON_PINK,
+		Position = Vector3.new(500, 0, 500),
+		Difficulty = 4,
+		CaptureThreshold = Config.DISTRICT_CAPTURE_ENERGY * 2.5,
+		BonusXP = Config.DISTRICT_BONUS_XP + 0.3,
+	},
+	TheCore = {
+		DisplayName = "The Core",
+		Description = "The beating heart of the city. Maximum speed, maximum glory.",
+		ThemeColor = Color3.fromRGB(255, 0, 100),
+		Position = Vector3.new(250, 0, 250),
+		Difficulty = 5,
+		CaptureThreshold = Config.DISTRICT_CAPTURE_ENERGY * 3,
+		BonusXP = Config.DISTRICT_BONUS_XP + 0.5,
+	},
+}
+
+function DistrictData.GetDistrict(name)
+	return DistrictData.Districts[name]
+end
+
+function DistrictData.GetAllNames()
+	local names = {}
+	for name in pairs(DistrictData.Districts) do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	return names
+end
+
+return DistrictData
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="6">
+      <Properties>
+        <string name="Name">KatanaData</string>
+        <string name="Source"><![CDATA[--[[
+	KatanaData.lua
+	Catalogue of katanas available in the game.
+	Each entry defines appearance, sound, and unlock criteria.
+]]
+
+local Config = require(script.Parent:WaitForChild("Config"))
+
+local KatanaData = {}
+
+KatanaData.Katanas = {
+	NeonBlade = {
+		DisplayName = "Neon Blade",
+		Description = "The default rider katana. Clean cuts, pure neon.",
+		BladeColor = Config.NEON_CYAN,
+		TrailColor = Config.NEON_CYAN,
+		SlashSoundId = "rbxassetid://0", -- placeholder asset id
+		Rarity = "Common",
+		UnlockType = "Default",
+		Price = 0,
+	},
+	PurpleHaze = {
+		DisplayName = "Purple Haze",
+		Description = "Leaves a misty purple trail with every swing.",
+		BladeColor = Config.NEON_PURPLE,
+		TrailColor = Config.NEON_PURPLE,
+		SlashSoundId = "rbxassetid://0",
+		Rarity = "Uncommon",
+		UnlockType = "Currency",
+		Price = 500,
+	},
+	PinkFury = {
+		DisplayName = "Pink Fury",
+		Description = "A blade forged in neon fire. Strikes leave a pink blaze.",
+		BladeColor = Config.NEON_PINK,
+		TrailColor = Config.NEON_PINK,
+		SlashSoundId = "rbxassetid://0",
+		Rarity = "Rare",
+		UnlockType = "Currency",
+		Price = 1500,
+	},
+	GoldenEdge = {
+		DisplayName = "Golden Edge",
+		Description = "The legendary katana. Blinding golden arcs.",
+		BladeColor = Config.NEON_YELLOW,
+		TrailColor = Config.NEON_YELLOW,
+		SlashSoundId = "rbxassetid://0",
+		Rarity = "Legendary",
+		UnlockType = "Currency",
+		Price = 5000,
+	},
+	ShadowCutter = {
+		DisplayName = "Shadow Cutter",
+		Description = "Dark energy radiates from this mysterious blade.",
+		BladeColor = Color3.fromRGB(80, 0, 120),
+		TrailColor = Color3.fromRGB(80, 0, 120),
+		SlashSoundId = "rbxassetid://0",
+		Rarity = "Epic",
+		UnlockType = "Currency",
+		Price = 3000,
+	},
+}
+
+-- Rarity sort order
+KatanaData.RarityOrder = {
+	Common = 1,
+	Uncommon = 2,
+	Rare = 3,
+	Epic = 4,
+	Legendary = 5,
+}
+
+-- Rarity colours for UI
+KatanaData.RarityColors = {
+	Common = Color3.fromRGB(180, 180, 180),
+	Uncommon = Color3.fromRGB(46, 204, 113),
+	Rare = Color3.fromRGB(52, 152, 219),
+	Epic = Color3.fromRGB(155, 89, 182),
+	Legendary = Color3.fromRGB(241, 196, 15),
+}
+
+function KatanaData.GetKatana(name)
+	return KatanaData.Katanas[name]
+end
+
+function KatanaData.GetSortedList()
+	local list = {}
+	for name, data in pairs(KatanaData.Katanas) do
+		table.insert(list, {Name = name, Data = data})
+	end
+	table.sort(list, function(a, b)
+		local orderA = KatanaData.RarityOrder[a.Data.Rarity] or 0
+		local orderB = KatanaData.RarityOrder[b.Data.Rarity] or 0
+		return orderA < orderB
+	end)
+	return list
+end
+
+return KatanaData
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="7">
+      <Properties>
+        <string name="Name">Utilities</string>
+        <string name="Source"><![CDATA[--[[
+	Utilities.lua
+	Shared helper functions used across client and server.
+]]
+
+local Utilities = {}
+
+--- Linearly interpolate between two numbers.
+function Utilities.Lerp(a, b, t)
+	return a + (b - a) * math.clamp(t, 0, 1)
+end
+
+--- Linearly interpolate between two Color3 values.
+function Utilities.LerpColor(c1, c2, t)
+	t = math.clamp(t, 0, 1)
+	return Color3.new(
+		Utilities.Lerp(c1.R, c2.R, t),
+		Utilities.Lerp(c1.G, c2.G, t),
+		Utilities.Lerp(c1.B, c2.B, t)
+	)
+end
+
+--- Format a number with commas (e.g. 12345 -> "12,345").
+function Utilities.FormatNumber(n)
+	local formatted = tostring(math.floor(n))
+	local k
+	while true do
+		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", "%1,%2")
+		if k == 0 then break end
+	end
+	return formatted
+end
+
+--- Format seconds into M:SS.
+function Utilities.FormatTime(seconds)
+	seconds = math.max(0, math.floor(seconds))
+	local m = math.floor(seconds / 60)
+	local s = seconds % 60
+	return string.format("%d:%02d", m, s)
+end
+
+--- Shallow copy a table.
+function Utilities.ShallowCopy(t)
+	local copy = {}
+	for k, v in pairs(t) do
+		copy[k] = v
+	end
+	return copy
+end
+
+--- Weighted random from a dictionary of {key = weight}.
+function Utilities.WeightedRandom(weights)
+	local total = 0
+	for _, w in pairs(weights) do
+		total = total + w
+	end
+	local roll = math.random() * total
+	local cumulative = 0
+	for key, w in pairs(weights) do
+		cumulative = cumulative + w
+		if roll <= cumulative then
+			return key
+		end
+	end
+end
+
+--- Create a neon part helper.
+function Utilities.CreateNeonPart(size, color, position)
+	local part = Instance.new("Part")
+	part.Size = size or Vector3.new(4, 4, 1)
+	part.Color = color or Color3.fromRGB(155, 89, 182)
+	part.Material = Enum.Material.Neon
+	part.Anchored = true
+	part.CanCollide = false
+	part.Position = position or Vector3.new(0, 0, 0)
+	part.TopSurface = Enum.SurfaceType.Smooth
+	part.BottomSurface = Enum.SurfaceType.Smooth
+	return part
+end
+
+return Utilities
+]]></string>
+      </Properties>
+    </Item>
+  </Item>
+  <Item class="ServerScriptService" referent="8">
+    <Properties>
+      <string name="Name">ServerScriptService</string>
+    </Properties>
+    <Item class="Script" referent="9">
+      <Properties>
+        <string name="Name">BlockSpawner</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[--[[
+	BlockSpawner.server.lua
+	Spawns neon blocks ahead of each active runner.
+	Blocks are streamed to the client via RemoteEvents for local rendering.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local BlockTypes = require(ReplicatedStorage:WaitForChild("BlockTypes"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+--------------------------------------------------------------------
+-- Wait for GameManager to create remotes
+--------------------------------------------------------------------
+local SpawnBlockEvent = ReplicatedStorage:WaitForChild("SpawnBlock")
+local StartRunEvent   = ReplicatedStorage:WaitForChild("StartRun")
+local EndRunEvent     = ReplicatedStorage:WaitForChild("EndRun")
+
+--------------------------------------------------------------------
+-- State
+--------------------------------------------------------------------
+local activeSpawners = {} -- [Player] = spawner coroutine / flag
+local blockIdCounter = 0
+
+local function nextBlockId()
+	blockIdCounter = blockIdCounter + 1
+	return blockIdCounter
+end
+
+--------------------------------------------------------------------
+-- Spawn loop per player
+--------------------------------------------------------------------
+local function spawnLoop(player)
+	activeSpawners[player] = true
+
+	while activeSpawners[player] and player.Parent do
+		-- Pick a random block type
+		local typeName, typeData = BlockTypes.GetRandomType()
+
+		-- Choose a random lane (-1 = left, 0 = center, 1 = right)
+		local lane = math.random(-1, 1)
+		local laneOffset = lane * Config.LANE_WIDTH
+
+		-- Determine a random slice line angle for the block
+		local sliceAngle = 0
+		if typeData.SliceDirection == "Horizontal" then
+			sliceAngle = 0
+		elseif typeData.SliceDirection == "Vertical" then
+			sliceAngle = 90
+		elseif typeData.SliceDirection == "Any" then
+			sliceAngle = math.random(0, 3) * 45 -- 0, 45, 90, 135
+		end
+
+		local blockId = nextBlockId()
+
+		-- Send block info to the client so it can render it
+		SpawnBlockEvent:FireClient(player, {
+			Id = blockId,
+			TypeName = typeName,
+			Lane = lane,
+			LaneOffset = laneOffset,
+			Size = typeData.Size,
+			Color = {typeData.Color.R, typeData.Color.G, typeData.Color.B},
+			Material = typeData.Material.Name,
+			SliceAngle = sliceAngle,
+			SliceDirection = typeData.SliceDirection,
+			Points = typeData.Points,
+			Energy = typeData.Energy,
+			SpawnDistance = Config.BLOCK_SPAWN_DISTANCE,
+		})
+
+		-- Wait for the next spawn interval (speeds up as player goes faster)
+		local interval = Utilities.Lerp(
+			Config.BLOCK_MAX_INTERVAL,
+			Config.BLOCK_MIN_INTERVAL,
+			0.5 -- placeholder difficulty scaling
+		)
+		task.wait(interval)
+	end
+end
+
+--------------------------------------------------------------------
+-- Listen for run start / end
+--------------------------------------------------------------------
+StartRunEvent.OnServerEvent:Connect(function(player)
+	-- Start spawning blocks for this player
+	if not activeSpawners[player] then
+		task.spawn(spawnLoop, player)
+	end
+end)
+
+EndRunEvent.OnServerEvent:Connect(function(player)
+	activeSpawners[player] = nil
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	activeSpawners[player] = nil
+end)
+
+print("[NEON SLICE] BlockSpawner loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="10">
+      <Properties>
+        <string name="Name">DistrictSystem</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[--[[
+	DistrictSystem.server.lua
+	Tracks ownership and energy contributions for each city district.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local DistrictData = require(ReplicatedStorage:WaitForChild("DistrictData"))
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local DistrictUpdateEvent = ReplicatedStorage:WaitForChild("DistrictUpdate")
+local BankEnergyEvent     = ReplicatedStorage:WaitForChild("BankEnergy")
+local NotificationEvent   = ReplicatedStorage:WaitForChild("Notification")
+
+--------------------------------------------------------------------
+-- District state
+--------------------------------------------------------------------
+local districtState = {} -- [districtName] = { Owner = "guild/none", Energy = {[guildId] = amount} }
+
+for name, data in pairs(DistrictData.Districts) do
+	districtState[name] = {
+		Owner = "Unclaimed",
+		Energy = {},
+		Threshold = data.CaptureThreshold,
+	}
+end
+
+--------------------------------------------------------------------
+-- Energy contribution (called when a run ends)
+--------------------------------------------------------------------
+local function contributeEnergy(player, districtName, amount)
+	local state = districtState[districtName]
+	if not state then return end
+
+	-- Use player name as a simple guild stand-in
+	local guildId = player.Name
+
+	state.Energy[guildId] = (state.Energy[guildId] or 0) + amount
+
+	-- Check for capture
+	if state.Energy[guildId] >= state.Threshold and state.Owner ~= guildId then
+		state.Owner = guildId
+		-- Broadcast capture
+		for _, p in ipairs(Players:GetPlayers()) do
+			DistrictUpdateEvent:FireClient(p, {
+				District = districtName,
+				NewOwner = guildId,
+				Type = "Captured",
+			})
+		end
+		NotificationEvent:FireClient(player, "You captured " .. districtName .. "!")
+	end
+end
+
+--------------------------------------------------------------------
+-- Listen for run completions to bank energy (via BindableEvent from GameManager)
+--------------------------------------------------------------------
+BankEnergyEvent.Event:Connect(function(player, districtName, energy)
+	if player and districtName and energy then
+		contributeEnergy(player, districtName, energy)
+	end
+end)
+
+--------------------------------------------------------------------
+-- Broadcast district state periodically
+--------------------------------------------------------------------
+task.spawn(function()
+	while true do
+		task.wait(30) -- every 30 seconds
+		local summary = {}
+		for name, state in pairs(districtState) do
+			summary[name] = {
+				Owner = state.Owner,
+				TopContributor = "",
+				TopEnergy = 0,
+			}
+			for guild, energy in pairs(state.Energy) do
+				if energy > summary[name].TopEnergy then
+					summary[name].TopContributor = guild
+					summary[name].TopEnergy = energy
+				end
+			end
+		end
+
+		for _, player in ipairs(Players:GetPlayers()) do
+			DistrictUpdateEvent:FireClient(player, {
+				Type = "FullUpdate",
+				Districts = summary,
+			})
+		end
+	end
+end)
+
+print("[NEON SLICE] DistrictSystem loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="11">
+      <Properties>
+        <string name="Name">GameManager</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[--[[
+	GameManager.server.lua
+	Central server-side orchestrator for NEON SLICE.
+	Creates RemoteEvents, manages game state, and coordinates subsystems.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+
+--------------------------------------------------------------------
+-- Remote Events / Functions setup
+--------------------------------------------------------------------
+local function createRemote(className, name)
+	local remote = Instance.new(className)
+	remote.Name = name
+	remote.Parent = ReplicatedStorage
+	return remote
+end
+
+-- Client -> Server
+local SliceRequestEvent   = createRemote("RemoteEvent", "SliceRequest")
+local StartRunEvent       = createRemote("RemoteEvent", "StartRun")
+local EndRunEvent         = createRemote("RemoteEvent", "EndRun")
+local JoinRaidEvent       = createRemote("RemoteEvent", "JoinRaid")
+local PurchaseEvent       = createRemote("RemoteEvent", "PurchaseRequest")
+local EquipKatanaEvent    = createRemote("RemoteEvent", "EquipKatana")
+local SelectDistrictEvent = createRemote("RemoteEvent", "SelectDistrict")
+
+-- Server -> Client
+local SpawnBlockEvent     = createRemote("RemoteEvent", "SpawnBlock")
+local SliceResultEvent    = createRemote("RemoteEvent", "SliceResult")
+local UpdateScoreEvent    = createRemote("RemoteEvent", "UpdateScore")
+local UpdateSpeedEvent    = createRemote("RemoteEvent", "UpdateSpeed")
+local RunEndedEvent       = createRemote("RemoteEvent", "RunEnded")
+local RaidUpdateEvent     = createRemote("RemoteEvent", "RaidUpdate")
+local DistrictUpdateEvent = createRemote("RemoteEvent", "DistrictUpdate")
+local PlayerDataEvent     = createRemote("RemoteEvent", "PlayerData")
+local NotificationEvent   = createRemote("RemoteEvent", "Notification")
+
+-- Server-only bindable event (used to signal energy banking to DistrictSystem)
+local BankEnergyEvent     = Instance.new("BindableEvent")
+BankEnergyEvent.Name      = "BankEnergy"
+BankEnergyEvent.Parent    = ReplicatedStorage
+
+-- Remote Functions
+local GetPlayerDataFunc   = createRemote("RemoteFunction", "GetPlayerData")
+local GetDistrictsFunc    = createRemote("RemoteFunction", "GetDistricts")
+
+--------------------------------------------------------------------
+-- Per-player session state
+--------------------------------------------------------------------
+local playerSessions = {} -- [Player] = session table
+
+local function createSession(player)
+	return {
+		Running = false,
+		Score = 0,
+		Combo = 0,
+		Multiplier = 1,
+		Energy = 0,
+		Speed = Config.BASE_SPEED,
+		CurrentDistrict = "Newtown",
+		EquippedKatana = Config.DEFAULT_KATANA,
+		RunStartTime = 0,
+	}
+end
+
+--------------------------------------------------------------------
+-- Player lifecycle
+--------------------------------------------------------------------
+Players.PlayerAdded:Connect(function(player)
+	playerSessions[player] = createSession(player)
+
+	-- Let the character load, then send initial data
+	player.CharacterAdded:Connect(function(character)
+		-- Anchor character during menu; gameplay manages movement
+		task.wait(1)
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = 0
+			humanoid.JumpPower = 0
+		end
+	end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	playerSessions[player] = nil
+end)
+
+--------------------------------------------------------------------
+-- Start / End Run
+--------------------------------------------------------------------
+StartRunEvent.OnServerEvent:Connect(function(player)
+	local session = playerSessions[player]
+	if not session or session.Running then return end
+
+	session.Running = true
+	session.Score = 0
+	session.Combo = 0
+	session.Multiplier = 1
+	session.Energy = 0
+	session.Speed = Config.BASE_SPEED
+	session.RunStartTime = tick()
+
+	-- Un-anchor character for the run
+	local character = player.Character
+	if character then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = 0 -- movement is handled by the track system
+			humanoid.JumpPower = 0
+		end
+	end
+
+	UpdateScoreEvent:FireClient(player, session.Score, session.Combo, session.Multiplier, session.Energy)
+	UpdateSpeedEvent:FireClient(player, session.Speed)
+end)
+
+EndRunEvent.OnServerEvent:Connect(function(player)
+	local session = playerSessions[player]
+	if not session or not session.Running then return end
+
+	session.Running = false
+	local duration = tick() - session.RunStartTime
+
+	RunEndedEvent:FireClient(player, {
+		Score = session.Score,
+		Energy = session.Energy,
+		Duration = duration,
+		MaxCombo = session.Multiplier,
+	})
+
+	-- Bank earned energy into the district system via server-side BindableEvent
+	BankEnergyEvent:Fire(player, session.CurrentDistrict, session.Energy)
+end)
+
+--------------------------------------------------------------------
+-- Slice validation
+--------------------------------------------------------------------
+SliceRequestEvent.OnServerEvent:Connect(function(player, blockId, sliceAngle)
+	local session = playerSessions[player]
+	if not session or not session.Running then return end
+
+	-- In a full implementation this would validate the block and angle
+	-- For now, accept any slice and award points
+	local points = Config.POINTS_PER_SLICE
+	local energy = Config.ENERGY_PER_SLICE
+
+	session.Combo = session.Combo + 1
+	session.Multiplier = math.min(
+		Config.MAX_COMBO_MULTIPLIER,
+		1 + math.floor(session.Combo / Config.COMBO_MULTIPLIER_STEP)
+	)
+
+	local earned = math.floor(points * session.Multiplier)
+	session.Score = session.Score + earned
+	session.Energy = session.Energy + energy
+
+	-- Speed boost on successful slice
+	session.Speed = math.min(Config.MAX_SPEED, session.Speed + Config.SPEED_BOOST_AMOUNT * 0.1)
+
+	SliceResultEvent:FireClient(player, {
+		Success = true,
+		Points = earned,
+		Combo = session.Combo,
+		Multiplier = session.Multiplier,
+	})
+	UpdateScoreEvent:FireClient(player, session.Score, session.Combo, session.Multiplier, session.Energy)
+	UpdateSpeedEvent:FireClient(player, session.Speed)
+end)
+
+--------------------------------------------------------------------
+-- Katana equip
+--------------------------------------------------------------------
+EquipKatanaEvent.OnServerEvent:Connect(function(player, katanaName)
+	local session = playerSessions[player]
+	if not session then return end
+
+	local KatanaData = require(ReplicatedStorage:WaitForChild("KatanaData"))
+	if KatanaData.Katanas[katanaName] then
+		session.EquippedKatana = katanaName
+		PlayerDataEvent:FireClient(player, {EquippedKatana = katanaName})
+	end
+end)
+
+--------------------------------------------------------------------
+-- District selection
+--------------------------------------------------------------------
+SelectDistrictEvent.OnServerEvent:Connect(function(player, districtName)
+	local session = playerSessions[player]
+	if not session then return end
+
+	local DistrictData = require(ReplicatedStorage:WaitForChild("DistrictData"))
+	if DistrictData.Districts[districtName] then
+		session.CurrentDistrict = districtName
+		NotificationEvent:FireClient(player, "District changed to " .. districtName)
+	end
+end)
+
+--------------------------------------------------------------------
+-- Remote Functions
+--------------------------------------------------------------------
+GetPlayerDataFunc.OnServerInvoke = function(player)
+	local session = playerSessions[player]
+	if not session then return {} end
+	return {
+		Score = session.Score,
+		Energy = session.Energy,
+		EquippedKatana = session.EquippedKatana,
+		CurrentDistrict = session.CurrentDistrict,
+	}
+end
+
+GetDistrictsFunc.OnServerInvoke = function(_player)
+	local DistrictData = require(ReplicatedStorage:WaitForChild("DistrictData"))
+	-- Return district info plus ownership (placeholder)
+	local result = {}
+	for name, data in pairs(DistrictData.Districts) do
+		result[name] = {
+			DisplayName = data.DisplayName,
+			Description = data.Description,
+			Difficulty = data.Difficulty,
+			Owner = "Unclaimed",
+		}
+	end
+	return result
+end
+
+print("[NEON SLICE] GameManager loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="12">
+      <Properties>
+        <string name="Name">MapBuilder</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[--[[
+	MapBuilder.server.lua
+	Builds the static neon cityscape environment around the track.
+	Creates skybox lighting, ambient decorations, and the spawn area.
+]]
+
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+--------------------------------------------------------------------
+-- Lighting / Atmosphere
+--------------------------------------------------------------------
+Lighting.Ambient = Color3.fromRGB(20, 10, 40)
+Lighting.OutdoorAmbient = Color3.fromRGB(30, 15, 50)
+Lighting.Brightness = 0.3
+Lighting.ClockTime = 22  -- night time
+Lighting.FogColor = Color3.fromRGB(10, 5, 25)
+Lighting.FogEnd = 800
+Lighting.FogStart = 100
+
+-- Atmosphere effect
+local atmosphere = Instance.new("Atmosphere")
+atmosphere.Density = 0.4
+atmosphere.Offset = 0.1
+atmosphere.Color = Color3.fromRGB(40, 20, 80)
+atmosphere.Decay = Color3.fromRGB(20, 10, 40)
+atmosphere.Glare = 0.3
+atmosphere.Haze = 2
+atmosphere.Parent = Lighting
+
+-- Bloom effect
+local bloom = Instance.new("BloomEffect")
+bloom.Intensity = 0.8
+bloom.Size = 30
+bloom.Threshold = 0.8
+bloom.Parent = Lighting
+
+-- Color correction for cyberpunk feel
+local colorCorrection = Instance.new("ColorCorrectionEffect")
+colorCorrection.Brightness = 0.05
+colorCorrection.Contrast = 0.15
+colorCorrection.Saturation = 0.3
+colorCorrection.TintColor = Color3.fromRGB(200, 180, 255)
+colorCorrection.Parent = Lighting
+
+--------------------------------------------------------------------
+-- Spawn Platform
+--------------------------------------------------------------------
+local spawnFolder = Instance.new("Folder")
+spawnFolder.Name = "SpawnArea"
+spawnFolder.Parent = Workspace
+
+-- Main spawn platform
+local spawnPlatform = Utilities.CreateNeonPart(
+	Vector3.new(40, 1, 40),
+	Config.BG_DARK,
+	Vector3.new(0, 0, -10)
+)
+spawnPlatform.Material = Enum.Material.SmoothPlastic
+spawnPlatform.CanCollide = true
+spawnPlatform.Name = "SpawnPlatform"
+spawnPlatform.Parent = spawnFolder
+
+-- Neon grid lines on spawn platform
+for i = -18, 18, 4 do
+	local lineX = Utilities.CreateNeonPart(
+		Vector3.new(0.15, 0.15, 40),
+		Config.NEON_CYAN,
+		Vector3.new(i, 0.6, -10)
+	)
+	lineX.Transparency = 0.5
+	lineX.Name = "GridX_" .. tostring(i)
+	lineX.Parent = spawnFolder
+
+	local lineZ = Utilities.CreateNeonPart(
+		Vector3.new(40, 0.15, 0.15),
+		Config.NEON_CYAN,
+		Vector3.new(0, 0.6, -10 + i)
+	)
+	lineZ.Transparency = 0.5
+	lineZ.Name = "GridZ_" .. tostring(i)
+	lineZ.Parent = spawnFolder
+end
+
+-- Spawn point
+local spawnLocation = Instance.new("SpawnLocation")
+spawnLocation.Size = Vector3.new(6, 1, 6)
+spawnLocation.Position = Vector3.new(0, 1, -10)
+spawnLocation.Anchored = true
+spawnLocation.CanCollide = true
+spawnLocation.Material = Enum.Material.Neon
+spawnLocation.Color = Config.NEON_PURPLE
+spawnLocation.Transparency = 0.5
+spawnLocation.Name = "NeonSpawn"
+spawnLocation.Parent = spawnFolder
+
+--------------------------------------------------------------------
+-- Background cityscape buildings (decorative)
+--------------------------------------------------------------------
+local cityFolder = Instance.new("Folder")
+cityFolder.Name = "Cityscape"
+cityFolder.Parent = Workspace
+
+local buildingColors = {
+	Color3.fromRGB(20, 15, 40),
+	Color3.fromRGB(25, 20, 45),
+	Color3.fromRGB(15, 10, 35),
+	Color3.fromRGB(30, 25, 50),
+}
+
+local neonAccents = {
+	Config.NEON_PURPLE,
+	Config.NEON_BLUE,
+	Config.NEON_PINK,
+	Config.NEON_CYAN,
+}
+
+math.randomseed(42) -- deterministic city layout
+
+for side = -1, 1, 2 do
+	for i = 1, 30 do
+		local x = side * (30 + math.random(5, 50))
+		local z = (i - 1) * 40 + math.random(-10, 10)
+		local width = math.random(8, 20)
+		local depth = math.random(8, 20)
+		local height = math.random(20, 80)
+
+		-- Building body
+		local building = Utilities.CreateNeonPart(
+			Vector3.new(width, height, depth),
+			buildingColors[math.random(1, #buildingColors)],
+			Vector3.new(x, height / 2, z)
+		)
+		building.Material = Enum.Material.SmoothPlastic
+		building.Transparency = 0.1
+		building.Name = "Building_" .. tostring(side) .. "_" .. tostring(i)
+		building.Parent = cityFolder
+
+		-- Neon window strips
+		local stripCount = math.random(1, 3)
+		for s = 1, stripCount do
+			local stripHeight = math.random(2, height - 2)
+			local accentColor = neonAccents[math.random(1, #neonAccents)]
+			local strip = Utilities.CreateNeonPart(
+				Vector3.new(width + 0.5, 0.4, 0.4),
+				accentColor,
+				Vector3.new(x, stripHeight, z + depth / 2 + 0.2)
+			)
+			strip.Name = "Strip_" .. tostring(s)
+			strip.Parent = cityFolder
+		end
+
+		-- Rooftop neon light
+		if math.random() > 0.5 then
+			local roofLight = Utilities.CreateNeonPart(
+				Vector3.new(2, 2, 2),
+				neonAccents[math.random(1, #neonAccents)],
+				Vector3.new(x, height + 1.5, z)
+			)
+			roofLight.Shape = Enum.PartType.Ball
+			roofLight.Name = "RoofLight"
+			roofLight.Parent = cityFolder
+		end
+	end
+end
+
+--------------------------------------------------------------------
+-- Floor plane (distant ground)
+--------------------------------------------------------------------
+local ground = Utilities.CreateNeonPart(
+	Vector3.new(2000, 1, 2000),
+	Config.BG_DARK,
+	Vector3.new(0, -1, 500)
+)
+ground.Material = Enum.Material.SmoothPlastic
+ground.CanCollide = true
+ground.Name = "GroundPlane"
+ground.Parent = Workspace
+
+print("[NEON SLICE] MapBuilder loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="13">
+      <Properties>
+        <string name="Name">PlayerDataStore</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[--[[
+	PlayerDataStore.server.lua
+	Persists player data (currency, unlocked katanas, stats) using DataStoreService.
+]]
+
+local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local KatanaData = require(ReplicatedStorage:WaitForChild("KatanaData"))
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local PlayerDataEvent  = ReplicatedStorage:WaitForChild("PlayerData")
+local PurchaseEvent    = ReplicatedStorage:WaitForChild("PurchaseRequest")
+local NotificationEvent = ReplicatedStorage:WaitForChild("Notification")
+local GetPlayerDataFunc = ReplicatedStorage:WaitForChild("GetPlayerData")
+
+--------------------------------------------------------------------
+-- DataStore setup
+--------------------------------------------------------------------
+local DATA_STORE_NAME = "NeonSlice_PlayerData_v1"
+local playerDataStore
+
+-- pcall DataStore creation (may fail in Studio without API access)
+local ok, store = pcall(function()
+	return DataStoreService:GetDataStore(DATA_STORE_NAME)
+end)
+if ok then
+	playerDataStore = store
+else
+	warn("[NEON SLICE] DataStore not available (Studio mode). Using in-memory storage.")
+end
+
+--------------------------------------------------------------------
+-- In-memory cache
+--------------------------------------------------------------------
+local dataCache = {} -- [UserId] = data table
+
+local DEFAULT_DATA = {
+	Currency = 0,
+	TotalScore = 0,
+	TotalRuns = 0,
+	BestScore = 0,
+	UnlockedKatanas = {NeonBlade = true},
+	EquippedKatana = Config.DEFAULT_KATANA,
+	UnlockedTrails = {},
+	EquippedTrail = "",
+}
+
+local function deepCopy(orig)
+	if type(orig) ~= "table" then return orig end
+	local copy = {}
+	for k, v in pairs(orig) do
+		copy[k] = deepCopy(v)
+	end
+	return copy
+end
+
+--------------------------------------------------------------------
+-- Load / Save
+--------------------------------------------------------------------
+local function loadData(player)
+	local userId = player.UserId
+	local data
+
+	if playerDataStore then
+		local success, result = pcall(function()
+			return playerDataStore:GetAsync("Player_" .. tostring(userId))
+		end)
+		if success and result then
+			data = result
+		end
+	end
+
+	if not data then
+		data = deepCopy(DEFAULT_DATA)
+	end
+
+	-- Ensure all fields exist (forward compatibility)
+	for key, value in pairs(DEFAULT_DATA) do
+		if data[key] == nil then
+			data[key] = deepCopy(value)
+		end
+	end
+
+	dataCache[userId] = data
+	return data
+end
+
+local function saveData(player)
+	local userId = player.UserId
+	local data = dataCache[userId]
+	if not data or not playerDataStore then return end
+
+	local success, err = pcall(function()
+		playerDataStore:SetAsync("Player_" .. tostring(userId), data)
+	end)
+	if not success then
+		warn("[NEON SLICE] Failed to save data for " .. player.Name .. ": " .. tostring(err))
+	end
+end
+
+--------------------------------------------------------------------
+-- Player lifecycle
+--------------------------------------------------------------------
+Players.PlayerAdded:Connect(function(player)
+	local data = loadData(player)
+	-- Send initial data to client
+	task.wait(2) -- wait for client to be ready
+	PlayerDataEvent:FireClient(player, data)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	saveData(player)
+	dataCache[player.UserId] = nil
+end)
+
+-- Auto-save every 5 minutes
+task.spawn(function()
+	while true do
+		task.wait(300)
+		for _, player in ipairs(Players:GetPlayers()) do
+			saveData(player)
+		end
+	end
+end)
+
+--------------------------------------------------------------------
+-- Purchase handling
+--------------------------------------------------------------------
+PurchaseEvent.OnServerEvent:Connect(function(player, itemType, itemName)
+	local userId = player.UserId
+	local data = dataCache[userId]
+	if not data then return end
+
+	if itemType == "Katana" then
+		local katana = KatanaData.Katanas[itemName]
+		if not katana then
+			NotificationEvent:FireClient(player, "Katana not found!")
+			return
+		end
+
+		if data.UnlockedKatanas[itemName] then
+			NotificationEvent:FireClient(player, "You already own this katana!")
+			return
+		end
+
+		if data.Currency < katana.Price then
+			NotificationEvent:FireClient(player, "Not enough currency!")
+			return
+		end
+
+		data.Currency = data.Currency - katana.Price
+		data.UnlockedKatanas[itemName] = true
+		PlayerDataEvent:FireClient(player, {
+			Currency = data.Currency,
+			UnlockedKatanas = data.UnlockedKatanas,
+		})
+		NotificationEvent:FireClient(player, "Unlocked " .. katana.DisplayName .. "!")
+	end
+end)
+
+--------------------------------------------------------------------
+-- Update GetPlayerData to use saved data
+--------------------------------------------------------------------
+GetPlayerDataFunc.OnServerInvoke = function(player)
+	local data = dataCache[player.UserId]
+	if not data then
+		return deepCopy(DEFAULT_DATA)
+	end
+	return deepCopy(data)
+end
+
+print("[NEON SLICE] PlayerDataStore loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="14">
+      <Properties>
+        <string name="Name">RaidSystem</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[--[[
+	RaidSystem.server.lua
+	Manages 3-on-3 raid battles for territory control.
+	Teams compete: one team slices for speed, the other sets traps.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local JoinRaidEvent   = ReplicatedStorage:WaitForChild("JoinRaid")
+local RaidUpdateEvent = ReplicatedStorage:WaitForChild("RaidUpdate")
+local NotificationEvent = ReplicatedStorage:WaitForChild("Notification")
+
+--------------------------------------------------------------------
+-- Raid queue and state
+--------------------------------------------------------------------
+local raidQueue = {} -- list of {Player, DistrictName}
+local activeRaids = {} -- raidId -> raid state
+
+local raidIdCounter = 0
+
+local function newRaidId()
+	raidIdCounter = raidIdCounter + 1
+	return raidIdCounter
+end
+
+--------------------------------------------------------------------
+-- Match-making
+--------------------------------------------------------------------
+local function tryMatchmake(districtName)
+	-- Collect players queued for this district
+	local candidates = {}
+	for i, entry in ipairs(raidQueue) do
+		if entry.District == districtName then
+			table.insert(candidates, {Index = i, Player = entry.Player})
+		end
+	end
+
+	local teamSize = Config.RAID_TEAM_SIZE
+	if #candidates < teamSize * 2 then
+		return -- not enough players
+	end
+
+	-- Form two teams from the first available players
+	local teamA = {}
+	local teamB = {}
+	local toRemove = {}
+
+	for i, c in ipairs(candidates) do
+		if #teamA < teamSize then
+			table.insert(teamA, c.Player)
+			table.insert(toRemove, c.Index)
+		elseif #teamB < teamSize then
+			table.insert(teamB, c.Player)
+			table.insert(toRemove, c.Index)
+		end
+		if #teamA == teamSize and #teamB == teamSize then
+			break
+		end
+	end
+
+	-- Remove matched players from queue (reverse order to preserve indices)
+	table.sort(toRemove, function(a, b) return a > b end)
+	for _, idx in ipairs(toRemove) do
+		table.remove(raidQueue, idx)
+	end
+
+	-- Create raid
+	local raidId = newRaidId()
+	local raid = {
+		Id = raidId,
+		District = districtName,
+		TeamA = teamA, -- Slicers
+		TeamB = teamB, -- Trappers
+		ScoreA = 0,
+		ScoreB = 0,
+		StartTime = tick(),
+		Duration = Config.RAID_DURATION,
+		Active = true,
+	}
+	activeRaids[raidId] = raid
+
+	-- Notify all participants
+	for _, p in ipairs(teamA) do
+		RaidUpdateEvent:FireClient(p, {
+			Type = "RaidStart",
+			RaidId = raidId,
+			Role = "Slicer",
+			District = districtName,
+			Duration = Config.RAID_DURATION,
+			Teammates = {}, -- could send names
+		})
+	end
+	for _, p in ipairs(teamB) do
+		RaidUpdateEvent:FireClient(p, {
+			Type = "RaidStart",
+			RaidId = raidId,
+			Role = "Trapper",
+			District = districtName,
+			Duration = Config.RAID_DURATION,
+			Teammates = {},
+		})
+	end
+
+	-- Schedule raid end
+	task.delay(Config.RAID_DURATION, function()
+		if raid.Active then
+			endRaid(raid)
+		end
+	end)
+
+	return raid
+end
+
+--------------------------------------------------------------------
+-- End raid
+--------------------------------------------------------------------
+-- Defined here; called from the delayed task.delay above.
+function endRaid(raid)
+	raid.Active = false
+	local winner = raid.ScoreA >= raid.ScoreB and "TeamA" or "TeamB"
+
+	local result = {
+		Type = "RaidEnd",
+		RaidId = raid.Id,
+		Winner = winner,
+		ScoreA = raid.ScoreA,
+		ScoreB = raid.ScoreB,
+		District = raid.District,
+	}
+
+	local allPlayers = {}
+	for _, p in ipairs(raid.TeamA) do table.insert(allPlayers, p) end
+	for _, p in ipairs(raid.TeamB) do table.insert(allPlayers, p) end
+
+	for _, p in ipairs(allPlayers) do
+		if p.Parent then -- still in game
+			RaidUpdateEvent:FireClient(p, result)
+		end
+	end
+
+	activeRaids[raid.Id] = nil
+end
+
+--------------------------------------------------------------------
+-- Join raid request
+--------------------------------------------------------------------
+JoinRaidEvent.OnServerEvent:Connect(function(player, districtName)
+	-- Check player isn't already in queue or in a raid
+	for _, entry in ipairs(raidQueue) do
+		if entry.Player == player then
+			NotificationEvent:FireClient(player, "You are already in the raid queue!")
+			return
+		end
+	end
+
+	for _, raid in pairs(activeRaids) do
+		for _, p in ipairs(raid.TeamA) do
+			if p == player then
+				NotificationEvent:FireClient(player, "You are already in an active raid!")
+				return
+			end
+		end
+		for _, p in ipairs(raid.TeamB) do
+			if p == player then
+				NotificationEvent:FireClient(player, "You are already in an active raid!")
+				return
+			end
+		end
+	end
+
+	table.insert(raidQueue, {Player = player, District = districtName, JoinTime = tick()})
+	NotificationEvent:FireClient(player, "Joined raid queue for " .. districtName .. "...")
+
+	-- Attempt matchmaking
+	tryMatchmake(districtName)
+end)
+
+--------------------------------------------------------------------
+-- Clean up on player leave
+--------------------------------------------------------------------
+Players.PlayerRemoving:Connect(function(player)
+	-- Remove from queue
+	for i = #raidQueue, 1, -1 do
+		if raidQueue[i].Player == player then
+			table.remove(raidQueue, i)
+		end
+	end
+end)
+
+print("[NEON SLICE] RaidSystem loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="15">
+      <Properties>
+        <string name="Name">TrackSystem</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[--[[
+	TrackSystem.server.lua
+	Manages the procedural track that the player rides along.
+	Creates and recycles track segments as the player moves forward.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+--------------------------------------------------------------------
+-- Track folder in Workspace
+--------------------------------------------------------------------
+local trackFolder = Instance.new("Folder")
+trackFolder.Name = "Track"
+trackFolder.Parent = Workspace
+
+--------------------------------------------------------------------
+-- Segment creation
+--------------------------------------------------------------------
+local SEGMENT_LENGTH = Config.TRACK_SEGMENT_LENGTH
+local SEGMENTS_AHEAD = 3
+local SEGMENTS_BEHIND = 1
+
+local function createTrackSegment(index)
+	local zPos = index * SEGMENT_LENGTH
+
+	local segment = Instance.new("Model")
+	segment.Name = "Segment_" .. tostring(index)
+
+	-- Main rail (center lane)
+	local rail = Utilities.CreateNeonPart(
+		Vector3.new(Config.LANE_WIDTH * 3 + 4, 1, SEGMENT_LENGTH),
+		Config.BG_DARK,
+		Vector3.new(0, 0, zPos + SEGMENT_LENGTH / 2)
+	)
+	rail.Material = Enum.Material.SmoothPlastic
+	rail.Transparency = 0.3
+	rail.CanCollide = true
+	rail.Name = "Floor"
+	rail.Parent = segment
+
+	-- Neon lane dividers
+	for lane = -1, 1 do
+		local divider = Utilities.CreateNeonPart(
+			Vector3.new(0.3, 0.3, SEGMENT_LENGTH),
+			Config.NEON_CYAN,
+			Vector3.new(lane * Config.LANE_WIDTH, 0.6, zPos + SEGMENT_LENGTH / 2)
+		)
+		divider.Name = "LaneDivider_" .. tostring(lane)
+		divider.Parent = segment
+	end
+
+	-- Side walls with neon strips
+	for side = -1, 1, 2 do
+		local wall = Utilities.CreateNeonPart(
+			Vector3.new(1, 12, SEGMENT_LENGTH),
+			Config.BG_DARK,
+			Vector3.new(side * (Config.LANE_WIDTH * 1.5 + 3), 6, zPos + SEGMENT_LENGTH / 2)
+		)
+		wall.Material = Enum.Material.SmoothPlastic
+		wall.Transparency = 0.5
+		wall.Name = "Wall_" .. (side == -1 and "Left" or "Right")
+		wall.Parent = segment
+
+		-- Neon strip along wall
+		local strip = Utilities.CreateNeonPart(
+			Vector3.new(0.2, 0.4, SEGMENT_LENGTH),
+			side == -1 and Config.NEON_PURPLE or Config.NEON_PINK,
+			Vector3.new(side * (Config.LANE_WIDTH * 1.5 + 2.5), 3, zPos + SEGMENT_LENGTH / 2)
+		)
+		strip.Name = "NeonStrip_" .. (side == -1 and "Left" or "Right")
+		strip.Parent = segment
+	end
+
+	-- Random neon decorations
+	for i = 1, 4 do
+		local zOffset = math.random(10, SEGMENT_LENGTH - 10)
+		local side = (math.random(0, 1) == 0) and -1 or 1
+		local height = math.random(4, 10)
+		local colors = {Config.NEON_PURPLE, Config.NEON_BLUE, Config.NEON_PINK, Config.NEON_CYAN}
+		local color = colors[math.random(1, #colors)]
+
+		local deco = Utilities.CreateNeonPart(
+			Vector3.new(0.5, math.random(2, 6), 0.5),
+			color,
+			Vector3.new(
+				side * (Config.LANE_WIDTH * 1.5 + 5 + math.random(0, 5)),
+				height,
+				zPos + zOffset
+			)
+		)
+		deco.Name = "Decoration_" .. tostring(i)
+		deco.Parent = segment
+	end
+
+	segment.Parent = trackFolder
+	return segment
+end
+
+--------------------------------------------------------------------
+-- Per-player track management
+--------------------------------------------------------------------
+local playerSegments = {} -- [Player] = {currentIndex, segments = {}}
+
+local function updateTrackForPlayer(player, zPosition)
+	local data = playerSegments[player]
+	if not data then return end
+
+	local currentIndex = math.floor(zPosition / SEGMENT_LENGTH)
+
+	-- Create segments ahead
+	for i = currentIndex - SEGMENTS_BEHIND, currentIndex + SEGMENTS_AHEAD do
+		if not data.segments[i] then
+			data.segments[i] = createTrackSegment(i)
+		end
+	end
+
+	-- Remove segments too far behind
+	for idx, seg in pairs(data.segments) do
+		if idx < currentIndex - SEGMENTS_BEHIND - 1 then
+			seg:Destroy()
+			data.segments[idx] = nil
+		end
+	end
+
+	data.currentIndex = currentIndex
+end
+
+--------------------------------------------------------------------
+-- Run lifecycle
+--------------------------------------------------------------------
+local StartRunEvent = ReplicatedStorage:WaitForChild("StartRun")
+local EndRunEvent   = ReplicatedStorage:WaitForChild("EndRun")
+local UpdateSpeedEvent = ReplicatedStorage:WaitForChild("UpdateSpeed")
+
+StartRunEvent.OnServerEvent:Connect(function(player)
+	playerSegments[player] = {
+		currentIndex = 0,
+		segments = {},
+	}
+
+	-- Create initial segments
+	updateTrackForPlayer(player, 0)
+
+	-- Move character to start
+	local character = player.Character
+	if character then
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if root then
+			root.CFrame = CFrame.new(0, 3, 5)
+		end
+	end
+end)
+
+EndRunEvent.OnServerEvent:Connect(function(player)
+	-- Clean up segments
+	local data = playerSegments[player]
+	if data then
+		for _, seg in pairs(data.segments) do
+			seg:Destroy()
+		end
+	end
+	playerSegments[player] = nil
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	local data = playerSegments[player]
+	if data then
+		for _, seg in pairs(data.segments) do
+			seg:Destroy()
+		end
+	end
+	playerSegments[player] = nil
+end)
+
+--------------------------------------------------------------------
+-- Heartbeat: move characters and extend track
+--------------------------------------------------------------------
+RunService.Heartbeat:Connect(function(dt)
+	for player, data in pairs(playerSegments) do
+		local character = player.Character
+		if not character then continue end
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if not root then continue end
+
+		-- Move character forward at current speed
+		-- Speed is managed by GameManager; we read from a session-like approach
+		-- For simplicity we use a default speed; the client also drives visuals
+		local speed = Config.BASE_SPEED
+		root.CFrame = root.CFrame + Vector3.new(0, 0, speed * dt)
+
+		-- Extend track
+		updateTrackForPlayer(player, root.Position.Z)
+	end
+end)
+
+print("[NEON SLICE] TrackSystem loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+  </Item>
+  <Item class="StarterGui" referent="16">
+    <Properties>
+      <string name="Name">StarterGui</string>
+    </Properties>
+    <Item class="LocalScript" referent="17">
+      <Properties>
+        <string name="Name">DistrictMapGui</string>
+        <string name="Source"><![CDATA[--[[
+	DistrictMapGui.client.lua
+	City district map showing territory ownership and status.
+	Players can select districts for their runs and view guild control.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local DistrictData = require(ReplicatedStorage:WaitForChild("DistrictData"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local SelectDistrictEvent = ReplicatedStorage:WaitForChild("SelectDistrict")
+local DistrictUpdateEvent = ReplicatedStorage:WaitForChild("DistrictUpdate")
+local ToggleDistrictMap   = ReplicatedStorage:WaitForChild("ToggleDistrictMap")
+local ToggleShop          = ReplicatedStorage:WaitForChild("ToggleShop")
+local ToggleRaidUI        = ReplicatedStorage:WaitForChild("ToggleRaidUI")
+local GetDistrictsFunc    = ReplicatedStorage:WaitForChild("GetDistricts")
+
+--------------------------------------------------------------------
+-- State
+--------------------------------------------------------------------
+local selectedDistrict = "Newtown"
+local districtOwnership = {} -- [name] = owner string
+
+--------------------------------------------------------------------
+-- ScreenGui
+--------------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DistrictMapGui"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 30
+screenGui.Parent = playerGui
+
+-- Main container
+local container = Instance.new("Frame")
+container.Name = "MapContainer"
+container.BackgroundColor3 = Config.BG_DARK
+container.BackgroundTransparency = 0.05
+container.BorderSizePixel = 0
+container.Size = UDim2.new(0, 600, 0, 450)
+container.Position = UDim2.new(0.5, 0, 0.5, 0)
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.Visible = false
+container.Parent = screenGui
+
+local containerCorner = Instance.new("UICorner")
+containerCorner.CornerRadius = UDim.new(0, 12)
+containerCorner.Parent = container
+
+local containerStroke = Instance.new("UIStroke")
+containerStroke.Color = Config.NEON_BLUE
+containerStroke.Thickness = 2
+containerStroke.Parent = container
+
+-- Title
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Text = "🗺  NEON CITY — DISTRICT MAP"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextColor3 = Config.NEON_CYAN
+titleLabel.TextSize = 22
+titleLabel.BackgroundColor3 = Config.NEON_BLUE
+titleLabel.BackgroundTransparency = 0.7
+titleLabel.BorderSizePixel = 0
+titleLabel.Size = UDim2.new(1, 0, 0, 50)
+titleLabel.Parent = container
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleLabel
+
+-- Close button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Text = "✕"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.TextSize = 20
+closeBtn.BackgroundTransparency = 1
+closeBtn.Size = UDim2.new(0, 40, 0, 40)
+closeBtn.Position = UDim2.new(1, -5, 0, 5)
+closeBtn.AnchorPoint = Vector2.new(1, 0)
+closeBtn.Parent = container
+
+closeBtn.MouseButton1Click:Connect(function()
+	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local bg = mainMenuGui:FindFirstChild("Background")
+		if bg and not bg:GetAttribute("RunActive") then
+			bg.Visible = true
+		end
+	end
+end)
+
+-- Map area (grid of district tiles)
+local mapArea = Instance.new("Frame")
+mapArea.BackgroundTransparency = 1
+mapArea.Size = UDim2.new(1, -20, 1, -120)
+mapArea.Position = UDim2.new(0, 10, 0, 60)
+mapArea.Parent = container
+
+-- Detail panel at the bottom
+local detailPanel = Instance.new("Frame")
+detailPanel.BackgroundColor3 = Color3.fromRGB(20, 15, 40)
+detailPanel.BackgroundTransparency = 0.3
+detailPanel.BorderSizePixel = 0
+detailPanel.Size = UDim2.new(1, -20, 0, 55)
+detailPanel.Position = UDim2.new(0, 10, 1, -60)
+detailPanel.Parent = container
+
+local detailCorner = Instance.new("UICorner")
+detailCorner.CornerRadius = UDim.new(0, 8)
+detailCorner.Parent = detailPanel
+
+local detailText = Instance.new("TextLabel")
+detailText.Name = "DetailText"
+detailText.Text = "Select a district to begin your run."
+detailText.Font = Enum.Font.Gotham
+detailText.TextColor3 = Color3.fromRGB(200, 200, 220)
+detailText.TextSize = 14
+detailText.TextWrapped = true
+detailText.BackgroundTransparency = 1
+detailText.Size = UDim2.new(0.65, 0, 1, -10)
+detailText.Position = UDim2.new(0, 10, 0, 5)
+detailText.TextXAlignment = Enum.TextXAlignment.Left
+detailText.Parent = detailPanel
+
+local selectBtn = Instance.new("TextButton")
+selectBtn.Text = "SELECT"
+selectBtn.Font = Enum.Font.GothamBold
+selectBtn.TextColor3 = Color3.new(1, 1, 1)
+selectBtn.TextSize = 16
+selectBtn.BackgroundColor3 = Config.NEON_CYAN
+selectBtn.BackgroundTransparency = 0.1
+selectBtn.BorderSizePixel = 0
+selectBtn.Size = UDim2.new(0, 120, 0, 35)
+selectBtn.Position = UDim2.new(1, -10, 0.5, 0)
+selectBtn.AnchorPoint = Vector2.new(1, 0.5)
+selectBtn.Parent = detailPanel
+
+local selectCorner = Instance.new("UICorner")
+selectCorner.CornerRadius = UDim.new(0, 8)
+selectCorner.Parent = selectBtn
+
+selectBtn.MouseButton1Click:Connect(function()
+	SelectDistrictEvent:FireServer(selectedDistrict)
+	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local bg = mainMenuGui:FindFirstChild("Background")
+		if bg and not bg:GetAttribute("RunActive") then
+			bg.Visible = true
+		end
+	end
+end)
+
+--------------------------------------------------------------------
+-- Build district tiles
+--------------------------------------------------------------------
+local districtTiles = {}
+
+local function buildMap()
+	-- Clear existing tiles
+	for _, tile in pairs(districtTiles) do
+		tile:Destroy()
+	end
+	districtTiles = {}
+
+	local names = DistrictData.GetAllNames()
+	local cols = 3
+	local tileWidth = (mapArea.AbsoluteSize.X - 20) / cols
+	local tileHeight = 90
+
+	for i, name in ipairs(names) do
+		local data = DistrictData.Districts[name]
+		local col = (i - 1) % cols
+		local row = math.floor((i - 1) / cols)
+		local owner = districtOwnership[name] or "Unclaimed"
+
+		local tile = Instance.new("TextButton")
+		tile.Name = name
+		tile.Text = ""
+		tile.BackgroundColor3 = data.ThemeColor
+		tile.BackgroundTransparency = 0.6
+		tile.BorderSizePixel = 0
+		tile.Size = UDim2.new(0, tileWidth - 8, 0, tileHeight)
+		tile.Position = UDim2.new(0, col * tileWidth + 4, 0, row * (tileHeight + 8))
+		tile.Parent = mapArea
+
+		local tileCorner = Instance.new("UICorner")
+		tileCorner.CornerRadius = UDim.new(0, 8)
+		tileCorner.Parent = tile
+
+		local tileStroke = Instance.new("UIStroke")
+		tileStroke.Color = selectedDistrict == name and Config.NEON_CYAN or data.ThemeColor
+		tileStroke.Thickness = selectedDistrict == name and 3 or 1
+		tileStroke.Parent = tile
+
+		-- District name
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Text = data.DisplayName
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.TextColor3 = Color3.new(1, 1, 1)
+		nameLabel.TextSize = 16
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Size = UDim2.new(1, -10, 0, 22)
+		nameLabel.Position = UDim2.new(0, 5, 0, 8)
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.Parent = tile
+
+		-- Difficulty stars
+		local diffLabel = Instance.new("TextLabel")
+		diffLabel.Text = string.rep("★", data.Difficulty) .. string.rep("☆", 5 - data.Difficulty)
+		diffLabel.Font = Enum.Font.Gotham
+		diffLabel.TextColor3 = Config.NEON_YELLOW
+		diffLabel.TextSize = 12
+		diffLabel.BackgroundTransparency = 1
+		diffLabel.Size = UDim2.new(1, -10, 0, 16)
+		diffLabel.Position = UDim2.new(0, 5, 0, 30)
+		diffLabel.TextXAlignment = Enum.TextXAlignment.Left
+		diffLabel.Parent = tile
+
+		-- Owner
+		local ownerLabel = Instance.new("TextLabel")
+		ownerLabel.Text = "Owner: " .. owner
+		ownerLabel.Font = Enum.Font.Gotham
+		ownerLabel.TextColor3 = owner == "Unclaimed" and Color3.fromRGB(150, 150, 170) or Config.NEON_CYAN
+		ownerLabel.TextSize = 11
+		ownerLabel.BackgroundTransparency = 1
+		ownerLabel.Size = UDim2.new(1, -10, 0, 16)
+		ownerLabel.Position = UDim2.new(0, 5, 0, 48)
+		ownerLabel.TextXAlignment = Enum.TextXAlignment.Left
+		ownerLabel.Parent = tile
+
+		-- XP bonus
+		local bonusLabel = Instance.new("TextLabel")
+		bonusLabel.Text = "+" .. tostring(math.floor((data.BonusXP - 1) * 100)) .. "% XP"
+		bonusLabel.Font = Enum.Font.GothamBold
+		bonusLabel.TextColor3 = Config.NEON_YELLOW
+		bonusLabel.TextSize = 11
+		bonusLabel.BackgroundTransparency = 1
+		bonusLabel.Size = UDim2.new(1, -10, 0, 16)
+		bonusLabel.Position = UDim2.new(0, 5, 0, 66)
+		bonusLabel.TextXAlignment = Enum.TextXAlignment.Left
+		bonusLabel.Parent = tile
+
+		tile.MouseButton1Click:Connect(function()
+			selectedDistrict = name
+			detailText.Text = data.DisplayName .. " — " .. data.Description
+			buildMap() -- refresh selection
+		end)
+
+		districtTiles[name] = tile
+	end
+end
+
+--------------------------------------------------------------------
+-- Helper: close other menus
+--------------------------------------------------------------------
+local function closeOtherMenus()
+	local shopGui = playerGui:FindFirstChild("ShopGui")
+	if shopGui then
+		local shopContainer = shopGui:FindFirstChild("ShopContainer")
+		if shopContainer then shopContainer.Visible = false end
+	end
+	local raidGui = playerGui:FindFirstChild("RaidUIGui")
+	if raidGui then
+		local raidContainer = raidGui:FindFirstChild("RaidContainer")
+		if raidContainer then raidContainer.Visible = false end
+	end
+end
+
+--------------------------------------------------------------------
+-- Toggle
+--------------------------------------------------------------------
+ToggleDistrictMap.Event:Connect(function()
+	container.Visible = not container.Visible
+	if container.Visible then
+		closeOtherMenus()
+		-- Fetch latest ownership
+		local ok, districts = pcall(function()
+			return GetDistrictsFunc:InvokeServer()
+		end)
+		if ok and districts then
+			for name, info in pairs(districts) do
+				districtOwnership[name] = info.Owner
+			end
+		end
+		buildMap()
+	end
+end)
+
+--------------------------------------------------------------------
+-- District updates from server
+--------------------------------------------------------------------
+DistrictUpdateEvent.OnClientEvent:Connect(function(update)
+	if update.Type == "Captured" then
+		districtOwnership[update.District] = update.NewOwner
+		if container.Visible then buildMap() end
+	elseif update.Type == "FullUpdate" and update.Districts then
+		for name, info in pairs(update.Districts) do
+			districtOwnership[name] = info.Owner
+		end
+		if container.Visible then buildMap() end
+	end
+end)
+
+print("[NEON SLICE] DistrictMapGui loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="LocalScript" referent="18">
+      <Properties>
+        <string name="Name">HUD</string>
+        <string name="Source"><![CDATA[--[[
+	HUD.client.lua
+	In-game heads-up display showing score, combo, energy, speed,
+	and the end-of-run results screen.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local UpdateScoreEvent  = ReplicatedStorage:WaitForChild("UpdateScore")
+local UpdateSpeedEvent  = ReplicatedStorage:WaitForChild("UpdateSpeed")
+local SliceResultEvent  = ReplicatedStorage:WaitForChild("SliceResult")
+local RunEndedEvent     = ReplicatedStorage:WaitForChild("RunEnded")
+local EndRunEvent       = ReplicatedStorage:WaitForChild("EndRun")
+local RunStateChanged   = ReplicatedStorage:WaitForChild("RunStateChanged")
+local NotificationEvent = ReplicatedStorage:WaitForChild("Notification")
+
+--------------------------------------------------------------------
+-- ScreenGui
+--------------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HUDGui"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 20
+screenGui.Parent = playerGui
+
+-- Container (hidden until run starts)
+local hudFrame = Instance.new("Frame")
+hudFrame.Name = "HUD"
+hudFrame.BackgroundTransparency = 1
+hudFrame.Size = UDim2.new(1, 0, 1, 0)
+hudFrame.Visible = false
+hudFrame.Parent = screenGui
+
+--------------------------------------------------------------------
+-- Score display (top center)
+--------------------------------------------------------------------
+local scoreLabel = Instance.new("TextLabel")
+scoreLabel.Name = "Score"
+scoreLabel.Text = "0"
+scoreLabel.Font = Enum.Font.GothamBold
+scoreLabel.TextColor3 = Color3.new(1, 1, 1)
+scoreLabel.TextSize = 42
+scoreLabel.BackgroundTransparency = 1
+scoreLabel.Size = UDim2.new(0, 300, 0, 50)
+scoreLabel.Position = UDim2.new(0.5, 0, 0.05, 0)
+scoreLabel.AnchorPoint = Vector2.new(0.5, 0)
+scoreLabel.Parent = hudFrame
+
+local scoreStroke = Instance.new("UIStroke")
+scoreStroke.Color = Config.NEON_CYAN
+scoreStroke.Thickness = 1
+scoreStroke.Transparency = 0.5
+scoreStroke.Parent = scoreLabel
+
+--------------------------------------------------------------------
+-- Combo display (below score)
+--------------------------------------------------------------------
+local comboLabel = Instance.new("TextLabel")
+comboLabel.Name = "Combo"
+comboLabel.Text = ""
+comboLabel.Font = Enum.Font.GothamBold
+comboLabel.TextColor3 = Config.NEON_YELLOW
+comboLabel.TextSize = 28
+comboLabel.BackgroundTransparency = 1
+comboLabel.Size = UDim2.new(0, 300, 0, 35)
+comboLabel.Position = UDim2.new(0.5, 0, 0.1, 0)
+comboLabel.AnchorPoint = Vector2.new(0.5, 0)
+comboLabel.Parent = hudFrame
+
+--------------------------------------------------------------------
+-- Multiplier indicator
+--------------------------------------------------------------------
+local multiplierLabel = Instance.new("TextLabel")
+multiplierLabel.Name = "Multiplier"
+multiplierLabel.Text = "x1"
+multiplierLabel.Font = Enum.Font.GothamBold
+multiplierLabel.TextColor3 = Config.NEON_PINK
+multiplierLabel.TextSize = 36
+multiplierLabel.TextTransparency = 0.5
+multiplierLabel.BackgroundTransparency = 1
+multiplierLabel.Size = UDim2.new(0, 100, 0, 40)
+multiplierLabel.Position = UDim2.new(0.5, 160, 0.05, 0)
+multiplierLabel.AnchorPoint = Vector2.new(0, 0)
+multiplierLabel.Parent = hudFrame
+
+--------------------------------------------------------------------
+-- Energy bar (left side)
+--------------------------------------------------------------------
+local energyBg = Instance.new("Frame")
+energyBg.Name = "EnergyBg"
+energyBg.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+energyBg.BackgroundTransparency = 0.3
+energyBg.BorderSizePixel = 0
+energyBg.Size = UDim2.new(0, 12, 0.4, 0)
+energyBg.Position = UDim2.new(0, 25, 0.3, 0)
+energyBg.Parent = hudFrame
+
+local energyCorner = Instance.new("UICorner")
+energyCorner.CornerRadius = UDim.new(0, 6)
+energyCorner.Parent = energyBg
+
+local energyFill = Instance.new("Frame")
+energyFill.Name = "EnergyFill"
+energyFill.BackgroundColor3 = Config.NEON_CYAN
+energyFill.BorderSizePixel = 0
+energyFill.Size = UDim2.new(1, 0, 0, 0)
+energyFill.Position = UDim2.new(0, 0, 1, 0)
+energyFill.AnchorPoint = Vector2.new(0, 1)
+energyFill.Parent = energyBg
+
+local energyFillCorner = Instance.new("UICorner")
+energyFillCorner.CornerRadius = UDim.new(0, 6)
+energyFillCorner.Parent = energyFill
+
+local energyLabel = Instance.new("TextLabel")
+energyLabel.Name = "EnergyLabel"
+energyLabel.Text = "⚡ 0"
+energyLabel.Font = Enum.Font.GothamBold
+energyLabel.TextColor3 = Config.NEON_CYAN
+energyLabel.TextSize = 14
+energyLabel.BackgroundTransparency = 1
+energyLabel.Size = UDim2.new(0, 60, 0, 20)
+energyLabel.Position = UDim2.new(0, 18, 0.71, 0)
+energyLabel.TextXAlignment = Enum.TextXAlignment.Center
+energyLabel.Parent = hudFrame
+
+--------------------------------------------------------------------
+-- Speed indicator (right side)
+--------------------------------------------------------------------
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Name = "Speed"
+speedLabel.Text = "80 km/h"
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextColor3 = Config.NEON_PURPLE
+speedLabel.TextSize = 18
+speedLabel.BackgroundTransparency = 1
+speedLabel.Size = UDim2.new(0, 120, 0, 30)
+speedLabel.Position = UDim2.new(1, -20, 0.9, 0)
+speedLabel.AnchorPoint = Vector2.new(1, 0)
+speedLabel.TextXAlignment = Enum.TextXAlignment.Right
+speedLabel.Parent = hudFrame
+
+--------------------------------------------------------------------
+-- Slice feedback flash (center screen text)
+--------------------------------------------------------------------
+local sliceFeedback = Instance.new("TextLabel")
+sliceFeedback.Name = "SliceFeedback"
+sliceFeedback.Text = ""
+sliceFeedback.Font = Enum.Font.GothamBold
+sliceFeedback.TextColor3 = Config.NEON_YELLOW
+sliceFeedback.TextSize = 32
+sliceFeedback.TextTransparency = 1
+sliceFeedback.BackgroundTransparency = 1
+sliceFeedback.Size = UDim2.new(0, 300, 0, 50)
+sliceFeedback.Position = UDim2.new(0.5, 0, 0.4, 0)
+sliceFeedback.AnchorPoint = Vector2.new(0.5, 0.5)
+sliceFeedback.Parent = hudFrame
+
+--------------------------------------------------------------------
+-- End Run button (bottom center)
+--------------------------------------------------------------------
+local endRunBtn = Instance.new("TextButton")
+endRunBtn.Name = "EndRun"
+endRunBtn.Text = "✕  END RUN"
+endRunBtn.Font = Enum.Font.GothamBold
+endRunBtn.TextColor3 = Color3.new(1, 1, 1)
+endRunBtn.TextSize = 16
+endRunBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+endRunBtn.BackgroundTransparency = 0.3
+endRunBtn.BorderSizePixel = 0
+endRunBtn.Size = UDim2.new(0, 140, 0, 36)
+endRunBtn.Position = UDim2.new(0.5, 0, 0.95, 0)
+endRunBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+endRunBtn.Parent = hudFrame
+
+local endRunCorner = Instance.new("UICorner")
+endRunCorner.CornerRadius = UDim.new(0, 8)
+endRunCorner.Parent = endRunBtn
+
+endRunBtn.MouseButton1Click:Connect(function()
+	EndRunEvent:FireServer()
+	RunStateChanged:Fire(false)
+end)
+
+--------------------------------------------------------------------
+-- Results overlay
+--------------------------------------------------------------------
+local resultsOverlay = Instance.new("Frame")
+resultsOverlay.Name = "Results"
+resultsOverlay.BackgroundColor3 = Config.BG_DARK
+resultsOverlay.BackgroundTransparency = 0.15
+resultsOverlay.BorderSizePixel = 0
+resultsOverlay.Size = UDim2.new(0, 400, 0, 300)
+resultsOverlay.Position = UDim2.new(0.5, 0, 0.5, 0)
+resultsOverlay.AnchorPoint = Vector2.new(0.5, 0.5)
+resultsOverlay.Visible = false
+resultsOverlay.Parent = screenGui
+
+local resultsCorner = Instance.new("UICorner")
+resultsCorner.CornerRadius = UDim.new(0, 12)
+resultsCorner.Parent = resultsOverlay
+
+local resultsStroke = Instance.new("UIStroke")
+resultsStroke.Color = Config.NEON_CYAN
+resultsStroke.Thickness = 2
+resultsStroke.Parent = resultsOverlay
+
+local resultsTitle = Instance.new("TextLabel")
+resultsTitle.Text = "RUN COMPLETE"
+resultsTitle.Font = Enum.Font.GothamBold
+resultsTitle.TextColor3 = Config.NEON_CYAN
+resultsTitle.TextSize = 30
+resultsTitle.BackgroundTransparency = 1
+resultsTitle.Size = UDim2.new(1, 0, 0, 50)
+resultsTitle.Position = UDim2.new(0, 0, 0, 10)
+resultsTitle.Parent = resultsOverlay
+
+local resultsBody = Instance.new("TextLabel")
+resultsBody.Name = "ResultsBody"
+resultsBody.Text = ""
+resultsBody.Font = Enum.Font.Gotham
+resultsBody.TextColor3 = Color3.new(1, 1, 1)
+resultsBody.TextSize = 18
+resultsBody.BackgroundTransparency = 1
+resultsBody.Size = UDim2.new(1, -40, 0, 180)
+resultsBody.Position = UDim2.new(0, 20, 0, 60)
+resultsBody.TextXAlignment = Enum.TextXAlignment.Left
+resultsBody.TextYAlignment = Enum.TextYAlignment.Top
+resultsBody.Parent = resultsOverlay
+
+local resultsDismiss = Instance.new("TextButton")
+resultsDismiss.Text = "CONTINUE"
+resultsDismiss.Font = Enum.Font.GothamBold
+resultsDismiss.TextColor3 = Color3.new(1, 1, 1)
+resultsDismiss.TextSize = 18
+resultsDismiss.BackgroundColor3 = Config.NEON_PURPLE
+resultsDismiss.BackgroundTransparency = 0.1
+resultsDismiss.BorderSizePixel = 0
+resultsDismiss.Size = UDim2.new(0, 160, 0, 40)
+resultsDismiss.Position = UDim2.new(0.5, 0, 1, -30)
+resultsDismiss.AnchorPoint = Vector2.new(0.5, 1)
+resultsDismiss.Parent = resultsOverlay
+
+local dismissCorner = Instance.new("UICorner")
+dismissCorner.CornerRadius = UDim.new(0, 8)
+dismissCorner.Parent = resultsDismiss
+
+resultsDismiss.MouseButton1Click:Connect(function()
+	resultsOverlay.Visible = false
+end)
+
+--------------------------------------------------------------------
+-- Notification toast (top)
+--------------------------------------------------------------------
+local notifLabel = Instance.new("TextLabel")
+notifLabel.Name = "Notification"
+notifLabel.Text = ""
+notifLabel.Font = Enum.Font.GothamBold
+notifLabel.TextColor3 = Config.NEON_YELLOW
+notifLabel.TextSize = 18
+notifLabel.BackgroundColor3 = Config.BG_DARK
+notifLabel.BackgroundTransparency = 0.3
+notifLabel.BorderSizePixel = 0
+notifLabel.Size = UDim2.new(0, 400, 0, 40)
+notifLabel.Position = UDim2.new(0.5, 0, 0, -50)
+notifLabel.AnchorPoint = Vector2.new(0.5, 0)
+notifLabel.Parent = screenGui
+
+local notifCorner = Instance.new("UICorner")
+notifCorner.CornerRadius = UDim.new(0, 8)
+notifCorner.Parent = notifLabel
+
+--------------------------------------------------------------------
+-- Event handlers
+--------------------------------------------------------------------
+UpdateScoreEvent.OnClientEvent:Connect(function(score, combo, multiplier, energy)
+	scoreLabel.Text = Utilities.FormatNumber(score)
+	comboLabel.Text = combo > 0 and ("COMBO " .. tostring(combo)) or ""
+	multiplierLabel.Text = "x" .. tostring(multiplier)
+	energyLabel.Text = "⚡ " .. tostring(energy)
+
+	-- Energy bar fill
+	local fillRatio = math.clamp(energy / Config.DISTRICT_CAPTURE_ENERGY, 0, 1)
+	TweenService:Create(energyFill, TweenInfo.new(0.3), {
+		Size = UDim2.new(1, 0, fillRatio, 0),
+	}):Play()
+end)
+
+UpdateSpeedEvent.OnClientEvent:Connect(function(speed)
+	speedLabel.Text = tostring(math.floor(speed)) .. " km/h"
+end)
+
+SliceResultEvent.OnClientEvent:Connect(function(result)
+	if result.Success then
+		-- Flash feedback
+		sliceFeedback.Text = "+" .. tostring(result.Points)
+		sliceFeedback.TextTransparency = 0
+		sliceFeedback.TextColor3 = result.Multiplier >= 4 and Config.NEON_YELLOW
+			or result.Multiplier >= 2 and Config.NEON_PINK
+			or Config.NEON_CYAN
+
+		local tween = TweenService:Create(sliceFeedback, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			TextTransparency = 1,
+			Position = UDim2.new(0.5, 0, 0.35, 0),
+		})
+		tween:Play()
+		tween.Completed:Connect(function()
+			sliceFeedback.Position = UDim2.new(0.5, 0, 0.4, 0)
+		end)
+
+		-- Combo text scale pulse
+		TweenService:Create(comboLabel, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			TextSize = 34,
+		}):Play()
+		task.delay(0.15, function()
+			TweenService:Create(comboLabel, TweenInfo.new(0.2), {
+				TextSize = 28,
+			}):Play()
+		end)
+	end
+end)
+
+RunEndedEvent.OnClientEvent:Connect(function(stats)
+	hudFrame.Visible = false
+	if stats then
+		resultsBody.Text = string.format(
+			"Score: %s\nEnergy Earned: %d\nMax Multiplier: x%d\nDuration: %s",
+			Utilities.FormatNumber(stats.Score or 0),
+			stats.Energy or 0,
+			stats.MaxCombo or 1,
+			Utilities.FormatTime(stats.Duration or 0)
+		)
+		resultsOverlay.Visible = true
+	end
+end)
+
+NotificationEvent.OnClientEvent:Connect(function(message)
+	notifLabel.Text = message
+	TweenService:Create(notifLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0, 10),
+	}):Play()
+
+	task.delay(3, function()
+		TweenService:Create(notifLabel, TweenInfo.new(0.3), {
+			Position = UDim2.new(0.5, 0, 0, -50),
+		}):Play()
+	end)
+end)
+
+--------------------------------------------------------------------
+-- Run state
+--------------------------------------------------------------------
+RunStateChanged.Event:Connect(function(running)
+	hudFrame.Visible = running
+	if running then
+		scoreLabel.Text = "0"
+		comboLabel.Text = ""
+		multiplierLabel.Text = "x1"
+		energyLabel.Text = "⚡ 0"
+		speedLabel.Text = tostring(Config.BASE_SPEED) .. " km/h"
+		energyFill.Size = UDim2.new(1, 0, 0, 0)
+		resultsOverlay.Visible = false
+	end
+end)
+
+print("[NEON SLICE] HUD loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="LocalScript" referent="19">
+      <Properties>
+        <string name="Name">MainMenu</string>
+        <string name="Source"><![CDATA[--[[
+	MainMenu.client.lua
+	Main menu screen with Play, Shop, District Map, and Raid buttons.
+	Full cyberpunk-neon styled UI.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local StartRunEvent    = ReplicatedStorage:WaitForChild("StartRun")
+local RunEndedEvent    = ReplicatedStorage:WaitForChild("RunEnded")
+local RunStateChanged  = ReplicatedStorage:WaitForChild("RunStateChanged")
+local ToggleShop       = ReplicatedStorage:WaitForChild("ToggleShop")
+local ToggleDistrictMap = ReplicatedStorage:WaitForChild("ToggleDistrictMap")
+local ToggleRaidUI     = ReplicatedStorage:WaitForChild("ToggleRaidUI")
+
+--------------------------------------------------------------------
+-- Helper: Create styled UI elements
+--------------------------------------------------------------------
+local function createFrame(props)
+	local frame = Instance.new("Frame")
+	frame.BackgroundColor3 = props.Color or Config.BG_DARK
+	frame.BackgroundTransparency = props.Transparency or 0
+	frame.BorderSizePixel = 0
+	frame.Size = props.Size or UDim2.new(1, 0, 1, 0)
+	frame.Position = props.Position or UDim2.new(0, 0, 0, 0)
+	frame.AnchorPoint = props.AnchorPoint or Vector2.new(0, 0)
+	frame.Name = props.Name or "Frame"
+	if props.Parent then
+		frame.Parent = props.Parent
+	end
+	-- Add corner radius if specified
+	if props.CornerRadius then
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, props.CornerRadius)
+		corner.Parent = frame
+	end
+	return frame
+end
+
+local function createLabel(props)
+	local label = Instance.new("TextLabel")
+	label.Text = props.Text or ""
+	label.Font = Enum.Font.GothamBold
+	label.TextColor3 = props.TextColor or Color3.new(1, 1, 1)
+	label.TextSize = props.TextSize or 24
+	label.BackgroundTransparency = 1
+	label.Size = props.Size or UDim2.new(1, 0, 0, 40)
+	label.Position = props.Position or UDim2.new(0, 0, 0, 0)
+	label.AnchorPoint = props.AnchorPoint or Vector2.new(0, 0)
+	label.TextXAlignment = props.TextXAlignment or Enum.TextXAlignment.Center
+	label.TextYAlignment = props.TextYAlignment or Enum.TextYAlignment.Center
+	label.Name = props.Name or "Label"
+	if props.Parent then
+		label.Parent = props.Parent
+	end
+	return label
+end
+
+local function createButton(props)
+	local button = Instance.new("TextButton")
+	button.Text = props.Text or "Button"
+	button.Font = Enum.Font.GothamBold
+	button.TextColor3 = props.TextColor or Color3.new(1, 1, 1)
+	button.TextSize = props.TextSize or 20
+	button.BackgroundColor3 = props.Color or Config.NEON_PURPLE
+	button.BackgroundTransparency = props.Transparency or 0.1
+	button.BorderSizePixel = 0
+	button.Size = props.Size or UDim2.new(0, 200, 0, 50)
+	button.Position = props.Position or UDim2.new(0.5, 0, 0.5, 0)
+	button.AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5)
+	button.AutoButtonColor = true
+	button.Name = props.Name or "Button"
+	if props.Parent then
+		button.Parent = props.Parent
+	end
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = button
+
+	-- Neon border
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = props.StrokeColor or props.Color or Config.NEON_CYAN
+	stroke.Thickness = 2
+	stroke.Transparency = 0.3
+	stroke.Parent = button
+
+	-- Hover effect
+	button.MouseEnter:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.2), {
+			BackgroundTransparency = 0,
+			Size = props.Size and UDim2.new(
+				props.Size.X.Scale, props.Size.X.Offset + 6,
+				props.Size.Y.Scale, props.Size.Y.Offset + 4
+			) or UDim2.new(0, 206, 0, 54),
+		}):Play()
+	end)
+	button.MouseLeave:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.2), {
+			BackgroundTransparency = props.Transparency or 0.1,
+			Size = props.Size or UDim2.new(0, 200, 0, 50),
+		}):Play()
+	end)
+
+	return button
+end
+
+--------------------------------------------------------------------
+-- Build Main Menu ScreenGui
+--------------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MainMenuGui"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 10
+screenGui.Parent = playerGui
+
+-- Background overlay
+local bg = createFrame({
+	Name = "Background",
+	Color = Config.BG_DARK,
+	Transparency = 0.2,
+	Size = UDim2.new(1, 0, 1, 0),
+	Parent = screenGui,
+})
+
+-- Title
+local title = createLabel({
+	Name = "Title",
+	Text = "NEON SLICE",
+	TextSize = 64,
+	TextColor = Config.NEON_CYAN,
+	Size = UDim2.new(1, 0, 0, 80),
+	Position = UDim2.new(0.5, 0, 0.15, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Parent = bg,
+})
+
+-- Title glow (stroke)
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Color = Config.NEON_PURPLE
+titleStroke.Thickness = 2
+titleStroke.Transparency = 0.4
+titleStroke.Parent = title
+
+-- Subtitle
+local subtitle = createLabel({
+	Name = "Subtitle",
+	Text = "Cut, ride and rock in the neon city",
+	TextSize = 20,
+	TextColor = Config.NEON_PINK,
+	Size = UDim2.new(1, 0, 0, 30),
+	Position = UDim2.new(0.5, 0, 0.22, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Parent = bg,
+})
+
+-- Button container
+local buttonContainer = createFrame({
+	Name = "Buttons",
+	Color = Config.BG_DARK,
+	Transparency = 1,
+	Size = UDim2.new(0, 300, 0, 320),
+	Position = UDim2.new(0.5, 0, 0.55, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Parent = bg,
+})
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.FillDirection = Enum.FillDirection.Vertical
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.Padding = UDim.new(0, 12)
+listLayout.Parent = buttonContainer
+
+-- Play button
+local playBtn = createButton({
+	Name = "PlayButton",
+	Text = "▶  START RUN",
+	Size = UDim2.new(1, 0, 0, 56),
+	Color = Config.NEON_CYAN,
+	StrokeColor = Config.NEON_CYAN,
+	TextSize = 24,
+	Parent = buttonContainer,
+})
+
+-- Shop button
+local shopBtn = createButton({
+	Name = "ShopButton",
+	Text = "🗡  KATANA SHOP  [B]",
+	Size = UDim2.new(1, 0, 0, 50),
+	Color = Config.NEON_PURPLE,
+	StrokeColor = Config.NEON_PURPLE,
+	Parent = buttonContainer,
+})
+
+-- District Map button
+local districtBtn = createButton({
+	Name = "DistrictButton",
+	Text = "🗺  DISTRICT MAP  [M]",
+	Size = UDim2.new(1, 0, 0, 50),
+	Color = Config.NEON_BLUE,
+	StrokeColor = Config.NEON_BLUE,
+	Parent = buttonContainer,
+})
+
+-- Raid button
+local raidBtn = createButton({
+	Name = "RaidButton",
+	Text = "⚔  RAID BATTLE  [R]",
+	Size = UDim2.new(1, 0, 0, 50),
+	Color = Config.NEON_PINK,
+	StrokeColor = Config.NEON_PINK,
+	Parent = buttonContainer,
+})
+
+-- Version label
+createLabel({
+	Name = "Version",
+	Text = "v" .. Config.VERSION,
+	TextSize = 14,
+	TextColor = Color3.fromRGB(100, 100, 120),
+	Size = UDim2.new(0, 100, 0, 20),
+	Position = UDim2.new(1, -10, 1, -10),
+	AnchorPoint = Vector2.new(1, 1),
+	Parent = bg,
+})
+
+--------------------------------------------------------------------
+-- Button handlers
+--------------------------------------------------------------------
+playBtn.MouseButton1Click:Connect(function()
+	-- Start a run
+	bg.Visible = false
+	bg:SetAttribute("RunActive", true)
+	StartRunEvent:FireServer()
+	RunStateChanged:Fire(true)
+end)
+
+shopBtn.MouseButton1Click:Connect(function()
+	bg.Visible = false
+	ToggleShop:Fire()
+end)
+
+districtBtn.MouseButton1Click:Connect(function()
+	bg.Visible = false
+	ToggleDistrictMap:Fire()
+end)
+
+raidBtn.MouseButton1Click:Connect(function()
+	bg.Visible = false
+	ToggleRaidUI:Fire()
+end)
+
+--------------------------------------------------------------------
+-- Show menu when run ends
+--------------------------------------------------------------------
+RunEndedEvent.OnClientEvent:Connect(function(stats)
+	-- Show results briefly, then return to menu
+	task.wait(2)
+	bg:SetAttribute("RunActive", false)
+	bg.Visible = true
+end)
+
+--------------------------------------------------------------------
+-- Show menu again when all sub-menus close
+--------------------------------------------------------------------
+local menuIsRunning = false
+
+RunStateChanged.Event:Connect(function(running)
+	menuIsRunning = running
+end)
+
+RunEndedEvent.OnClientEvent:Connect(function()
+	menuIsRunning = false
+end)
+
+local function onSubMenuToggled()
+	-- If no sub-menu is visible, bring main menu back
+	-- Each sub-menu fires its toggle event on close too, so we
+	-- listen with a tiny delay to let the toggle execute first.
+	task.defer(function()
+		if menuIsRunning then return end
+
+		local shopGui = playerGui:FindFirstChild("ShopGui")
+		local districtGui = playerGui:FindFirstChild("DistrictMapGui")
+		local raidGui = playerGui:FindFirstChild("RaidUIGui")
+
+		local shopOpen = shopGui and shopGui:FindFirstChild("ShopContainer") and shopGui.ShopContainer.Visible
+		local districtOpen = districtGui and districtGui:FindFirstChild("MapContainer") and districtGui.MapContainer.Visible
+		local raidOpen = raidGui and raidGui:FindFirstChild("RaidContainer") and raidGui.RaidContainer.Visible
+
+		if not shopOpen and not districtOpen and not raidOpen then
+			bg.Visible = true
+		end
+	end)
+end
+
+ToggleShop.Event:Connect(onSubMenuToggled)
+ToggleDistrictMap.Event:Connect(onSubMenuToggled)
+ToggleRaidUI.Event:Connect(onSubMenuToggled)
+
+--------------------------------------------------------------------
+-- Title animation (pulse glow)
+--------------------------------------------------------------------
+task.spawn(function()
+	local colors = {Config.NEON_CYAN, Config.NEON_PURPLE, Config.NEON_PINK, Config.NEON_BLUE}
+	local index = 1
+	while true do
+		local nextColor = colors[index]
+		TweenService:Create(title, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			TextColor3 = nextColor,
+		}):Play()
+		TweenService:Create(titleStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Color = colors[(index % #colors) + 1],
+		}):Play()
+		index = (index % #colors) + 1
+		task.wait(2)
+	end
+end)
+
+print("[NEON SLICE] MainMenu loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="LocalScript" referent="20">
+      <Properties>
+        <string name="Name">RaidUI</string>
+        <string name="Source"><![CDATA[--[[
+	RaidUI.client.lua
+	Raid battle interface for 3v3 territory competitions.
+	Allows players to queue for raids and shows real-time raid status.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local DistrictData = require(ReplicatedStorage:WaitForChild("DistrictData"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local JoinRaidEvent    = ReplicatedStorage:WaitForChild("JoinRaid")
+local RaidUpdateEvent  = ReplicatedStorage:WaitForChild("RaidUpdate")
+local ToggleRaidUI     = ReplicatedStorage:WaitForChild("ToggleRaidUI")
+local ToggleShop       = ReplicatedStorage:WaitForChild("ToggleShop")
+local ToggleDistrictMap = ReplicatedStorage:WaitForChild("ToggleDistrictMap")
+
+--------------------------------------------------------------------
+-- State
+--------------------------------------------------------------------
+local isInQueue = false
+local isInRaid = false
+local currentRaid = nil
+
+--------------------------------------------------------------------
+-- ScreenGui
+--------------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RaidUIGui"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 30
+screenGui.Parent = playerGui
+
+-- Main container
+local container = Instance.new("Frame")
+container.Name = "RaidContainer"
+container.BackgroundColor3 = Config.BG_DARK
+container.BackgroundTransparency = 0.05
+container.BorderSizePixel = 0
+container.Size = UDim2.new(0, 480, 0, 400)
+container.Position = UDim2.new(0.5, 0, 0.5, 0)
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.Visible = false
+container.Parent = screenGui
+
+local containerCorner = Instance.new("UICorner")
+containerCorner.CornerRadius = UDim.new(0, 12)
+containerCorner.Parent = container
+
+local containerStroke = Instance.new("UIStroke")
+containerStroke.Color = Config.NEON_PINK
+containerStroke.Thickness = 2
+containerStroke.Parent = container
+
+-- Title
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Text = "⚔  RAID BATTLE"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextColor3 = Config.NEON_PINK
+titleLabel.TextSize = 24
+titleLabel.BackgroundColor3 = Config.NEON_PINK
+titleLabel.BackgroundTransparency = 0.7
+titleLabel.BorderSizePixel = 0
+titleLabel.Size = UDim2.new(1, 0, 0, 50)
+titleLabel.Parent = container
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleLabel
+
+-- Close button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Text = "✕"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.TextSize = 20
+closeBtn.BackgroundTransparency = 1
+closeBtn.Size = UDim2.new(0, 40, 0, 40)
+closeBtn.Position = UDim2.new(1, -5, 0, 5)
+closeBtn.AnchorPoint = Vector2.new(1, 0)
+closeBtn.Parent = container
+
+closeBtn.MouseButton1Click:Connect(function()
+	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local mainBg = mainMenuGui:FindFirstChild("Background")
+		if mainBg and not mainBg:GetAttribute("RunActive") then
+			mainBg.Visible = true
+		end
+	end
+end)
+
+-- Info text
+local infoLabel = Instance.new("TextLabel")
+infoLabel.Text = "Compete in 3v3 Raid Runs to capture city districts!\n\nOne team slices blocks for speed while the other sets traps.\nThe team with the highest score wins control of the district."
+infoLabel.Font = Enum.Font.Gotham
+infoLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+infoLabel.TextSize = 14
+infoLabel.TextWrapped = true
+infoLabel.BackgroundTransparency = 1
+infoLabel.Size = UDim2.new(1, -30, 0, 80)
+infoLabel.Position = UDim2.new(0, 15, 0, 60)
+infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+infoLabel.Parent = container
+
+-- District selector for raid
+local districtSelectorLabel = Instance.new("TextLabel")
+districtSelectorLabel.Text = "Select District:"
+districtSelectorLabel.Font = Enum.Font.GothamBold
+districtSelectorLabel.TextColor3 = Color3.new(1, 1, 1)
+districtSelectorLabel.TextSize = 16
+districtSelectorLabel.BackgroundTransparency = 1
+districtSelectorLabel.Size = UDim2.new(0, 150, 0, 30)
+districtSelectorLabel.Position = UDim2.new(0, 15, 0, 150)
+districtSelectorLabel.TextXAlignment = Enum.TextXAlignment.Left
+districtSelectorLabel.Parent = container
+
+-- District buttons
+local districtButtonFrame = Instance.new("Frame")
+districtButtonFrame.BackgroundTransparency = 1
+districtButtonFrame.Size = UDim2.new(1, -30, 0, 100)
+districtButtonFrame.Position = UDim2.new(0, 15, 0, 185)
+districtButtonFrame.Parent = container
+
+local districtLayout = Instance.new("UIListLayout")
+districtLayout.FillDirection = Enum.FillDirection.Horizontal
+districtLayout.Padding = UDim.new(0, 8)
+districtLayout.Parent = districtButtonFrame
+
+local selectedRaidDistrict = "Newtown"
+local districtButtons = {}
+
+for _, name in ipairs(DistrictData.GetAllNames()) do
+	local data = DistrictData.Districts[name]
+
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Text = data.DisplayName
+	btn.Font = Enum.Font.GothamBold
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.TextSize = 12
+	btn.BackgroundColor3 = data.ThemeColor
+	btn.BackgroundTransparency = 0.4
+	btn.BorderSizePixel = 0
+	btn.Size = UDim2.new(0, 80, 0, 35)
+	btn.Parent = districtButtonFrame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = btn
+
+	local btnStroke = Instance.new("UIStroke")
+	btnStroke.Color = data.ThemeColor
+	btnStroke.Thickness = 1
+	btnStroke.Parent = btn
+
+	btn.MouseButton1Click:Connect(function()
+		selectedRaidDistrict = name
+		for n, b in pairs(districtButtons) do
+			local s = b:FindFirstChildOfClass("UIStroke")
+			if s then
+				s.Thickness = n == name and 3 or 1
+			end
+		end
+	end)
+
+	districtButtons[name] = btn
+end
+
+-- Highlight default selection
+if districtButtons[selectedRaidDistrict] then
+	local s = districtButtons[selectedRaidDistrict]:FindFirstChildOfClass("UIStroke")
+	if s then s.Thickness = 3 end
+end
+
+-- Status label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "Status"
+statusLabel.Text = ""
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextColor3 = Config.NEON_CYAN
+statusLabel.TextSize = 16
+statusLabel.BackgroundTransparency = 1
+statusLabel.Size = UDim2.new(1, -30, 0, 30)
+statusLabel.Position = UDim2.new(0, 15, 0, 300)
+statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+statusLabel.Parent = container
+
+-- Join Raid button
+local joinBtn = Instance.new("TextButton")
+joinBtn.Name = "JoinRaid"
+joinBtn.Text = "⚔  JOIN RAID QUEUE"
+joinBtn.Font = Enum.Font.GothamBold
+joinBtn.TextColor3 = Color3.new(1, 1, 1)
+joinBtn.TextSize = 18
+joinBtn.BackgroundColor3 = Config.NEON_PINK
+joinBtn.BackgroundTransparency = 0.1
+joinBtn.BorderSizePixel = 0
+joinBtn.Size = UDim2.new(0, 250, 0, 45)
+joinBtn.Position = UDim2.new(0.5, 0, 1, -30)
+joinBtn.AnchorPoint = Vector2.new(0.5, 1)
+joinBtn.Parent = container
+
+local joinCorner = Instance.new("UICorner")
+joinCorner.CornerRadius = UDim.new(0, 8)
+joinCorner.Parent = joinBtn
+
+joinBtn.MouseButton1Click:Connect(function()
+	if not isInQueue and not isInRaid then
+		JoinRaidEvent:FireServer(selectedRaidDistrict)
+		isInQueue = true
+		statusLabel.Text = "Searching for opponents..."
+		joinBtn.Text = "QUEUED..."
+		joinBtn.BackgroundTransparency = 0.5
+	end
+end)
+
+--------------------------------------------------------------------
+-- Raid updates from server
+--------------------------------------------------------------------
+RaidUpdateEvent.OnClientEvent:Connect(function(update)
+	if update.Type == "RaidStart" then
+		isInQueue = false
+		isInRaid = true
+		currentRaid = update
+		statusLabel.Text = "RAID STARTED! Role: " .. update.Role
+		joinBtn.Text = "IN RAID"
+		joinBtn.BackgroundColor3 = Config.NEON_CYAN
+
+	elseif update.Type == "RaidEnd" then
+		isInRaid = false
+		currentRaid = nil
+		local won = (update.Winner == "TeamA") -- simplified
+		statusLabel.Text = won and "VICTORY! 🎉" or "DEFEAT..."
+		statusLabel.TextColor3 = won and Config.NEON_YELLOW or Color3.fromRGB(255, 80, 80)
+		joinBtn.Text = "⚔  JOIN RAID QUEUE"
+		joinBtn.BackgroundColor3 = Config.NEON_PINK
+		joinBtn.BackgroundTransparency = 0.1
+
+		-- Reset status after delay
+		task.delay(5, function()
+			statusLabel.Text = ""
+			statusLabel.TextColor3 = Config.NEON_CYAN
+		end)
+	end
+end)
+
+--------------------------------------------------------------------
+-- Helper: close other menus
+--------------------------------------------------------------------
+local function closeOtherMenus()
+	local shopGui = playerGui:FindFirstChild("ShopGui")
+	if shopGui then
+		local shopContainer = shopGui:FindFirstChild("ShopContainer")
+		if shopContainer then shopContainer.Visible = false end
+	end
+	local districtGui = playerGui:FindFirstChild("DistrictMapGui")
+	if districtGui then
+		local mapContainer = districtGui:FindFirstChild("MapContainer")
+		if mapContainer then mapContainer.Visible = false end
+	end
+end
+
+--------------------------------------------------------------------
+-- Toggle
+--------------------------------------------------------------------
+ToggleRaidUI.Event:Connect(function()
+	container.Visible = not container.Visible
+	if container.Visible then
+		closeOtherMenus()
+	end
+end)
+
+print("[NEON SLICE] RaidUI loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="LocalScript" referent="21">
+      <Properties>
+        <string name="Name">ShopGui</string>
+        <string name="Source"><![CDATA[--[[
+	ShopGui.client.lua
+	Katana shop interface.
+	Players can browse, purchase, and equip katanas.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local KatanaData = require(ReplicatedStorage:WaitForChild("KatanaData"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local PurchaseEvent    = ReplicatedStorage:WaitForChild("PurchaseRequest")
+local EquipKatanaEvent = ReplicatedStorage:WaitForChild("EquipKatana")
+local PlayerDataEvent  = ReplicatedStorage:WaitForChild("PlayerData")
+local ToggleShop       = ReplicatedStorage:WaitForChild("ToggleShop")
+local ToggleDistrictMap = ReplicatedStorage:WaitForChild("ToggleDistrictMap")
+local ToggleRaidUI     = ReplicatedStorage:WaitForChild("ToggleRaidUI")
+local NotificationEvent = ReplicatedStorage:WaitForChild("Notification")
+
+--------------------------------------------------------------------
+-- Player data cache
+--------------------------------------------------------------------
+local playerCurrency = 0
+local unlockedKatanas = {NeonBlade = true}
+local equippedKatana = Config.DEFAULT_KATANA
+
+--------------------------------------------------------------------
+-- ScreenGui
+--------------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ShopGui"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 30
+screenGui.Parent = playerGui
+
+-- Main container
+local container = Instance.new("Frame")
+container.Name = "ShopContainer"
+container.BackgroundColor3 = Config.BG_DARK
+container.BackgroundTransparency = 0.05
+container.BorderSizePixel = 0
+container.Size = UDim2.new(0, 520, 0, 440)
+container.Position = UDim2.new(0.5, 0, 0.5, 0)
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.Visible = false
+container.Parent = screenGui
+
+local containerCorner = Instance.new("UICorner")
+containerCorner.CornerRadius = UDim.new(0, 12)
+containerCorner.Parent = container
+
+local containerStroke = Instance.new("UIStroke")
+containerStroke.Color = Config.NEON_PURPLE
+containerStroke.Thickness = 2
+containerStroke.Parent = container
+
+-- Title bar
+local titleBar = Instance.new("Frame")
+titleBar.BackgroundColor3 = Config.NEON_PURPLE
+titleBar.BackgroundTransparency = 0.3
+titleBar.BorderSizePixel = 0
+titleBar.Size = UDim2.new(1, 0, 0, 50)
+titleBar.Parent = container
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Text = "🗡  KATANA SHOP"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.TextSize = 22
+titleLabel.BackgroundTransparency = 1
+titleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+titleLabel.Position = UDim2.new(0, 15, 0, 0)
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
+
+-- Currency display
+local currencyLabel = Instance.new("TextLabel")
+currencyLabel.Name = "Currency"
+currencyLabel.Text = "💰 0"
+currencyLabel.Font = Enum.Font.GothamBold
+currencyLabel.TextColor3 = Config.NEON_YELLOW
+currencyLabel.TextSize = 18
+currencyLabel.BackgroundTransparency = 1
+currencyLabel.Size = UDim2.new(0.3, -15, 1, 0)
+currencyLabel.Position = UDim2.new(0.7, 0, 0, 0)
+currencyLabel.TextXAlignment = Enum.TextXAlignment.Right
+currencyLabel.Parent = titleBar
+
+-- Close button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Text = "✕"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.TextSize = 20
+closeBtn.BackgroundTransparency = 1
+closeBtn.Size = UDim2.new(0, 40, 0, 40)
+closeBtn.Position = UDim2.new(1, -5, 0, 5)
+closeBtn.AnchorPoint = Vector2.new(1, 0)
+closeBtn.Parent = container
+
+closeBtn.MouseButton1Click:Connect(function()
+	container.Visible = false
+	-- Re-show main menu (only if not in a run)
+	local mainMenuGui = playerGui:FindFirstChild("MainMenuGui")
+	if mainMenuGui then
+		local mainBg = mainMenuGui:FindFirstChild("Background")
+		if mainBg and not mainBg:GetAttribute("RunActive") then
+			mainBg.Visible = true
+		end
+	end
+end)
+
+-- Scrolling frame for katana cards
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.Size = UDim2.new(1, -20, 1, -70)
+scrollFrame.Position = UDim2.new(0, 10, 0, 60)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollBarImageColor3 = Config.NEON_CYAN
+scrollFrame.Parent = container
+
+local gridLayout = Instance.new("UIGridLayout")
+gridLayout.CellSize = UDim2.new(0, 230, 0, 140)
+gridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+gridLayout.Parent = scrollFrame
+
+--------------------------------------------------------------------
+-- Build katana cards
+--------------------------------------------------------------------
+local function buildCards()
+	-- Clear existing
+	for _, child in ipairs(scrollFrame:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+
+	local sorted = KatanaData.GetSortedList()
+	for i, entry in ipairs(sorted) do
+		local name = entry.Name
+		local data = entry.Data
+		local owned = unlockedKatanas[name] or false
+		local equipped = equippedKatana == name
+		local rarityColor = KatanaData.RarityColors[data.Rarity] or Color3.new(1, 1, 1)
+
+		local card = Instance.new("Frame")
+		card.Name = name
+		card.BackgroundColor3 = Color3.fromRGB(25, 20, 45)
+		card.BackgroundTransparency = 0.1
+		card.BorderSizePixel = 0
+		card.LayoutOrder = i
+		card.Parent = scrollFrame
+
+		local cardCorner = Instance.new("UICorner")
+		cardCorner.CornerRadius = UDim.new(0, 8)
+		cardCorner.Parent = card
+
+		local cardStroke = Instance.new("UIStroke")
+		cardStroke.Color = equipped and Config.NEON_CYAN or rarityColor
+		cardStroke.Thickness = equipped and 3 or 1
+		cardStroke.Transparency = 0.3
+		cardStroke.Parent = card
+
+		-- Color preview bar
+		local preview = Instance.new("Frame")
+		preview.BackgroundColor3 = data.BladeColor
+		preview.BorderSizePixel = 0
+		preview.Size = UDim2.new(1, 0, 0, 6)
+		preview.Parent = card
+
+		local previewCorner = Instance.new("UICorner")
+		previewCorner.CornerRadius = UDim.new(0, 8)
+		previewCorner.Parent = preview
+
+		-- Katana name
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Text = data.DisplayName
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.TextColor3 = Color3.new(1, 1, 1)
+		nameLabel.TextSize = 16
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Size = UDim2.new(1, -10, 0, 22)
+		nameLabel.Position = UDim2.new(0, 5, 0, 12)
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.Parent = card
+
+		-- Rarity
+		local rarityLabel = Instance.new("TextLabel")
+		rarityLabel.Text = data.Rarity
+		rarityLabel.Font = Enum.Font.Gotham
+		rarityLabel.TextColor3 = rarityColor
+		rarityLabel.TextSize = 12
+		rarityLabel.BackgroundTransparency = 1
+		rarityLabel.Size = UDim2.new(1, -10, 0, 16)
+		rarityLabel.Position = UDim2.new(0, 5, 0, 34)
+		rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
+		rarityLabel.Parent = card
+
+		-- Description
+		local descLabel = Instance.new("TextLabel")
+		descLabel.Text = data.Description
+		descLabel.Font = Enum.Font.Gotham
+		descLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+		descLabel.TextSize = 11
+		descLabel.TextWrapped = true
+		descLabel.BackgroundTransparency = 1
+		descLabel.Size = UDim2.new(1, -10, 0, 36)
+		descLabel.Position = UDim2.new(0, 5, 0, 52)
+		descLabel.TextXAlignment = Enum.TextXAlignment.Left
+		descLabel.TextYAlignment = Enum.TextYAlignment.Top
+		descLabel.Parent = card
+
+		-- Action button
+		local actionBtn = Instance.new("TextButton")
+		actionBtn.Font = Enum.Font.GothamBold
+		actionBtn.TextColor3 = Color3.new(1, 1, 1)
+		actionBtn.TextSize = 14
+		actionBtn.BorderSizePixel = 0
+		actionBtn.Size = UDim2.new(1, -20, 0, 30)
+		actionBtn.Position = UDim2.new(0, 10, 1, -40)
+		actionBtn.Parent = card
+
+		local actionCorner = Instance.new("UICorner")
+		actionCorner.CornerRadius = UDim.new(0, 6)
+		actionCorner.Parent = actionBtn
+
+		if equipped then
+			actionBtn.Text = "EQUIPPED"
+			actionBtn.BackgroundColor3 = Config.NEON_CYAN
+			actionBtn.BackgroundTransparency = 0.3
+		elseif owned then
+			actionBtn.Text = "EQUIP"
+			actionBtn.BackgroundColor3 = Config.NEON_PURPLE
+			actionBtn.BackgroundTransparency = 0.1
+			actionBtn.MouseButton1Click:Connect(function()
+				EquipKatanaEvent:FireServer(name)
+				equippedKatana = name
+				buildCards()
+			end)
+		else
+			actionBtn.Text = "💰 " .. Utilities.FormatNumber(data.Price)
+			actionBtn.BackgroundColor3 = Config.NEON_YELLOW
+			actionBtn.BackgroundTransparency = 0.2
+			actionBtn.TextColor3 = Color3.fromRGB(20, 20, 20)
+			actionBtn.MouseButton1Click:Connect(function()
+				PurchaseEvent:FireServer("Katana", name)
+			end)
+		end
+	end
+
+	-- Update canvas size
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + 20)
+end
+
+--------------------------------------------------------------------
+-- Helper: close other menus
+--------------------------------------------------------------------
+local function closeOtherMenus()
+	local districtGui = playerGui:FindFirstChild("DistrictMapGui")
+	if districtGui then
+		local mapContainer = districtGui:FindFirstChild("MapContainer")
+		if mapContainer then mapContainer.Visible = false end
+	end
+	local raidGui = playerGui:FindFirstChild("RaidUIGui")
+	if raidGui then
+		local raidContainer = raidGui:FindFirstChild("RaidContainer")
+		if raidContainer then raidContainer.Visible = false end
+	end
+end
+
+--------------------------------------------------------------------
+-- Toggle visibility
+--------------------------------------------------------------------
+ToggleShop.Event:Connect(function()
+	container.Visible = not container.Visible
+	if container.Visible then
+		closeOtherMenus()
+		buildCards()
+	end
+end)
+
+--------------------------------------------------------------------
+-- Update from server
+--------------------------------------------------------------------
+PlayerDataEvent.OnClientEvent:Connect(function(data)
+	if data.Currency ~= nil then
+		playerCurrency = data.Currency
+		currencyLabel.Text = "💰 " .. Utilities.FormatNumber(playerCurrency)
+	end
+	if data.UnlockedKatanas then
+		unlockedKatanas = data.UnlockedKatanas
+	end
+	if data.EquippedKatana then
+		equippedKatana = data.EquippedKatana
+	end
+	if container.Visible then
+		buildCards()
+	end
+end)
+
+print("[NEON SLICE] ShopGui loaded ✓")
+]]></string>
+      </Properties>
+    </Item>
+  </Item>
+  <Item class="StarterPlayer" referent="22">
+    <Properties>
+      <string name="Name">StarterPlayer</string>
+    </Properties>
+    <Item class="StarterPlayerScripts" referent="23">
+      <Properties>
+        <string name="Name">StarterPlayerScripts</string>
+      </Properties>
+      <Item class="LocalScript" referent="24">
+        <Properties>
+          <string name="Name">CameraController</string>
+          <string name="Source"><![CDATA[--[[
+	CameraController.client.lua
+	Manages the third-person chase camera during gameplay.
+	Smooth follow with slight sway for dynamic feel.
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+
+local player = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+--------------------------------------------------------------------
+-- State
+--------------------------------------------------------------------
+local isRunning = false
+local cameraOffset = Config.CAMERA_OFFSET
+local targetFOV = Config.CAMERA_FOV
+local currentFOV = Config.CAMERA_FOV
+local swayTime = 0
+local shakeAmount = 0
+local shakeDecay = 5
+
+--------------------------------------------------------------------
+-- Camera update
+--------------------------------------------------------------------
+local function updateCamera(dt)
+	if not isRunning then return end
+
+	local character = player.Character
+	if not character then return end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	camera.CameraType = Enum.CameraType.Scriptable
+
+	-- Smooth follow position
+	local targetPos = root.Position + cameraOffset
+	local lookAt = root.Position + Vector3.new(0, 2, 10)
+
+	-- Gentle sway
+	swayTime = swayTime + dt
+	local swayX = math.sin(swayTime * 0.8) * 0.5
+	local swayY = math.cos(swayTime * 0.6) * 0.3
+	targetPos = targetPos + Vector3.new(swayX, swayY, 0)
+
+	-- Camera shake (from impacts)
+	if shakeAmount > 0.01 then
+		local shakeX = (math.random() - 0.5) * shakeAmount
+		local shakeY = (math.random() - 0.5) * shakeAmount
+		targetPos = targetPos + Vector3.new(shakeX, shakeY, 0)
+		shakeAmount = shakeAmount * math.exp(-shakeDecay * dt)
+	end
+
+	-- Lerp camera
+	local currentCF = camera.CFrame
+	local targetCF = CFrame.lookAt(targetPos, lookAt)
+	camera.CFrame = currentCF:Lerp(targetCF, math.clamp(dt * 8, 0, 1))
+
+	-- FOV (increases with speed for a rush effect)
+	currentFOV = currentFOV + (targetFOV - currentFOV) * math.clamp(dt * 5, 0, 1)
+	camera.FieldOfView = currentFOV
+end
+
+RunService.RenderStepped:Connect(updateCamera)
+
+--------------------------------------------------------------------
+-- Speed changes affect FOV
+--------------------------------------------------------------------
+local UpdateSpeedEvent = ReplicatedStorage:WaitForChild("UpdateSpeed")
+UpdateSpeedEvent.OnClientEvent:Connect(function(speed)
+	-- Map speed to FOV: BASE_SPEED -> 75, MAX_SPEED -> 95
+	local t = (speed - Config.BASE_SPEED) / (Config.MAX_SPEED - Config.BASE_SPEED)
+	targetFOV = 75 + t * 20
+end)
+
+--------------------------------------------------------------------
+-- Camera shake API
+--------------------------------------------------------------------
+local function triggerShake(amount)
+	shakeAmount = math.min(shakeAmount + amount, 3)
+end
+
+-- Shake on slice result
+local SliceResultEvent = ReplicatedStorage:WaitForChild("SliceResult")
+SliceResultEvent.OnClientEvent:Connect(function(result)
+	if result.Success then
+		triggerShake(0.3)
+	end
+end)
+
+--------------------------------------------------------------------
+-- Run state
+--------------------------------------------------------------------
+local RunStateEvent = ReplicatedStorage:WaitForChild("RunStateChanged")
+RunStateEvent.Event:Connect(function(running)
+	isRunning = running
+	if not running then
+		camera.CameraType = Enum.CameraType.Custom
+		camera.FieldOfView = Config.CAMERA_FOV
+	end
+end)
+
+local RunEndedEvent = ReplicatedStorage:WaitForChild("RunEnded")
+RunEndedEvent.OnClientEvent:Connect(function()
+	isRunning = false
+	camera.CameraType = Enum.CameraType.Custom
+	camera.FieldOfView = Config.CAMERA_FOV
+end)
+
+print("[NEON SLICE] CameraController loaded ✓")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="25">
+        <Properties>
+          <string name="Name">InputHandler</string>
+          <string name="Source"><![CDATA[--[[
+	InputHandler.client.lua
+	Centralised input handler for keyboard shortcuts and UI toggles.
+]]
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+
+--------------------------------------------------------------------
+-- Disable default Roblox UI elements for a cleaner look
+--------------------------------------------------------------------
+pcall(function()
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+end)
+
+--------------------------------------------------------------------
+-- Bindable events for UI toggles
+--------------------------------------------------------------------
+local toggleShop = Instance.new("BindableEvent")
+toggleShop.Name = "ToggleShop"
+toggleShop.Parent = ReplicatedStorage
+
+local toggleDistrictMap = Instance.new("BindableEvent")
+toggleDistrictMap.Name = "ToggleDistrictMap"
+toggleDistrictMap.Parent = ReplicatedStorage
+
+local toggleRaidUI = Instance.new("BindableEvent")
+toggleRaidUI.Name = "ToggleRaidUI"
+toggleRaidUI.Parent = ReplicatedStorage
+
+--------------------------------------------------------------------
+-- Keyboard shortcuts
+--------------------------------------------------------------------
+local isRunning = false
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if isRunning then return end
+
+	if input.KeyCode == Enum.KeyCode.B then
+		toggleShop:Fire()
+	elseif input.KeyCode == Enum.KeyCode.M then
+		toggleDistrictMap:Fire()
+	elseif input.KeyCode == Enum.KeyCode.R then
+		toggleRaidUI:Fire()
+	end
+end)
+
+--------------------------------------------------------------------
+-- Track run state to disable shortcuts during gameplay
+--------------------------------------------------------------------
+local RunStateEvent = ReplicatedStorage:WaitForChild("RunStateChanged")
+RunStateEvent.Event:Connect(function(running)
+	isRunning = running
+end)
+
+local RunEndedEvent = ReplicatedStorage:WaitForChild("RunEnded")
+RunEndedEvent.OnClientEvent:Connect(function()
+	isRunning = false
+end)
+
+print("[NEON SLICE] InputHandler loaded ✓")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="26">
+        <Properties>
+          <string name="Name">MusicController</string>
+          <string name="Source"><![CDATA[--[[
+	MusicController.client.lua
+	Manages background music and sound effects.
+	Plays lo-fi / synthwave tracks and speeds them up during raids.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+
+local player = Players.LocalPlayer
+
+--------------------------------------------------------------------
+-- Sound setup
+--------------------------------------------------------------------
+
+-- Background music (placeholder asset IDs – replace with real ones)
+local bgMusic = Instance.new("Sound")
+bgMusic.Name = "BackgroundMusic"
+bgMusic.SoundId = "rbxassetid://0" -- Replace with synthwave track
+bgMusic.Volume = 0.4
+bgMusic.Looped = true
+bgMusic.PlaybackSpeed = 1
+bgMusic.Parent = SoundService
+
+-- Slice sound effect
+local sliceSound = Instance.new("Sound")
+sliceSound.Name = "SliceSound"
+sliceSound.SoundId = "rbxassetid://0" -- Replace with satisfying slice SFX
+sliceSound.Volume = 0.6
+sliceSound.Looped = false
+sliceSound.Parent = SoundService
+
+-- Combo sound (pitch increases with combo)
+local comboSound = Instance.new("Sound")
+comboSound.Name = "ComboSound"
+comboSound.SoundId = "rbxassetid://0" -- Replace with ascending tone SFX
+comboSound.Volume = 0.5
+comboSound.Looped = false
+comboSound.Parent = SoundService
+
+-- Miss / hit sound
+local missSound = Instance.new("Sound")
+missSound.Name = "MissSound"
+missSound.SoundId = "rbxassetid://0" -- Replace with impact SFX
+missSound.Volume = 0.5
+missSound.Looped = false
+missSound.Parent = SoundService
+
+-- Menu music
+local menuMusic = Instance.new("Sound")
+menuMusic.Name = "MenuMusic"
+menuMusic.SoundId = "rbxassetid://0" -- Replace with chill lo-fi track
+menuMusic.Volume = 0.3
+menuMusic.Looped = true
+menuMusic.Parent = SoundService
+
+--------------------------------------------------------------------
+-- Music control
+--------------------------------------------------------------------
+local isRunning = false
+
+local function playMenuMusic()
+	bgMusic:Stop()
+	if not menuMusic.IsPlaying then
+		menuMusic:Play()
+	end
+end
+
+local function playGameMusic()
+	menuMusic:Stop()
+	bgMusic.PlaybackSpeed = 1
+	bgMusic:Play()
+end
+
+local function stopAllMusic()
+	bgMusic:Stop()
+	menuMusic:Stop()
+end
+
+--------------------------------------------------------------------
+-- Speed up music during high combos / raids
+--------------------------------------------------------------------
+local function setMusicIntensity(combo)
+	if not isRunning then return end
+	local maxCombo = Config.MAX_COMBO_MULTIPLIER * Config.COMBO_MULTIPLIER_STEP
+	local t = math.clamp(combo / maxCombo, 0, 1)
+	local targetSpeed = 1 + t * 0.3 -- Up to 1.3x speed
+
+	local tween = TweenService:Create(bgMusic, TweenInfo.new(0.5), {
+		PlaybackSpeed = targetSpeed,
+	})
+	tween:Play()
+end
+
+--------------------------------------------------------------------
+-- Sound effects
+--------------------------------------------------------------------
+local function playSliceSound(combo)
+	sliceSound:Play()
+	-- Pitch combo sound based on combo count
+	comboSound.PlaybackSpeed = 1 + math.clamp((combo or 0) / 40, 0, 0.5)
+	comboSound:Play()
+end
+
+local function playMissSound()
+	missSound:Play()
+end
+
+--------------------------------------------------------------------
+-- Events
+--------------------------------------------------------------------
+local SliceResultEvent = ReplicatedStorage:WaitForChild("SliceResult")
+SliceResultEvent.OnClientEvent:Connect(function(result)
+	if result.Success then
+		playSliceSound(result.Combo)
+		setMusicIntensity(result.Combo)
+	end
+end)
+
+local RunStateEvent = ReplicatedStorage:WaitForChild("RunStateChanged")
+RunStateEvent.Event:Connect(function(running)
+	isRunning = running
+	if running then
+		playGameMusic()
+	else
+		playMenuMusic()
+	end
+end)
+
+local RunEndedEvent = ReplicatedStorage:WaitForChild("RunEnded")
+RunEndedEvent.OnClientEvent:Connect(function()
+	isRunning = false
+	playMenuMusic()
+end)
+
+-- Start with menu music
+playMenuMusic()
+
+print("[NEON SLICE] MusicController loaded ✓")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="27">
+        <Properties>
+          <string name="Name">SliceController</string>
+          <string name="Source"><![CDATA[--[[
+	SliceController.client.lua
+	Handles mouse/touch input for slicing neon blocks.
+	Renders blocks locally, detects swipe gestures, and sends slice
+	requests to the server.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Utilities = require(ReplicatedStorage:WaitForChild("Utilities"))
+
+local player = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+--------------------------------------------------------------------
+-- Wait for remotes
+--------------------------------------------------------------------
+local SpawnBlockEvent  = ReplicatedStorage:WaitForChild("SpawnBlock")
+local SliceRequestEvent = ReplicatedStorage:WaitForChild("SliceRequest")
+local SliceResultEvent  = ReplicatedStorage:WaitForChild("SliceResult")
+local StartRunEvent     = ReplicatedStorage:WaitForChild("StartRun")
+local EndRunEvent       = ReplicatedStorage:WaitForChild("EndRun")
+
+--------------------------------------------------------------------
+-- State
+--------------------------------------------------------------------
+local isRunning = false
+local activeBlocks = {} -- [blockId] = { Part, Data }
+local swipeStart = nil  -- Vector2
+local swipeStartTime = 0
+
+-- Block container in Workspace
+local blockFolder = Instance.new("Folder")
+blockFolder.Name = "NeonBlocks"
+blockFolder.Parent = Workspace
+
+--------------------------------------------------------------------
+-- Create a visible block from server data
+--------------------------------------------------------------------
+local function createBlockVisual(data)
+	local part = Instance.new("Part")
+	part.Size = data.Size
+	part.Color = Color3.new(data.Color[1], data.Color[2], data.Color[3])
+	part.Material = Enum.Material.Neon
+	part.Anchored = true
+	part.CanCollide = false
+	part.Name = "Block_" .. tostring(data.Id)
+	part.CastShadow = false
+
+	-- Position block ahead of the player in the correct lane
+	local character = player.Character
+	if character then
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if root then
+			local forwardPos = root.Position + Vector3.new(
+				data.LaneOffset,
+				math.random(2, 6),
+				data.SpawnDistance
+			)
+			part.Position = forwardPos
+		end
+	end
+
+	-- Slice line indicator (thin neon line across the block)
+	if data.SliceDirection ~= "None" then
+		local line = Instance.new("Part")
+		line.Size = Vector3.new(data.Size.X + 1, 0.15, 0.15)
+		line.Color = Color3.fromRGB(255, 255, 255)
+		line.Material = Enum.Material.Neon
+		line.Transparency = 0.3
+		line.Anchored = true
+		line.CanCollide = false
+		line.CastShadow = false
+		line.Name = "SliceLine"
+		line.CFrame = part.CFrame * CFrame.Angles(0, 0, math.rad(data.SliceAngle))
+		line.Parent = part
+	end
+
+	-- Point light for glow
+	local pointLight = Instance.new("PointLight")
+	pointLight.Color = part.Color
+	pointLight.Brightness = 2
+	pointLight.Range = 12
+	pointLight.Parent = part
+
+	part.Parent = blockFolder
+
+	return part
+end
+
+--------------------------------------------------------------------
+-- Block lifecycle
+--------------------------------------------------------------------
+SpawnBlockEvent.OnClientEvent:Connect(function(data)
+	if not isRunning then return end
+
+	local part = createBlockVisual(data)
+	activeBlocks[data.Id] = {
+		Part = part,
+		Data = data,
+		SpawnTime = tick(),
+	}
+
+	-- Tween block towards the player
+	local character = player.Character
+	if not character then return end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	local targetPos = root.Position + Vector3.new(data.LaneOffset, math.random(2, 6), -5)
+	local distance = (part.Position - targetPos).Magnitude
+	local travelTime = distance / Config.BASE_SPEED
+
+	local tween = TweenService:Create(part, TweenInfo.new(travelTime, Enum.EasingStyle.Linear), {
+		Position = targetPos,
+	})
+	tween:Play()
+
+	-- Auto-remove if not sliced after passing the player
+	task.delay(travelTime + 0.5, function()
+		if activeBlocks[data.Id] then
+			-- Block was not sliced — player missed or it was a hazard
+			local block = activeBlocks[data.Id]
+			if block.Part and block.Part.Parent then
+				-- Fade out
+				local fadeOut = TweenService:Create(block.Part, TweenInfo.new(0.3), {
+					Transparency = 1,
+				})
+				fadeOut:Play()
+				fadeOut.Completed:Connect(function()
+					if block.Part then
+						block.Part:Destroy()
+					end
+				end)
+			end
+			activeBlocks[data.Id] = nil
+		end
+	end)
+end)
+
+--------------------------------------------------------------------
+-- Slice effect (split animation)
+--------------------------------------------------------------------
+local function playSliceEffect(part, color)
+	-- Create two halves that fly apart
+	for i = 1, 2 do
+		local half = Instance.new("Part")
+		half.Size = Vector3.new(part.Size.X / 2, part.Size.Y, part.Size.Z)
+		half.Color = color or part.Color
+		half.Material = Enum.Material.Neon
+		half.Anchored = false
+		half.CanCollide = false
+		half.CastShadow = false
+		half.Position = part.Position + Vector3.new((i == 1 and -1 or 1) * part.Size.X / 4, 0, 0)
+		half.Parent = blockFolder
+
+		-- Add velocity to fly apart
+		local bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.Velocity = Vector3.new(
+			(i == 1 and -1 or 1) * math.random(15, 30),
+			math.random(5, 15),
+			math.random(-5, 5)
+		)
+		bodyVelocity.MaxForce = Vector3.new(1e4, 1e4, 1e4)
+		bodyVelocity.Parent = half
+
+		-- Point light flash
+		local flash = Instance.new("PointLight")
+		flash.Color = color or part.Color
+		flash.Brightness = 5
+		flash.Range = 20
+		flash.Parent = half
+
+		-- Fade and destroy
+		local tween = TweenService:Create(half, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Transparency = 1,
+			Size = Vector3.new(0.1, 0.1, 0.1),
+		})
+		tween:Play()
+		tween.Completed:Connect(function()
+			half:Destroy()
+		end)
+	end
+
+	-- Particle burst
+	local emitter = Instance.new("Part")
+	emitter.Size = Vector3.new(0.5, 0.5, 0.5)
+	emitter.Transparency = 1
+	emitter.Anchored = true
+	emitter.CanCollide = false
+	emitter.Position = part.Position
+	emitter.Parent = blockFolder
+
+	local particles = Instance.new("ParticleEmitter")
+	particles.Color = ColorSequence.new(color or part.Color)
+	particles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	particles.Lifetime = NumberRange.new(0.3, 0.6)
+	particles.Speed = NumberRange.new(10, 25)
+	particles.SpreadAngle = Vector2.new(180, 180)
+	particles.Rate = 0
+	particles.Parent = emitter
+	particles:Emit(20)
+
+	task.delay(1, function()
+		emitter:Destroy()
+	end)
+end
+
+--------------------------------------------------------------------
+-- Swipe detection
+--------------------------------------------------------------------
+local function onInputBegan(input, gameProcessed)
+	if gameProcessed then return end
+	if not isRunning then return end
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		swipeStart = Vector2.new(input.Position.X, input.Position.Y)
+		swipeStartTime = tick()
+	end
+end
+
+local function onInputEnded(input, gameProcessed)
+	if gameProcessed then return end
+	if not isRunning then return end
+	if not swipeStart then return end
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+
+		local swipeEnd = Vector2.new(input.Position.X, input.Position.Y)
+		local swipeDelta = swipeEnd - swipeStart
+		local swipeLength = swipeDelta.Magnitude
+		local swipeDuration = tick() - swipeStartTime
+
+		swipeStart = nil
+
+		-- Minimum swipe threshold
+		if swipeLength < 30 or swipeDuration > 1 then return end
+
+		-- Calculate swipe angle
+		local swipeAngle = math.deg(math.atan2(swipeDelta.Y, swipeDelta.X))
+
+		-- Raycast from the center of the swipe to find blocks
+		local midPoint = (swipeStart + swipeEnd) / 2
+		local ray = camera:ViewportPointToRay(midPoint.X, midPoint.Y)
+
+		-- Check collision with active blocks
+		local closestBlock = nil
+		local closestDist = math.huge
+
+		for blockId, blockInfo in pairs(activeBlocks) do
+			if blockInfo.Part and blockInfo.Part.Parent then
+				local blockPos = blockInfo.Part.Position
+				local screenPos, onScreen = camera:WorldToViewportPoint(blockPos)
+
+				if onScreen then
+					local screenPoint = Vector2.new(screenPos.X, screenPos.Y)
+					-- Check if swipe line passes near the block on screen
+					local distToSwipe = distPointToLine(screenPoint, swipeStart, swipeEnd)
+
+					if distToSwipe < 80 and screenPos.Z < closestDist then
+						closestDist = screenPos.Z
+						closestBlock = blockId
+					end
+				end
+			end
+		end
+
+		if closestBlock then
+			local blockInfo = activeBlocks[closestBlock]
+			if blockInfo and blockInfo.Data.SliceDirection ~= "None" then
+				-- Play slice effect
+				playSliceEffect(blockInfo.Part, blockInfo.Part.Color)
+				blockInfo.Part:Destroy()
+				activeBlocks[closestBlock] = nil
+
+				-- Send to server
+				SliceRequestEvent:FireServer(closestBlock, swipeAngle)
+			elseif blockInfo and blockInfo.Data.SliceDirection == "None" then
+				-- Hit a hazard block! Flash red
+				local originalColor = blockInfo.Part.Color
+				blockInfo.Part.Color = Color3.fromRGB(255, 0, 0)
+				task.delay(0.2, function()
+					if blockInfo.Part and blockInfo.Part.Parent then
+						blockInfo.Part.Color = originalColor
+					end
+				end)
+			end
+		end
+	end
+end
+
+-- Helper: distance from point to line segment
+function distPointToLine(point, lineStart, lineEnd)
+	local lineVec = lineEnd - lineStart
+	local pointVec = point - lineStart
+	local lineLen = lineVec.Magnitude
+	if lineLen < 0.001 then return (point - lineStart).Magnitude end
+
+	local t = math.clamp(pointVec:Dot(lineVec) / (lineLen * lineLen), 0, 1)
+	local projection = lineStart + lineVec * t
+	return (point - projection).Magnitude
+end
+
+UserInputService.InputBegan:Connect(onInputBegan)
+UserInputService.InputEnded:Connect(onInputEnded)
+
+--------------------------------------------------------------------
+-- Slice result feedback
+--------------------------------------------------------------------
+SliceResultEvent.OnClientEvent:Connect(function(result)
+	if result.Success then
+		-- Could play a sound here
+		-- Feedback is handled by the HUD
+	end
+end)
+
+--------------------------------------------------------------------
+-- Run state management
+--------------------------------------------------------------------
+local function setRunning(state)
+	isRunning = state
+	if not state then
+		-- Clear all blocks
+		for id, blockInfo in pairs(activeBlocks) do
+			if blockInfo.Part then
+				blockInfo.Part:Destroy()
+			end
+		end
+		activeBlocks = {}
+	end
+end
+
+-- Listen for run state from other client scripts via a BindableEvent
+local runStateEvent = Instance.new("BindableEvent")
+runStateEvent.Name = "RunStateChanged"
+runStateEvent.Parent = ReplicatedStorage
+
+runStateEvent.Event:Connect(function(running)
+	setRunning(running)
+end)
+
+-- Also listen for server RunEnded
+local RunEndedEvent = ReplicatedStorage:WaitForChild("RunEnded")
+RunEndedEvent.OnClientEvent:Connect(function()
+	setRunning(false)
+end)
+
+print("[NEON SLICE] SliceController loaded ✓")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="28">
+        <Properties>
+          <string name="Name">TrailEffects</string>
+          <string name="Source"><![CDATA[--[[
+	TrailEffects.client.lua
+	Manages katana trail effects and movement particles.
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local KatanaData = require(ReplicatedStorage:WaitForChild("KatanaData"))
+
+local player = Players.LocalPlayer
+
+--------------------------------------------------------------------
+-- State
+--------------------------------------------------------------------
+local isRunning = false
+local currentTrail = nil
+local currentParticles = nil
+local equippedKatana = Config.DEFAULT_KATANA
+
+--------------------------------------------------------------------
+-- Create trail attachment on character
+--------------------------------------------------------------------
+local function setupTrail(character)
+	if not character then return end
+	local root = character:WaitForChild("HumanoidRootPart", 5)
+	if not root then return end
+
+	-- Remove old trail
+	if currentTrail then
+		currentTrail:Destroy()
+		currentTrail = nil
+	end
+	if currentParticles then
+		currentParticles:Destroy()
+		currentParticles = nil
+	end
+
+	local katana = KatanaData.GetKatana(equippedKatana) or KatanaData.GetKatana("NeonBlade")
+	local trailColor = katana.TrailColor
+
+	-- Create attachments for the trail
+	local attachment0 = Instance.new("Attachment")
+	attachment0.Position = Vector3.new(0, 2, 0)
+	attachment0.Name = "TrailAttach0"
+	attachment0.Parent = root
+
+	local attachment1 = Instance.new("Attachment")
+	attachment1.Position = Vector3.new(0, -1, 0)
+	attachment1.Name = "TrailAttach1"
+	attachment1.Parent = root
+
+	-- Trail
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = attachment0
+	trail.Attachment1 = attachment1
+	trail.Color = ColorSequence.new(trailColor, trailColor)
+	trail.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	trail.Lifetime = Config.TRAIL_LIFETIME
+	trail.MinLength = Config.TRAIL_MIN_LENGTH
+	trail.LightEmission = 1
+	trail.LightInfluence = 0
+	trail.FaceCamera = true
+	trail.Enabled = false
+	trail.Parent = root
+
+	currentTrail = trail
+
+	-- Speed particles
+	local particleEmitter = Instance.new("ParticleEmitter")
+	particleEmitter.Color = ColorSequence.new(trailColor)
+	particleEmitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	particleEmitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	particleEmitter.Lifetime = NumberRange.new(0.2, 0.5)
+	particleEmitter.Speed = NumberRange.new(2, 8)
+	particleEmitter.SpreadAngle = Vector2.new(30, 30)
+	particleEmitter.Rate = 0
+	particleEmitter.LightEmission = 1
+	particleEmitter.Enabled = false
+	particleEmitter.Parent = root
+
+	currentParticles = particleEmitter
+end
+
+--------------------------------------------------------------------
+-- Enable/disable trail based on run state
+--------------------------------------------------------------------
+local function setTrailEnabled(enabled)
+	if currentTrail then
+		currentTrail.Enabled = enabled
+	end
+	if currentParticles then
+		if enabled then
+			currentParticles.Rate = 30
+		else
+			currentParticles.Rate = 0
+		end
+	end
+end
+
+--------------------------------------------------------------------
+-- Character lifecycle
+--------------------------------------------------------------------
+player.CharacterAdded:Connect(function(character)
+	setupTrail(character)
+end)
+
+if player.Character then
+	setupTrail(player.Character)
+end
+
+--------------------------------------------------------------------
+-- Run state
+--------------------------------------------------------------------
+local RunStateEvent = ReplicatedStorage:WaitForChild("RunStateChanged")
+RunStateEvent.Event:Connect(function(running)
+	isRunning = running
+	setTrailEnabled(running)
+end)
+
+local RunEndedEvent = ReplicatedStorage:WaitForChild("RunEnded")
+RunEndedEvent.OnClientEvent:Connect(function()
+	isRunning = false
+	setTrailEnabled(false)
+end)
+
+--------------------------------------------------------------------
+-- Katana change
+--------------------------------------------------------------------
+local PlayerDataEvent = ReplicatedStorage:WaitForChild("PlayerData")
+PlayerDataEvent.OnClientEvent:Connect(function(data)
+	if data.EquippedKatana then
+		equippedKatana = data.EquippedKatana
+		setupTrail(player.Character)
+		if isRunning then
+			setTrailEnabled(true)
+		end
+	end
+end)
+
+print("[NEON SLICE] TrailEffects loaded ✓")
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+</roblox>
