@@ -1,0 +1,56 @@
+{
+  "title": "MEMETRIC",
+  "description": "Rhythm meme platformer – jump to the beat, dodge obstacles, collect coins! Meme-themed characters, leaderboards, and daily challenges.",
+  "description_ru": "Ритм-платформер с мемами – прыгай в такт, уворачивайся от препятствий, собирай монеты! Персонажи-мемы, таблица лидеров и ежедневные задания.",
+  "orientation": "landscape",
+  "categories": ["arcade", "casual"],
+  "tags": ["arcade", "casual", "runner", "rhythm", "meme", "platformer"],
+  "age_rating": "6+",
+  "cover": "icon-512.png",
+  "icon": "icon-256.png",
+  "screenshots": [],
+  "publisher": {
+    "name": "MEMETRIC Studio"
+  },
+  "leaderboards": [
+    {
+      "name": "main_leaderboard",
+      "type": "score",
+      "order": "desc",
+      "title": {
+        "ru": "Лучший счёт",
+        "en": "Best Score"
+      }
+    }
+  ],
+  "in_app_purchases": [
+    {
+      "id": "coins_small",
+      "title": { "ru": "Монеты × 100", "en": "Coins × 100" },
+      "description": { "ru": "Стартовый набор монет", "en": "Starter coin pack" },
+      "price_money": 15,
+      "currency": "RUB"
+    },
+    {
+      "id": "coins_medium",
+      "title": { "ru": "Монеты × 500", "en": "Coins × 500" },
+      "description": { "ru": "Выгодный набор монет", "en": "Value coin pack" },
+      "price_money": 49,
+      "currency": "RUB"
+    },
+    {
+      "id": "coins_large",
+      "title": { "ru": "Монеты × 1500", "en": "Coins × 1500" },
+      "description": { "ru": "Большой набор монет", "en": "Large coin pack" },
+      "price_money": 99,
+      "currency": "RUB"
+    },
+    {
+      "id": "coins_mega",
+      "title": { "ru": "Монеты × 5000", "en": "Coins × 5000" },
+      "description": { "ru": "Мега набор монет", "en": "Mega coin pack" },
+      "price_money": 249,
+      "currency": "RUB"
+    }
+  ]
+}
