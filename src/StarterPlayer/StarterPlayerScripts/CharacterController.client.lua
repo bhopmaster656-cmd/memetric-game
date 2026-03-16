@@ -68,7 +68,11 @@ local function handleChatCommand(message)
                 return
             end
         end
-        NotifyPlayer:FireServer and nil
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title   = "Arrest",
+            Text    = "Player not found: " .. arrestTarget,
+            Duration = 3,
+        })
         return
     end
 

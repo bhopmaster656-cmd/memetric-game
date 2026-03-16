@@ -7,8 +7,9 @@ local DataStoreService = game:GetService("DataStoreService")
 local RunService       = game:GetService("RunService")
 local ReplicatedStorage= game:GetService("ReplicatedStorage")
 
-local GameConfig   = require(ReplicatedStorage:WaitForChild("GameConfig"))
+local GameConfig     = require(ReplicatedStorage:WaitForChild("GameConfig"))
 local CharacterStats = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CharacterStats"))
+local ItemData       = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ItemData"))
 
 local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local UpdateStats      = RemoteEvents:WaitForChild("UpdateStats")
@@ -298,7 +299,102 @@ RunService.Heartbeat:Connect(function(dt)
     end
 end)
 
--- Make PDM accessible to other server scripts via a BindableFunction
+-- ─── UseItem Handler ─────────────────────────────────────────────────────────
+local UseItem = RemoteEvents:WaitForChild("UseItem")
+UseItem.OnServerEvent:Connect(function(player, itemId)
+    local data = playerData[player.UserId]
+    if not data then return end
+
+    local item = ItemData.ById[itemId]
+    if not item or not item.consumable then return end
+
+    -- Verify the player actually has the item
+    if not PDM.RemoveFromInventory(player, itemId, 1) then return end
+
+    -- Apply stat restorations
+    if item.hungerRestore then
+        PDM.SetStat(player, "Hunger",  math.min(100, data.Stats.Hunger  + item.hungerRestore))
+    end
+    if item.thirstRestore then
+        PDM.SetStat(player, "Thirst",  math.min(100, data.Stats.Thirst  + item.thirstRestore))
+    end
+    if item.energyRestore then
+        PDM.SetStat(player, "Energy",  math.min(100, data.Stats.Energy  + item.energyRestore))
+    end
+    if item.healthRestore then
+        PDM.SetStat(player, "Health",  math.min(100, data.Stats.Health  + item.healthRestore))
+    end
+
+    NotifyPlayer:FireClient(player, "✅ Used " .. (item.name or itemId), "green")
+end)
+
+-- ─── Server-Side Stat Decay ──────────────────────────────────────────────────
+-- Drains Hunger, Thirst, and Energy over time; deals damage when they hit 0.
+local statDecayTimer = 0
+local STAT_DECAY_INTERVAL = 30  -- apply decay every 30 real seconds
+
+RunService.Heartbeat:Connect(function(dt)
+    statDecayTimer = statDecayTimer + dt
+    if statDecayTimer < STAT_DECAY_INTERVAL then return end
+    statDecayTimer = 0
+
+    local minutes = STAT_DECAY_INTERVAL / 60  -- fraction of a minute elapsed
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        local data = playerData[player.UserId]
+        if not data then continue end
+        local stats = data.Stats
+
+        -- Hunger decay
+        local newHunger = math.max(0, stats.Hunger - GameConfig.HungerDecayRate * minutes)
+        PDM.SetStat(player, "Hunger", newHunger)
+
+        -- Thirst decays faster; Summer speeds it up further
+        local thirstMult = 1.0  -- season multiplier applied client-side; server uses base rate
+        local newThirst = math.max(0, stats.Thirst - GameConfig.ThirstDecayRate * minutes * thirstMult)
+        PDM.SetStat(player, "Thirst", newThirst)
+
+        -- Energy decays only while character is moving (approximated by humanoid)
+        local char = player.Character
+        local isMoving = false
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.MoveDirection.Magnitude > 0.1 then
+                isMoving = true
+            end
+        end
+        if isMoving then
+            local newEnergy = math.max(0, stats.Energy - GameConfig.EnergyDecayRate * minutes)
+            PDM.SetStat(player, "Energy", newEnergy)
+        end
+
+        -- Health damage when hunger or thirst is at zero
+        local healthDelta = 0
+        if stats.Hunger <= 0 then
+            healthDelta = healthDelta - GameConfig.HungerDamage * minutes
+        end
+        if stats.Thirst <= 0 then
+            healthDelta = healthDelta - GameConfig.ThirstDamage * minutes
+        end
+        if healthDelta < 0 then
+            local newHealth = math.max(0, stats.Health + healthDelta)
+            PDM.SetStat(player, "Health", newHealth)
+            -- Knock player out when health hits zero (faint mechanic)
+            if newHealth <= 0 and char then
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.Health = 0  -- trigger respawn
+                end
+                -- Penalise money on faint
+                local fine = math.floor(data.Money * 0.05)
+                PDM.SubtractMoney(player, fine)
+                NotifyPlayer:FireClient(player, "💊 You fainted! Lost $" .. fine .. " and woke up in hospital.", "red")
+            end
+        end
+    end
+end)
+
+
 local pdmBindable = Instance.new("BindableFunction")
 pdmBindable.Name = "PDM_GetData"
 pdmBindable.OnInvoke = function(player)

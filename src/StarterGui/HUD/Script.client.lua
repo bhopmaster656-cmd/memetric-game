@@ -163,6 +163,35 @@ local weatherLabel = makeLabel("WeatherLabel", "☀️ Clear | 🌸 Spring",
     Enum.Font.Gotham, weatherFrame)
 weatherLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+-- ─── Open GUI (local helper — opens sub-GUIs without going through server) ────
+local function openGui(shopType)
+    local playerGui = player:WaitForChild("PlayerGui")
+    local guiNames = { "ShopGui", "ProfessionGui", "BuildingGui", "MarketGui" }
+    for _, guiName in ipairs(guiNames) do
+        local gui = playerGui:FindFirstChild(guiName)
+        if gui then gui.Enabled = false end
+    end
+    if shopType == "GovStore" or shopType == "Cafe" then
+        local gui = playerGui:FindFirstChild("ShopGui")
+        if gui then
+            gui:SetAttribute("ShopType", shopType)
+            gui.Enabled = true
+        end
+    elseif shopType == "Profession" then
+        local gui = playerGui:FindFirstChild("ProfessionGui")
+        if gui then gui.Enabled = true end
+    elseif shopType == "Build" or shopType == "Inventory" then
+        local gui = playerGui:FindFirstChild("BuildingGui")
+        if gui then
+            gui:SetAttribute("Mode", shopType)
+            gui.Enabled = true
+        end
+    elseif shopType == "Market" then
+        local gui = playerGui:FindFirstChild("MarketGui")
+        if gui then gui.Enabled = true end
+    end
+end
+
 -- ─── Action Buttons (Bottom Right) ───────────────────────────────────────────
 local actionPanel = makeFrame("ActionPanel",
     UDim2.new(0, 140, 0, 260),
@@ -173,23 +202,23 @@ actionCorner.CornerRadius = UDim.new(0, 8)
 actionCorner.Parent = actionPanel
 
 makeButton("ShopBtn",       "🏪 Shop",       UDim2.new(1, -10, 0, 36), UDim2.new(0, 5, 0, 5),   Color3.fromRGB(50, 150, 80),  actionPanel, function()
-    OpenShop:FireServer("GovStore")
+    openGui("GovStore")
 end)
 makeButton("MarketBtn",     "📦 Market",     UDim2.new(1, -10, 0, 36), UDim2.new(0, 5, 0, 46),  Color3.fromRGB(80, 100, 200), actionPanel, function()
-    OpenShop:FireServer("Market")
+    openGui("Market")
 end)
 makeButton("ProfessionBtn", "🎓 Profession", UDim2.new(1, -10, 0, 36), UDim2.new(0, 5, 0, 87),  Color3.fromRGB(150, 80, 200), actionPanel, function()
-    OpenShop:FireServer("Profession")
+    openGui("Profession")
 end)
 makeButton("BuildBtn",      "🏗️ Build",      UDim2.new(1, -10, 0, 36), UDim2.new(0, 5, 0, 128), Color3.fromRGB(200, 120, 30), actionPanel, function()
-    OpenShop:FireServer("Build")
+    openGui("Build")
 end)
 makeButton("VehicleBtn",    "🚗 Vehicle",    UDim2.new(1, -10, 0, 36), UDim2.new(0, 5, 0, 169), Color3.fromRGB(30, 130, 180), actionPanel, function()
     -- Spawn bicycle as default, player can buy cars
     SpawnVehicle:InvokeServer("Bicycle")
 end)
 makeButton("InventoryBtn",  "🎒 Inventory",  UDim2.new(1, -10, 0, 36), UDim2.new(0, 5, 0, 210), Color3.fromRGB(100, 100, 100),actionPanel, function()
-    OpenShop:FireServer("Inventory")
+    openGui("Inventory")
 end)
 
 -- ─── Notification System ─────────────────────────────────────────────────────
@@ -362,37 +391,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ─── Open GUI handlers (from server or action buttons) ───────────────────────
+-- ─── Open GUI handlers (from server proximity prompts / NPC triggers) ────────
 OpenShop.OnClientEvent:Connect(function(shopType)
-    -- Forward to the specific GUI
-    local playerGui = player:WaitForChild("PlayerGui")
-
-    -- Close all sub-GUIs first
-    local guiNames = { "ShopGui", "ProfessionGui", "BuildingGui", "MarketGui" }
-    for _, guiName in ipairs(guiNames) do
-        local gui = playerGui:FindFirstChild(guiName)
-        if gui then gui.Enabled = false end
-    end
-
-    if shopType == "GovStore" or shopType == "Cafe" then
-        local gui = playerGui:FindFirstChild("ShopGui")
-        if gui then
-            gui:SetAttribute("ShopType", shopType)
-            gui.Enabled = true
-        end
-    elseif shopType == "Profession" then
-        local gui = playerGui:FindFirstChild("ProfessionGui")
-        if gui then gui.Enabled = true end
-    elseif shopType == "Build" or shopType == "Inventory" then
-        local gui = playerGui:FindFirstChild("BuildingGui")
-        if gui then
-            gui:SetAttribute("Mode", shopType)
-            gui.Enabled = true
-        end
-    elseif shopType == "Market" then
-        local gui = playerGui:FindFirstChild("MarketGui")
-        if gui then gui.Enabled = true end
-    end
+    openGui(shopType)
 end)
 
 print("[HUD] Ready")
