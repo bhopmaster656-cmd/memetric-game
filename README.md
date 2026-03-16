@@ -19,29 +19,30 @@ A cyberpunk social action game for Roblox where street gangs compete in parkour 
 - **Full HUD** — Score, combo, energy bar, speed indicator, and results screen
 - **Loading screen** — Animated cyberpunk loading sequence
 
-## Quick Start (3 steps)
+## Quick Start
 
-### 1. Install tools
+### Option A: Download pre-built file (easiest — no tools needed)
 
-- Install [Roblox Studio](https://www.roblox.com/create) (free)
-- Install [Rojo](https://github.com/rojo-rbx/rojo/releases) (download the latest release for your OS)
-- Install the Rojo plugin in Studio: run `rojo plugin install`, or find **Rojo** in Studio → Plugins → Manage Plugins
+1. Go to the [**Releases**](../../releases) page of this repository
+2. Download **NeonSlice.rbxlx** from the latest release
+3. Open it in [Roblox Studio](https://www.roblox.com/create) → Press **▶ Play**
 
-### 2. Build the game file
+> ℹ️ **`NeonSlice.rbxlx` is not stored in the repository** — it is a build artifact.
+> It is automatically built by GitHub Actions on every commit and published to [Releases](../../releases) when a version is tagged.
+> You can also build it yourself with Rojo (see Option B below).
 
-```bash
-git clone https://github.com/bhopmaster656-cmd/memetric-game.git
-cd memetric-game
-rojo build default.project.json -o NeonSlice.rbxlx
-```
+### Option B: Build it yourself with Rojo
 
-**Or use the helper scripts:**
-- Windows: `scripts\build.bat`
-- Mac/Linux: `./scripts/build.sh`
-
-### 3. Play!
-
-Open `NeonSlice.rbxlx` in Roblox Studio → Press **▶ Play**.
+1. Install [Roblox Studio](https://www.roblox.com/create) (free) and [Rojo](https://github.com/rojo-rbx/rojo/releases)
+2. Install the Rojo plugin in Studio: run `rojo plugin install`
+3. Build the game file:
+   ```bash
+   git clone https://github.com/bhopmaster656-cmd/memetric-game.git
+   cd memetric-game
+   rojo build default.project.json -o NeonSlice.rbxlx
+   ```
+   **Or use the helper scripts:** `scripts\build.bat` (Windows) / `./scripts/build.sh` (Mac/Linux)
+4. Open `NeonSlice.rbxlx` in Roblox Studio → Press **▶ Play**
 
 That's it! 🎉
 
