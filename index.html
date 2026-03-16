@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d0d1a" />
+  <title>MEMETRIC</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Loading screen -->
+  <div id="loading-screen">
+    <div class="loading-logo">MEMETRIC</div>
+    <div class="loading-sub">Rhythm Meme Platformer</div>
+    <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+  </div>
+
+  <!-- Main canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HUD overlay -->
+  <div id="hud" class="hidden">
+    <div id="hud-score">0</div>
+    <div id="hud-coins">🪙 0</div>
+    <div id="hud-lives">❤️❤️❤️</div>
+    <div id="hud-combo" class="hidden">×1</div>
+  </div>
+
+  <!-- Main Menu -->
+  <div id="main-menu" class="screen hidden">
+    <div class="menu-title">MEMETRIC</div>
+    <div class="menu-subtitle">Rhythm Meme Platformer</div>
+    <div class="highscore-display" id="menu-highscore">Рекорд: 0</div>
+    <button class="btn btn-primary" id="btn-play">▶ ИГРАТЬ</button>
+    <button class="btn btn-secondary" id="btn-shop">🛒 МАГАЗИН</button>
+    <button class="btn btn-secondary" id="btn-leaderboard">🏆 ТАБЛИЦА ЛИДЕРОВ</button>
+    <div class="version-tag">v1.0.0</div>
+  </div>
+
+  <!-- Shop Screen -->
+  <div id="shop-screen" class="screen hidden">
+    <div class="screen-title">🛒 МАГАЗИН</div>
+    <div class="coin-balance">🪙 <span id="shop-coins">0</span></div>
+
+    <div class="shop-tabs">
+      <button class="shop-tab active" data-tab="skins">СКИНЫ</button>
+      <button class="shop-tab" data-tab="packs">МОНЕТЫ</button>
+    </div>
+
+    <div id="tab-skins" class="shop-tab-content">
+      <div class="shop-grid" id="skin-grid"></div>
+    </div>
+
+    <div id="tab-packs" class="shop-tab-content hidden">
+      <div class="coin-packs" id="coin-packs-grid"></div>
+    </div>
+
+    <button class="btn btn-back" id="btn-shop-back">← НАЗАД</button>
+  </div>
+
+  <!-- Leaderboard Screen -->
+  <div id="leaderboard-screen" class="screen hidden">
+    <div class="screen-title">🏆 ТАБЛИЦА ЛИДЕРОВ</div>
+    <div id="leaderboard-list"></div>
+    <button class="btn btn-back" id="btn-lb-back">← НАЗАД</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameover-screen" class="screen hidden">
+    <div class="screen-title">GAME OVER</div>
+    <div class="go-score">Счёт: <span id="go-score">0</span></div>
+    <div class="go-coins">🪙 Монеты: <span id="go-coins">0</span></div>
+    <div class="go-highscore" id="go-highscore"></div>
+    <button class="btn btn-primary" id="btn-revive">💀 ВОЗРОДИТЬСЯ (реклама)</button>
+    <button class="btn btn-secondary" id="btn-play-again">🔄 ЗАНОВО</button>
+    <button class="btn btn-back" id="btn-go-menu">🏠 МЕНЮ</button>
+  </div>
+
+  <!-- Pause Screen -->
+  <div id="pause-screen" class="screen hidden">
+    <div class="screen-title">ПАУЗА</div>
+    <button class="btn btn-primary" id="btn-resume">▶ ПРОДОЛЖИТЬ</button>
+    <button class="btn btn-secondary" id="btn-pause-menu">🏠 МЕНЮ</button>
+  </div>
+
+  <!-- Ad Overlay -->
+  <div id="ad-overlay" class="hidden">
+    <div class="ad-box">
+      <div class="ad-text">📢 Реклама</div>
+      <div class="ad-sub">Смотрите рекламу, чтобы получить награду</div>
+    </div>
+  </div>
+
+  <!-- Purchase Notification -->
+  <div id="purchase-notify" class="hidden">
+    <div id="purchase-notify-text"></div>
+  </div>
+
+  <script src="https://yandex.ru/games/sdk/v2"></script>
+  <script src="game.js"></script>
+</body>
+</html>
