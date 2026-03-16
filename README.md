@@ -23,13 +23,10 @@ A cyberpunk social action game for Roblox where street gangs compete in parkour 
 
 ### Option A: Download pre-built file (easiest — no tools needed)
 
-1. Go to the [**Releases**](../../releases) page of this repository
-2. Download **NeonSlice.rbxlx** from the latest release
-3. Open it in [Roblox Studio](https://www.roblox.com/create) → Press **▶ Play**
+1. Download [**NeonSlice.rbxlx**](NeonSlice.rbxlx) directly from this repository (click the link, then click **Download**)
+2. Open it in [Roblox Studio](https://www.roblox.com/create) → Press **▶ Play**
 
-> ℹ️ **`NeonSlice.rbxlx` is not stored in the repository** — it is a build artifact.
-> It is automatically built by GitHub Actions on every commit and published to [Releases](../../releases) when a version is tagged.
-> You can also build it yourself with Rojo (see Option B below).
+> ℹ️ The file is automatically rebuilt by GitHub Actions whenever the source code changes.
 
 ### Option B: Build it yourself with Rojo
 

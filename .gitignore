@@ -7,6 +7,10 @@
 *.rbxm
 *.rbxmx
 
+# Exception: keep the pre-built game file in the repo so users
+# can download and open it without installing Rojo.
+!NeonSlice.rbxlx
+
 # Rojo build artifacts
 /build/
 
