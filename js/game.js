@@ -57,6 +57,18 @@ class Game {
         const th = this.buildingManager.place('townhall', px, py, this.world);
         if (th) th.constructed = true;
 
+        // Place starter buildings so the city looks alive from the start
+        const starters = [
+            { type: 'cottage', dx: -100, dy: -60 },
+            { type: 'cottage', dx:  120, dy: -70 },
+            { type: 'farm',    dx: -120, dy:  80 },
+            { type: 'well',    dx:   60, dy:  70 },
+        ];
+        for (const s of starters) {
+            const b = this.buildingManager.place(s.type, px + s.dx, py + s.dy, this.world);
+            if (b) b.constructed = true;
+        }
+
         // Spawn initial residents
         for (let i = 0; i < 6; i++) {
             const r = this.residentManager.spawn(i % 2 === 0, [], []);
