@@ -72,6 +72,81 @@ def prop_token(props_el, name, value):
     el.text = str(value)
     return el
 
+def prop_float(props_el, name, value):
+    el = ET.SubElement(props_el, "float")
+    el.set("name", name)
+    el.text = str(float(value))
+    return el
+
+def prop_vector3(props_el, name, x, y, z):
+    """Serialise a Vector3 property as used in Roblox RBXLX v4."""
+    el = ET.SubElement(props_el, "Vector3")
+    el.set("name", name)
+    ET.SubElement(el, "X").text = str(float(x))
+    ET.SubElement(el, "Y").text = str(float(y))
+    ET.SubElement(el, "Z").text = str(float(z))
+    return el
+
+def prop_cframe(props_el, name, x, y, z):
+    """Serialise an identity-rotation CoordinateFrame at (x, y, z)."""
+    el = ET.SubElement(props_el, "CoordinateFrame")
+    el.set("name", name)
+    ET.SubElement(el, "X").text   = str(float(x))
+    ET.SubElement(el, "Y").text   = str(float(y))
+    ET.SubElement(el, "Z").text   = str(float(z))
+    # Identity rotation matrix
+    for tag, val in [("R00","1"),("R01","0"),("R02","0"),
+                     ("R10","0"),("R11","1"),("R12","0"),
+                     ("R20","0"),("R21","0"),("R22","1")]:
+        ET.SubElement(el, tag).text = val
+    return el
+
+def prop_brickcolor(props_el, name, color_id):
+    """BrickColor by numeric Roblox palette ID."""
+    el = ET.SubElement(props_el, "BrickColor")
+    el.set("name", name)
+    el.text = str(int(color_id))
+    return el
+
+# ── Static geometry helpers ───────────────────────────────────────────────────
+def make_static_part(parent_el, name, sx, sy, sz, cx, cy, cz,
+                     brickcolor_id=37, material_token=1280,
+                     transparency=0.0):
+    """Add an Anchored, CanCollide Part with full geometry to the RBXLX.
+
+    Default BrickColor 37 = Bright green; Material token 1280 = Grass.
+    """
+    it = item(parent_el, "Part")
+    p  = props(it)
+    prop_string(p,     "Name",        name)
+    prop_bool(p,       "Anchored",    True)
+    prop_bool(p,       "CanCollide",  True)
+    prop_bool(p,       "CastShadow",  True)
+    prop_vector3(p,    "Size",        sx, sy, sz)
+    prop_cframe(p,     "CFrame",      cx, cy, cz)
+    prop_brickcolor(p, "BrickColor",  brickcolor_id)
+    prop_token(p,      "Material",    material_token)
+    if transparency > 0:
+        prop_float(p,  "Transparency", transparency)
+    return it
+
+def make_static_spawn(parent_el, cx=0, cy=1, cz=0):
+    """Add a neutral SpawnLocation to the RBXLX so players always have
+    somewhere to spawn regardless of whether CityBuilder has finished."""
+    it = item(parent_el, "SpawnLocation")
+    p  = props(it)
+    prop_string(p,     "Name",                  "Spawn")
+    prop_bool(p,       "Anchored",               True)
+    prop_bool(p,       "CanCollide",             True)
+    prop_bool(p,       "Neutral",                True)
+    prop_int(p,        "Duration",               0)
+    prop_bool(p,       "AllowTeamChangeOnTouch", False)
+    prop_vector3(p,    "Size",                   20, 1, 20)
+    prop_cframe(p,     "CFrame",                 cx, cy, cz)
+    prop_brickcolor(p, "BrickColor",             37)   # Bright green
+    prop_token(p,      "Material",               256)  # Plastic
+    return it
+
 # ── Read a Lua source file ────────────────────────────────────────────────────
 def read_lua(path: Path) -> str:
     try:
@@ -148,6 +223,18 @@ def build_tree():
     prop_bool(pw,   "FilteringEnabled", True)
     prop_bool(pw,   "StreamingEnabled", False)
 
+    # ── Static baseplate – must exist BEFORE CityBuilder runs so players
+    #    never fall through when they first join the game.
+    #    BrickColor 37 = Bright green, Material 1280 = Grass.
+    make_static_part(ws, "Baseplate",
+                     sx=2048, sy=4,  sz=2048,
+                     cx=0,    cy=-2, cz=0,
+                     brickcolor_id=37, material_token=1280)
+
+    # ── Static SpawnLocation – always present at map centre (0, 1, 0).
+    #    CityBuilder will attach the welcome BillboardGui to it at runtime.
+    make_static_spawn(ws, cx=0, cy=1, cz=0)
+
     # ── ServerScriptService ───────────────────────────────────────────────────
     sss = item(dm, "ServerScriptService")
     sss_props_el = props(sss)
@@ -203,27 +290,11 @@ def build_tree():
 
     return root
 
-# ── Indent XML helper ─────────────────────────────────────────────────────────
-def indent(elem, level=0):
-    pad = "\n" + "  " * level
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = pad + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = pad
-        for child in elem:
-            indent(child, level + 1)
-        if not child.tail or not child.tail.strip():
-            child.tail = pad
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = pad
-
 # ── Entry point ───────────────────────────────────────────────────────────────
+# NOTE: requires Python 3.9+ for ET.indent().
 def main():
     print(f"Generating {OUTPUT} ...")
     tree_root = build_tree()
-    indent(tree_root)
     tree_obj = ET.ElementTree(tree_root)
     ET.indent(tree_obj, space="  ")  # Python 3.9+
 

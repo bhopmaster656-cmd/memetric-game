@@ -46,18 +46,13 @@ local function addLabel(part, text)
 end
 
 -- ── Map root folders ──────────────────────────────────────────────────────────
-local mapFolder = makeModel("CityMap", Workspace)
+local mapFolder   = makeModel("CityMap", Workspace)
 local plotsFolder = makeModel("PropertyPlots", Workspace)  -- needed by PropertySystem
 
--- ── Ground ────────────────────────────────────────────────────────────────────
-local ground = makePart({
-    Name        = "Ground",
-    Size        = Vector3.new(2048, 4, 2048),
-    CFrame      = CFrame.new(0, -2, 0),
-    BrickColor  = BrickColor.new("Medium green"),
-    Material    = Enum.Material.Grass,
-    parent      = mapFolder,
-})
+-- The Baseplate (ground) and SpawnLocation are embedded as static geometry
+-- in the RBXLX so they exist the moment the game loads, before this script
+-- runs.  We locate the static spawn to attach the welcome sign.
+local spawnPart = Workspace:FindFirstChild("Spawn")
 
 -- ── Road helper ───────────────────────────────────────────────────────────────
 local function road(x, z, sx, sz)
@@ -328,18 +323,10 @@ makePart({ Name="Slide", Size=Vector3.new(3,8,12), CFrame=CFrame.new(380, 4, 200
 makePart({ Name="GardenBed1", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 200), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
 makePart({ Name="GardenBed2", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 215), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
 
--- ── 7. SPAWN LOCATION ─────────────────────────────────────────────────────────
-local spawn = Instance.new("SpawnLocation")
-spawn.Name        = "Spawn"
-spawn.Size        = Vector3.new(20, 1, 20)
-spawn.CFrame      = CFrame.new(0, 1, 0)
-spawn.BrickColor  = BrickColor.new("Bright green")
-spawn.Neutral     = true
-spawn.Duration    = 0
-spawn.Parent      = Workspace
-
--- Welcome sign
-addLabel(spawn, "🏙️ Welcome to CityLife!")
+-- ── 7. WELCOME SIGN on the static SpawnLocation ──────────────────────────────
+if spawnPart then
+    addLabel(spawnPart, "🏙️ Welcome to CityLife!")
+end
 
 -- ── 8. STREET LIGHTS ─────────────────────────────────────────────────────────
 local function streetLight(cx, cz)

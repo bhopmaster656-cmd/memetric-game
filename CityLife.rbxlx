@@ -13,12 +13,72 @@
         <bool name="FilteringEnabled">true</bool>
         <bool name="StreamingEnabled">false</bool>
       </Properties>
+      <Item class="Part" referent="RBX00000003">
+        <Properties>
+          <string name="Name">Baseplate</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="Size">
+            <X>2048.0</X>
+            <Y>4.0</Y>
+            <Z>2048.0</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.0</X>
+            <Y>-2.0</Y>
+            <Z>0.0</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <BrickColor name="BrickColor">37</BrickColor>
+          <token name="Material">1280</token>
+        </Properties>
+      </Item>
+      <Item class="SpawnLocation" referent="RBX00000004">
+        <Properties>
+          <string name="Name">Spawn</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="Neutral">true</bool>
+          <int name="Duration">0</int>
+          <bool name="AllowTeamChangeOnTouch">false</bool>
+          <Vector3 name="Size">
+            <X>20.0</X>
+            <Y>1.0</Y>
+            <Z>20.0</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.0</X>
+            <Y>1.0</Y>
+            <Z>0.0</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <BrickColor name="BrickColor">37</BrickColor>
+          <token name="Material">256</token>
+        </Properties>
+      </Item>
     </Item>
-    <Item class="ServerScriptService" referent="RBX00000003">
+    <Item class="ServerScriptService" referent="RBX00000005">
       <Properties>
         <string name="Name">ServerScriptService</string>
       </Properties>
-      <Item class="Script" referent="RBX00000004">
+      <Item class="Script" referent="RBX00000006">
         <Properties>
           <string name="Name">AuctionSystem</string>
           <ProtectedString name="Source">-- AuctionSystem.server.lua
@@ -282,7 +342,7 @@ print("[AuctionSystem] Initialized.")
           <token name="RunContext">0</token>
         </Properties>
       </Item>
-      <Item class="Script" referent="RBX00000005">
+      <Item class="Script" referent="RBX00000007">
         <Properties>
           <string name="Name">BusinessSystem</string>
           <ProtectedString name="Source">-- BusinessSystem.server.lua
@@ -417,7 +477,7 @@ print("[BusinessSystem] Initialized.")
           <token name="RunContext">0</token>
         </Properties>
       </Item>
-      <Item class="Script" referent="RBX00000006">
+      <Item class="Script" referent="RBX00000008">
         <Properties>
           <string name="Name">CityBuilder</string>
           <ProtectedString name="Source">-- CityBuilder.server.lua
@@ -468,18 +528,13 @@ local function addLabel(part, text)
 end
 
 -- ── Map root folders ──────────────────────────────────────────────────────────
-local mapFolder = makeModel("CityMap", Workspace)
+local mapFolder   = makeModel("CityMap", Workspace)
 local plotsFolder = makeModel("PropertyPlots", Workspace)  -- needed by PropertySystem
 
--- ── Ground ────────────────────────────────────────────────────────────────────
-local ground = makePart({
-    Name        = "Ground",
-    Size        = Vector3.new(2048, 4, 2048),
-    CFrame      = CFrame.new(0, -2, 0),
-    BrickColor  = BrickColor.new("Medium green"),
-    Material    = Enum.Material.Grass,
-    parent      = mapFolder,
-})
+-- The Baseplate (ground) and SpawnLocation are embedded as static geometry
+-- in the RBXLX so they exist the moment the game loads, before this script
+-- runs.  We locate the static spawn to attach the welcome sign.
+local spawnPart = Workspace:FindFirstChild("Spawn")
 
 -- ── Road helper ───────────────────────────────────────────────────────────────
 local function road(x, z, sx, sz)
@@ -750,18 +805,10 @@ makePart({ Name="Slide", Size=Vector3.new(3,8,12), CFrame=CFrame.new(380, 4, 200
 makePart({ Name="GardenBed1", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 200), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
 makePart({ Name="GardenBed2", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 215), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
 
--- ── 7. SPAWN LOCATION ─────────────────────────────────────────────────────────
-local spawn = Instance.new("SpawnLocation")
-spawn.Name        = "Spawn"
-spawn.Size        = Vector3.new(20, 1, 20)
-spawn.CFrame      = CFrame.new(0, 1, 0)
-spawn.BrickColor  = BrickColor.new("Bright green")
-spawn.Neutral     = true
-spawn.Duration    = 0
-spawn.Parent      = Workspace
-
--- Welcome sign
-addLabel(spawn, "🏙️ Welcome to CityLife!")
+-- ── 7. WELCOME SIGN on the static SpawnLocation ──────────────────────────────
+if spawnPart then
+    addLabel(spawnPart, "🏙️ Welcome to CityLife!")
+end
 
 -- ── 8. STREET LIGHTS ─────────────────────────────────────────────────────────
 local function streetLight(cx, cz)
@@ -785,7 +832,7 @@ print("[CityBuilder] City generated.")
           <token name="RunContext">0</token>
         </Properties>
       </Item>
-      <Item class="Script" referent="RBX00000007">
+      <Item class="Script" referent="RBX00000009">
         <Properties>
           <string name="Name">DataStore</string>
           <ProtectedString name="Source">-- DataStore.server.lua
@@ -925,7 +972,7 @@ print("[DataStore] Initialized.")
           <token name="RunContext">0</token>
         </Properties>
       </Item>
-      <Item class="Script" referent="RBX00000008">
+      <Item class="Script" referent="RBX00000010">
         <Properties>
           <string name="Name">JobSystem</string>
           <ProtectedString name="Source">-- JobSystem.server.lua
@@ -1086,7 +1133,7 @@ print("[JobSystem] Initialized.")
           <token name="RunContext">0</token>
         </Properties>
       </Item>
-      <Item class="Script" referent="RBX00000009">
+      <Item class="Script" referent="RBX00000011">
         <Properties>
           <string name="Name">Monetization</string>
           <ProtectedString name="Source">-- Monetization.server.lua
@@ -1168,7 +1215,7 @@ print("[Monetization] Initialized.")
           <token name="RunContext">0</token>
         </Properties>
       </Item>
-      <Item class="Script" referent="RBX00000010">
+      <Item class="Script" referent="RBX00000012">
         <Properties>
           <string name="Name">PropertySystem</string>
           <ProtectedString name="Source">-- PropertySystem.server.lua
@@ -1320,7 +1367,7 @@ print("[PropertySystem] Initialized.")
           <token name="RunContext">0</token>
         </Properties>
       </Item>
-      <Item class="Script" referent="RBX00000011">
+      <Item class="Script" referent="RBX00000013">
         <Properties>
           <string name="Name">TaxSystem</string>
           <ProtectedString name="Source">-- TaxSystem.server.lua
@@ -1433,15 +1480,15 @@ print("[TaxSystem] Initialized.")
         </Properties>
       </Item>
     </Item>
-    <Item class="ReplicatedStorage" referent="RBX00000012">
+    <Item class="ReplicatedStorage" referent="RBX00000014">
       <Properties>
         <string name="Name">ReplicatedStorage</string>
       </Properties>
-      <Item class="Folder" referent="RBX00000013">
+      <Item class="Folder" referent="RBX00000015">
         <Properties>
           <string name="Name">Modules</string>
         </Properties>
-        <Item class="ModuleScript" referent="RBX00000014">
+        <Item class="ModuleScript" referent="RBX00000016">
           <Properties>
             <string name="Name">GameConfig</string>
             <ProtectedString name="Source">-- GameConfig.lua
@@ -1674,7 +1721,7 @@ return GameConfig
             <bool name="Disabled">false</bool>
           </Properties>
         </Item>
-        <Item class="ModuleScript" referent="RBX00000015">
+        <Item class="ModuleScript" referent="RBX00000017">
           <Properties>
             <string name="Name">RemoteEvents</string>
             <ProtectedString name="Source">-- RemoteEvents.lua
@@ -1742,11 +1789,11 @@ return RemoteEvents
         </Item>
       </Item>
     </Item>
-    <Item class="StarterGui" referent="RBX00000016">
+    <Item class="StarterGui" referent="RBX00000018">
       <Properties>
         <string name="Name">StarterGui</string>
       </Properties>
-      <Item class="LocalScript" referent="RBX00000017">
+      <Item class="LocalScript" referent="RBX00000019">
         <Properties>
           <string name="Name">AuctionMenu</string>
           <ProtectedString name="Source">-- AuctionMenu.client.lua
@@ -1999,7 +2046,7 @@ print("[AuctionMenu] Loaded.")
           <bool name="Disabled">false</bool>
         </Properties>
       </Item>
-      <Item class="LocalScript" referent="RBX00000018">
+      <Item class="LocalScript" referent="RBX00000020">
         <Properties>
           <string name="Name">BusinessMenu</string>
           <ProtectedString name="Source">-- BusinessMenu.client.lua
@@ -2225,7 +2272,7 @@ print("[BusinessMenu] Loaded.")
           <bool name="Disabled">false</bool>
         </Properties>
       </Item>
-      <Item class="LocalScript" referent="RBX00000019">
+      <Item class="LocalScript" referent="RBX00000021">
         <Properties>
           <string name="Name">JobMenu</string>
           <ProtectedString name="Source">-- JobMenu.client.lua
@@ -2392,7 +2439,7 @@ print("[JobMenu] Loaded.")
           <bool name="Disabled">false</bool>
         </Properties>
       </Item>
-      <Item class="LocalScript" referent="RBX00000020">
+      <Item class="LocalScript" referent="RBX00000022">
         <Properties>
           <string name="Name">MainHUD</string>
           <ProtectedString name="Source">-- MainHUD.client.lua
@@ -2574,7 +2621,7 @@ print("[MainHUD] Loaded.")
           <bool name="Disabled">false</bool>
         </Properties>
       </Item>
-      <Item class="LocalScript" referent="RBX00000021">
+      <Item class="LocalScript" referent="RBX00000023">
         <Properties>
           <string name="Name">PropertyMenu</string>
           <ProtectedString name="Source">-- PropertyMenu.client.lua
@@ -2805,7 +2852,7 @@ print("[PropertyMenu] Loaded.")
           <bool name="Disabled">false</bool>
         </Properties>
       </Item>
-      <Item class="LocalScript" referent="RBX00000022">
+      <Item class="LocalScript" referent="RBX00000024">
         <Properties>
           <string name="Name">ShopMenu</string>
           <ProtectedString name="Source">-- ShopMenu.client.lua
@@ -3018,15 +3065,15 @@ print("[ShopMenu] Loaded.")
         </Properties>
       </Item>
     </Item>
-    <Item class="StarterPlayer" referent="RBX00000023">
+    <Item class="StarterPlayer" referent="RBX00000025">
       <Properties>
         <string name="Name">StarterPlayer</string>
       </Properties>
-      <Item class="StarterPlayerScripts" referent="RBX00000024">
+      <Item class="StarterPlayerScripts" referent="RBX00000026">
         <Properties>
           <string name="Name">StarterPlayerScripts</string>
         </Properties>
-        <Item class="LocalScript" referent="RBX00000025">
+        <Item class="LocalScript" referent="RBX00000027">
           <Properties>
             <string name="Name">PlayerController</string>
             <ProtectedString name="Source">-- PlayerController.client.lua
@@ -3175,18 +3222,18 @@ print("[PlayerController] Loaded.")
         </Item>
       </Item>
     </Item>
-    <Item class="Teams" referent="RBX00000026">
+    <Item class="Teams" referent="RBX00000028">
       <Properties>
         <string name="Name">Teams</string>
       </Properties>
     </Item>
-    <Item class="Lighting" referent="RBX00000027">
+    <Item class="Lighting" referent="RBX00000029">
       <Properties>
         <string name="Name">Lighting</string>
         <bool name="GlobalShadows">true</bool>
         <int name="ClockTime">10</int>
       </Properties>
-      <Item class="Atmosphere" referent="RBX00000028">
+      <Item class="Atmosphere" referent="RBX00000030">
         <Properties>
           <string name="Name">Atmosphere</string>
         </Properties>
