@@ -1,0 +1,68 @@
+name: Build CityLife RBXLX
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate CityLife.rbxlx
+        run: python3 scripts/generate_rbxlx.py
+
+      - name: Verify output
+        run: |
+          ls -lh CityLife.rbxlx
+          echo "Lines: $(wc -l < CityLife.rbxlx)"
+
+      - name: Upload RBXLX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CityLife-rbxlx
+          path: CityLife.rbxlx
+          retention-days: 30
+
+      - name: Commit rebuilt RBXLX (main only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CityLife.rbxlx
+          git diff --cached --quiet || git commit -m "ci: rebuild CityLife.rbxlx [skip ci]"
+          git push
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate CityLife.rbxlx
+        run: python3 scripts/generate_rbxlx.py
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: CityLife.rbxlx
+          generate_release_notes: true
