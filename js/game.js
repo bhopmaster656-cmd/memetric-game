@@ -228,7 +228,7 @@ const Game = {
   _save() {
     try {
       const data = {
-        v: 1,
+        v: 2,
         credits: this.credits,
         totalBuilds: this.totalBuilds,
         totalMerges: this.totalMerges,
@@ -247,7 +247,7 @@ const Game = {
         return;
       }
       const data = JSON.parse(raw);
-      if (data.v !== 1) { this.credits = CONFIG.STARTING_CREDITS; return; }
+      if (data.v !== 2) { this.credits = CONFIG.STARTING_CREDITS; return; }
       this.credits     = data.credits     || CONFIG.STARTING_CREDITS;
       this.totalBuilds = data.totalBuilds || 0;
       this.totalMerges = data.totalMerges || 0;
