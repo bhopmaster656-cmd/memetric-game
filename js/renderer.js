@@ -24,6 +24,8 @@ const Renderer = {
     const W = this.canvas.width;
     const H = this.canvas.height;
 
+    // Advance animation phase [0, 2π) — sin/cos are periodic so any float works,
+    // but keeping the value bounded avoids slow float precision loss over long sessions.
     this._phase = (this._phase + 0.012) % (Math.PI * 2);
 
     // ── Background ────────────────────────────────────────────────────────────
@@ -622,10 +624,13 @@ const Renderer = {
 
   /** Draw a single building scaled to `size` for shop preview */
   drawPreview(ctx, bld, cx, cy, size) {
+    const saved = this.ctx;
+    this.ctx = ctx;
     ctx.save();
     ctx.shadowColor = bld.color;
     ctx.shadowBlur = 10;
     this._drawBuilding(bld, cx, cy, size);
     ctx.restore();
+    this.ctx = saved;
   },
 };

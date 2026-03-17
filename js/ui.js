@@ -49,7 +49,7 @@ const UI = {
       pctx.clearRect(0, 0, 60, 60);
       pctx.fillStyle = '#0a0a1f';
       pctx.fillRect(0, 0, 60, 60);
-      Renderer._drawBuilding.call(Renderer, bld, 30, 30, 55);
+      Renderer.drawPreview(pctx, bld, 30, 30, 55);
     });
   },
 

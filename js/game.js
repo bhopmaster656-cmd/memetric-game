@@ -41,9 +41,8 @@ const Game = {
     const loop = (ts) => {
       this._animId = requestAnimationFrame(loop);
       this._update(ts);
-      Renderer.render(Grid, this.drag);
       this.particles.update();
-      Renderer.particles.draw(Renderer.ctx);
+      Renderer.render(Grid, this.drag);
     };
     this._animId = requestAnimationFrame(loop);
   },

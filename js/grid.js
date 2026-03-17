@@ -46,7 +46,9 @@ const Grid = {
     if (a.id !== b.id) return null;
     if (a.id >= CONFIG.MAX_TIER) return null; // already max
 
-    const newTier = BUILDINGS[a.id]; // id is 1-based, array is 0-based
+    // BUILDINGS is 0-indexed; a.id is the current tier number (1-10),
+    // so BUILDINGS[a.id] gives the *next* tier (e.g. tier 1 → BUILDINGS[1] = tier 2).
+    const newTier = BUILDINGS[a.id];
     this.cells[srcIdx] = null;
     this.cells[dstIdx] = Object.assign({}, newTier);
     return this.cells[dstIdx];
