@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>НЕО СИТИ: ЭПОХА ИИ</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <header id="header">
+    <div id="game-title">⬡ НЕО СИТИ: ЭПОХА ИИ</div>
+    <div id="stats">
+      <div class="stat">
+        <span class="stat-label">💎 КРЕДИТЫ</span>
+        <span class="stat-value" id="credits-val">0</span>
+        <span class="stat-rate"  id="credits-rate">+0/с</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main area ──────────────────────────────────────────────────── -->
+  <div id="main">
+
+    <!-- Canvas -->
+    <div id="canvas-wrap">
+      <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- Side panel -->
+    <aside id="side-panel">
+
+      <!-- Shop -->
+      <div class="card">
+        <div class="card-title">🏪 Магазин</div>
+        <div id="shop-items"></div>
+        <button id="buy-btn" type="button">Купить здание</button>
+        <div id="cost-display">Стоимость: <span id="cost-val">10</span> 💎</div>
+      </div>
+
+      <!-- Building legend -->
+      <div class="card" id="legend-card">
+        <div class="card-title">📋 Здания</div>
+        <div id="legend"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card">
+        <div class="card-title">⚙️ Прочее</div>
+        <div id="hint">
+          Перетащите два одинаковых здания друг на друга чтобы объединить их.
+        </div>
+        <button id="reset-btn" type="button" style="margin-top:10px">🔄 Новая игра</button>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- ── Quest bar ──────────────────────────────────────────────────── -->
+  <div id="quest-bar">
+    <div id="quest-text">Загрузка…</div>
+    <div id="quest-progress">
+      <div id="quest-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="hidden"></div>
+
+<!-- Scripts — order matters: dependencies first -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+
+<!-- Inline: populate building legend after BUILDINGS is defined -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const legend = document.getElementById('legend');
+    if (!legend) return;
+    BUILDINGS.forEach(b => {
+      const row = document.createElement('div');
+      row.className = 'legend-row';
+      row.innerHTML = `
+        <div class="legend-dot" style="background:${b.color};color:${b.color}"></div>
+        <span class="legend-name">${b.id}. ${b.name}</span>
+        <span class="legend-income">+${Utils.formatNumber(b.incomePerSec)}/с</span>`;
+      legend.appendChild(row);
+    });
+  });
+</script>
+
+</body>
+</html>

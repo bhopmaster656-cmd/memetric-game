@@ -1,0 +1,349 @@
+/* ─── NEO CITY: AI ERA — Cyberpunk stylesheet ──────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
+
+:root {
+  --bg:        #07071a;
+  --panel-bg:  rgba(8, 8, 30, 0.92);
+  --border:    rgba(0, 229, 255, 0.22);
+  --border-hi: rgba(0, 229, 255, 0.6);
+  --cyan:      #00e5ff;
+  --purple:    #ce93d8;
+  --green:     #69f0ae;
+  --gold:      #ffd740;
+  --text:      #c8d8e8;
+  --text-dim:  #5a7080;
+  --danger:    #ff4757;
+  --font:      'Orbitron', monospace;
+  --radius:    10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Animated starfield background ──────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(0,80,120,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(80,0,120,0.12) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+#app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px;
+  gap: 10px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+#header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+}
+
+#game-title {
+  font-size: clamp(0.85rem, 3vw, 1.25rem);
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  text-shadow: 0 0 16px var(--cyan), 0 0 40px rgba(0,229,255,0.4);
+}
+
+#stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(0,229,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.stat-label { color: var(--text-dim); font-size: 0.7rem; }
+.stat-value { color: var(--gold); font-weight: 600; letter-spacing: 1px; }
+.stat-rate  { color: var(--green); font-size: 0.7rem; }
+
+/* ── Main area ──────────────────────────────────────────────────────────── */
+#main {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* ── Canvas wrapper ─────────────────────────────────────────────────────── */
+#canvas-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+}
+
+#game-canvas {
+  display: block;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 30px rgba(0,229,255,0.12), 0 0 60px rgba(0,100,200,0.1);
+  cursor: grab;
+  touch-action: none;
+}
+
+#game-canvas:active { cursor: grabbing; }
+
+/* ── Side panel ─────────────────────────────────────────────────────────── */
+#side-panel {
+  flex: 0 0 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Panel card ─────────────────────────────────────────────────────────── */
+.card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  backdrop-filter: blur(6px);
+}
+
+.card-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Shop item ──────────────────────────────────────────────────────────── */
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(0,229,255,0.04);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.shop-preview {
+  border-radius: 6px;
+  background: #0a0a1f;
+  flex-shrink: 0;
+}
+
+.shop-item-info { flex: 1; min-width: 0; }
+.shop-item-name { font-size: 0.75rem; font-weight: 600; color: var(--cyan); }
+.shop-item-desc { font-size: 0.62rem; color: var(--text-dim); margin: 2px 0; line-height: 1.3; }
+.shop-item-income { font-size: 0.7rem; color: var(--green); }
+
+/* ── Buy button ─────────────────────────────────────────────────────────── */
+#buy-btn {
+  width: 100%;
+  padding: 12px 8px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.12), rgba(0,80,200,0.1));
+  border: 1.5px solid var(--cyan);
+  border-radius: 8px;
+  color: var(--cyan);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  text-transform: uppercase;
+}
+
+#buy-btn:hover:not(:disabled) {
+  background: rgba(0,229,255,0.2);
+  box-shadow: 0 0 20px rgba(0,229,255,0.35);
+  transform: translateY(-1px);
+}
+
+#buy-btn:active:not(:disabled) { transform: scale(0.97); }
+
+#buy-btn:disabled {
+  border-color: var(--text-dim);
+  color: var(--text-dim);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+#cost-display {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--gold);
+  margin-top: 5px;
+}
+
+/* ── Reset button ───────────────────────────────────────────────────────── */
+#reset-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid rgba(255,71,87,0.4);
+  border-radius: 8px;
+  color: rgba(255,71,87,0.65);
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+#reset-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  box-shadow: 0 0 12px rgba(255,71,87,0.3);
+}
+
+/* ── Building legend ────────────────────────────────────────────────────── */
+#legend { max-height: 280px; overflow-y: auto; }
+#legend::-webkit-scrollbar { width: 4px; }
+#legend::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.65rem;
+  border-bottom: 1px solid rgba(30,50,100,0.4);
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+.legend-name { color: var(--text); flex: 1; }
+.legend-income { color: var(--green); font-size: 0.62rem; }
+
+/* ── Quest bar ──────────────────────────────────────────────────────────── */
+#quest-bar {
+  padding: 10px 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+#quest-text {
+  font-size: 0.7rem;
+  color: var(--gold);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+#quest-progress {
+  height: 6px;
+  background: rgba(255,215,64,0.12);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255,215,64,0.2);
+}
+
+#quest-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #ff9800);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 8px rgba(255,215,64,0.5);
+}
+
+/* ── Hint / instructions ────────────────────────────────────────────────── */
+#hint {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+  padding: 8px;
+}
+
+/* ── Toast notification ─────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  padding: 10px 20px;
+  background: rgba(0,0,20,0.9);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--cyan);
+  white-space: nowrap;
+  box-shadow: 0 0 20px rgba(0,229,255,0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+}
+
+#toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+.shake { animation: shake 0.35s ease; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,229,255,0.3); }
+  50%       { box-shadow: 0 0 20px rgba(0,229,255,0.7); }
+}
+
+/* ── Mobile adjustments ─────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #main { flex-direction: column; align-items: stretch; }
+  #side-panel { flex: unset; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  #side-panel .card { flex: 1 1 45%; }
+  #legend { max-height: 160px; }
+}
