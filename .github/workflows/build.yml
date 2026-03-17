@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the rebuilt RBXLX back to main
 
     steps:
       - name: Checkout repository
@@ -47,6 +49,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to create releases and upload assets
     if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
