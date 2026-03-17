@@ -222,6 +222,8 @@ def build_tree():
     prop_string(pw, "Name", "Workspace")
     prop_bool(pw,   "FilteringEnabled", True)
     prop_bool(pw,   "StreamingEnabled", False)
+    # Keep fallen parts well below ground so the baseplate is never destroyed.
+    prop_float(pw,  "FallenPartsDestroyHeight", -500.0)
 
     # ── Static baseplate – must exist BEFORE CityBuilder runs so players
     #    never fall through when they first join the game.

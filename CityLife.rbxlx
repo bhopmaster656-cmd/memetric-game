@@ -12,6 +12,7 @@
         <string name="Name">Workspace</string>
         <bool name="FilteringEnabled">true</bool>
         <bool name="StreamingEnabled">false</bool>
+        <float name="FallenPartsDestroyHeight">-500.0</float>
       </Properties>
       <Item class="Part" referent="RBX00000003">
         <Properties>
@@ -485,6 +486,13 @@ print("[BusinessSystem] Initialized.")
 -- Procedurally builds the city map using BaseParts.
 -- Districts: Civic, Residential, Commercial, Industrial, Park, Dealership Row.
 
+-- ── Prevent characters from spawning until the world is fully built ───────────
+-- This MUST be the first action in any server script that builds geometry.
+-- CharacterAutoLoads is re-enabled at the bottom of this file after all parts
+-- have been created, then any waiting players are loaded immediately.
+local Players = game:GetService("Players")
+Players.CharacterAutoLoads = false
+
 local Workspace = game:GetService("Workspace")
 
 -- ── Utility ───────────────────────────────────────────────────────────────────
@@ -531,10 +539,24 @@ end
 local mapFolder   = makeModel("CityMap", Workspace)
 local plotsFolder = makeModel("PropertyPlots", Workspace)  -- needed by PropertySystem
 
--- The Baseplate (ground) and SpawnLocation are embedded as static geometry
--- in the RBXLX so they exist the moment the game loads, before this script
--- runs.  We locate the static spawn to attach the welcome sign.
+-- Locate or create the SpawnLocation.
+-- It is embedded as static geometry in the RBXLX; if for any reason it is not
+-- present (e.g. older RBXLX format not recognised by the client), we create it
+-- dynamically here before any player character is loaded.
 local spawnPart = Workspace:FindFirstChild("Spawn")
+if not spawnPart then
+    spawnPart             = Instance.new("SpawnLocation")
+    spawnPart.Name        = "Spawn"
+    spawnPart.Size        = Vector3.new(20, 1, 20)
+    spawnPart.CFrame      = CFrame.new(0, 1, 0)
+    spawnPart.BrickColor  = BrickColor.new("Bright green")
+    spawnPart.Material    = Enum.Material.SmoothPlastic
+    spawnPart.Neutral     = true
+    spawnPart.Duration    = 0
+    spawnPart.Anchored    = true
+    spawnPart.CanCollide  = true
+    spawnPart.Parent      = Workspace
+end
 
 -- ── Road helper ───────────────────────────────────────────────────────────────
 local function road(x, z, sx, sz)
@@ -805,10 +827,8 @@ makePart({ Name="Slide", Size=Vector3.new(3,8,12), CFrame=CFrame.new(380, 4, 200
 makePart({ Name="GardenBed1", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 200), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
 makePart({ Name="GardenBed2", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 215), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
 
--- ── 7. WELCOME SIGN on the static SpawnLocation ──────────────────────────────
-if spawnPart then
-    addLabel(spawnPart, "🏙️ Welcome to CityLife!")
-end
+-- ── 7. WELCOME SIGN ──────────────────────────────────────────────────────────
+addLabel(spawnPart, "🏙️ Welcome to CityLife!")
 
 -- ── 8. STREET LIGHTS ─────────────────────────────────────────────────────────
 local function streetLight(cx, cz)
@@ -827,6 +847,23 @@ for i = -10, 10 do streetLight(-12, i * 80) end
 for i = -10, 10 do streetLight( 12, i * 80) end
 
 print("[CityBuilder] City generated.")
+
+-- ── Re-enable character loading now that the world is ready ───────────────────
+-- Any player who joined while the world was being built gets loaded now.
+-- Future players are handled by the PlayerAdded connection below.
+Players.CharacterAutoLoads = true
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if not player.Character then
+        player:LoadCharacter()
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player:LoadCharacter()
+end)
+
+print("[CityBuilder] Character loading enabled.")
 </ProtectedString>
           <bool name="Disabled">false</bool>
           <token name="RunContext">0</token>
