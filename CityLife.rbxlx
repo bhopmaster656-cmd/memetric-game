@@ -1,0 +1,3306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+  <Meta name="ExplicitAutoJoints" />
+  <External>null</External>
+  <External>nil</External>
+  <Item class="DataModel" referent="RBX00000001">
+    <Properties>
+      <string name="Name">CityLife</string>
+    </Properties>
+    <Item class="Workspace" referent="RBX00000002">
+      <Properties>
+        <string name="Name">Workspace</string>
+        <bool name="FilteringEnabled">true</bool>
+        <bool name="StreamingEnabled">false</bool>
+        <float name="Gravity">196.2</float>
+        <float name="FallenPartsDestroyHeight">-500.0</float>
+      </Properties>
+      <Item class="Part" referent="RBX00000003">
+        <Properties>
+          <string name="Name">Baseplate</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="Size">
+            <X>2048.0</X>
+            <Y>4.0</Y>
+            <Z>2048.0</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.0</X>
+            <Y>-2.0</Y>
+            <Z>0.0</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <BrickColor name="BrickColor">37</BrickColor>
+          <token name="Material">1280</token>
+        </Properties>
+      </Item>
+      <Item class="SpawnLocation" referent="RBX00000004">
+        <Properties>
+          <string name="Name">Spawn</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="Neutral">true</bool>
+          <int name="Duration">0</int>
+          <bool name="AllowTeamChangeOnTouch">false</bool>
+          <Vector3 name="Size">
+            <X>20.0</X>
+            <Y>1.0</Y>
+            <Z>20.0</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.0</X>
+            <Y>1.0</Y>
+            <Z>0.0</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <BrickColor name="BrickColor">37</BrickColor>
+          <token name="Material">256</token>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="ServerScriptService" referent="RBX00000005">
+      <Properties>
+        <string name="Name">ServerScriptService</string>
+      </Properties>
+      <Item class="Script" referent="RBX00000006">
+        <Properties>
+          <string name="Name">AuctionSystem</string>
+          <ProtectedString name="Source">-- AuctionSystem.server.lua
+-- ServerScriptService
+-- Players list properties or businesses for auction; others bid to acquire them.
+
+local Players   = game:GetService("Players")
+local RS        = game:GetService("ReplicatedStorage")
+
+repeat task.wait(0.1) until _G.PlayerData
+
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local RE         = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- ── Auction state ─────────────────────────────────────────────────────────────
+-- auctions[auctionId] = {
+--   id, sellerUserId, itemType ("property"|"business"),
+--   itemData, startPrice, currentBid, currentBidder,
+--   endTime, active
+-- }
+local auctions    = {}
+local auctionSeq  = 0
+
+local function newAuctionId()
+    auctionSeq = auctionSeq + 1
+    return "AUC_" .. auctionSeq
+end
+
+local function findAuction(auctionId)
+    return auctions[auctionId]
+end
+
+-- ── Remote: ListAuction ───────────────────────────────────────────────────────
+-- itemType: "property" | "business"
+-- itemRef:  plotId (for property) or businessId (for business)
+-- startPrice: opening bid
+RE.ListAuction.OnServerEvent:Connect(function(player, itemType, itemRef, startPrice)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    startPrice = math.max(1, math.floor(tonumber(startPrice) or 0))
+
+    -- Verify ownership
+    local itemData = nil
+    if itemType == "property" then
+        for _, entry in ipairs(data.properties) do
+            if entry.plotId == tostring(itemRef) then
+                itemData = entry
+                break
+            end
+        end
+    elseif itemType == "business" then
+        for _, entry in ipairs(data.businesses) do
+            if entry.businessId == tostring(itemRef) then
+                itemData = entry
+                break
+            end
+        end
+    end
+
+    if not itemData then
+        RE.Notify:FireClient(player, "You don't own that item.", "error")
+        return
+    end
+
+    local auctionId = newAuctionId()
+    auctions[auctionId] = {
+        id             = auctionId,
+        sellerUserId   = player.UserId,
+        itemType       = itemType,
+        itemData       = itemData,
+        startPrice     = startPrice,
+        currentBid     = startPrice,
+        currentBidder  = nil,
+        endTime        = os.time() + GameConfig.AuctionDuration,
+        active         = true,
+    }
+
+    RE.Notify:FireClient(player, "Auction listed! ID: " .. auctionId, "success")
+    print("[AuctionSystem]", player.Name, "listed", itemType, itemRef, "starting at $" .. startPrice)
+end)
+
+-- ── Remote: PlaceBid ──────────────────────────────────────────────────────────
+RE.PlaceBid.OnServerEvent:Connect(function(player, auctionId, bidAmount)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    local auc = findAuction(auctionId)
+    if not auc or not auc.active then
+        RE.Notify:FireClient(player, "Auction not found or expired.", "error")
+        return
+    end
+
+    if os.time() &gt; auc.endTime then
+        auc.active = false
+        RE.Notify:FireClient(player, "That auction has already ended.", "warn")
+        return
+    end
+
+    if player.UserId == auc.sellerUserId then
+        RE.Notify:FireClient(player, "You cannot bid on your own auction.", "warn")
+        return
+    end
+
+    bidAmount = math.floor(tonumber(bidAmount) or 0)
+    local minBid = math.ceil(auc.currentBid * (1 + GameConfig.AuctionMinBidRaise))
+    if bidAmount &lt; minBid then
+        RE.Notify:FireClient(player, "Bid must be at least $" .. minBid, "warn")
+        return
+    end
+
+    if data.cash &lt; bidAmount then
+        RE.Notify:FireClient(player, "Not enough cash!", "warn")
+        return
+    end
+
+    -- Refund previous bidder
+    if auc.currentBidder then
+        local prevBidder = Players:GetPlayerByUserId(auc.currentBidder)
+        if prevBidder then
+            _G.PlayerData.addCash(prevBidder, auc.currentBid)
+            RE.Notify:FireClient(prevBidder, "You were outbid on auction " .. auctionId, "warn")
+        end
+        -- If offline, store in their data when they return (simplified: just log)
+    end
+
+    _G.PlayerData.addCash(player, -bidAmount)
+    auc.currentBid    = bidAmount
+    auc.currentBidder = player.UserId
+
+    RE.Notify:FireClient(player, "Bid placed: $" .. bidAmount .. " on auction " .. auctionId, "success")
+end)
+
+-- ── Remote: ClaimAuction ─────────────────────────────────────────────────────
+RE.ClaimAuction.OnServerEvent:Connect(function(player, auctionId)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    local auc = findAuction(auctionId)
+    if not auc then
+        RE.Notify:FireClient(player, "Auction not found.", "error")
+        return
+    end
+
+    if auc.active and os.time() &lt; auc.endTime then
+        RE.Notify:FireClient(player, "Auction is still running.", "warn")
+        return
+    end
+
+    auc.active = false
+
+    if auc.currentBidder == nil then
+        -- No bids — return to seller if online
+        local seller = Players:GetPlayerByUserId(auc.sellerUserId)
+        if seller then
+            RE.Notify:FireClient(seller, "No bids on your auction " .. auctionId .. ". Item returned.", "info")
+        end
+        auctions[auctionId] = nil
+        return
+    end
+
+    if player.UserId ~= auc.currentBidder then
+        RE.Notify:FireClient(player, "You are not the winning bidder.", "error")
+        return
+    end
+
+    -- Transfer item to winner
+    if auc.itemType == "property" then
+        local sellerData = nil
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.UserId == auc.sellerUserId then
+                sellerData = _G.PlayerData.get(p)
+                break
+            end
+        end
+        -- If seller offline, item is still transferred (simplified)
+        if sellerData then
+            for i, entry in ipairs(sellerData.properties) do
+                if entry.plotId == auc.itemData.plotId then
+                    table.remove(sellerData.properties, i)
+                    break
+                end
+            end
+        end
+        data.properties[#data.properties + 1] = auc.itemData
+        -- Pay seller
+        local seller = Players:GetPlayerByUserId(auc.sellerUserId)
+        if seller then
+            _G.PlayerData.addCash(seller, auc.currentBid)
+            RE.Notify:FireClient(seller, "Your auction sold for $" .. auc.currentBid, "success")
+        end
+    elseif auc.itemType == "business" then
+        local sellerData = nil
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.UserId == auc.sellerUserId then
+                sellerData = _G.PlayerData.get(p)
+                break
+            end
+        end
+        if sellerData then
+            for i, entry in ipairs(sellerData.businesses) do
+                if entry.businessId == auc.itemData.businessId then
+                    table.remove(sellerData.businesses, i)
+                    break
+                end
+            end
+        end
+        data.businesses[#data.businesses + 1] = auc.itemData
+        local seller = Players:GetPlayerByUserId(auc.sellerUserId)
+        if seller then
+            _G.PlayerData.addCash(seller, auc.currentBid)
+            RE.Notify:FireClient(seller, "Your business auction sold for $" .. auc.currentBid, "success")
+        end
+    end
+
+    RE.Notify:FireClient(player, "You won auction " .. auctionId .. "!", "success")
+    auctions[auctionId] = nil
+end)
+
+-- ── Remote: GetAuctions ────────────────────────────────────────────────────────
+RE.GetAuctions.OnServerInvoke = function(_player)
+    local list = {}
+    for id, auc in pairs(auctions) do
+        if auc.active and os.time() &lt;= auc.endTime then
+            list[#list + 1] = {
+                id           = id,
+                itemType     = auc.itemType,
+                itemData     = auc.itemData,
+                currentBid   = auc.currentBid,
+                timeLeft     = auc.endTime - os.time(),
+            }
+        else
+            auc.active = false
+        end
+    end
+    return list
+end
+
+-- ── Expire auctions automatically ─────────────────────────────────────────────
+task.spawn(function()
+    while true do
+        task.wait(10)
+        for id, auc in pairs(auctions) do
+            if auc.active and os.time() &gt; auc.endTime then
+                auc.active = false
+                -- If there's a winning bidder, notify them
+                if auc.currentBidder then
+                    local winner = Players:GetPlayerByUserId(auc.currentBidder)
+                    if winner then
+                        RE.Notify:FireClient(winner, "Auction " .. id .. " ended – use Claim to collect.", "info")
+                    end
+                end
+            end
+        end
+    end
+end)
+
+print("[AuctionSystem] Initialized.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="RBX00000007">
+        <Properties>
+          <string name="Name">BusinessSystem</string>
+          <ProtectedString name="Source">-- BusinessSystem.server.lua
+-- ServerScriptService
+-- Players open, manage, and earn passive income from businesses.
+
+local Players   = game:GetService("Players")
+local RS        = game:GetService("ReplicatedStorage")
+
+repeat task.wait(0.1) until _G.PlayerData
+
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local RE         = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- ── Helpers ───────────────────────────────────────────────────────────────────
+local function findBizConfig(bizId)
+    for _, b in ipairs(GameConfig.Businesses) do
+        if b.id == bizId then return b end
+    end
+    return nil
+end
+
+local function countPlayerBusinesses(data, bizId)
+    local count = 0
+    for _, entry in ipairs(data.businesses) do
+        if entry.type == bizId then count = count + 1 end
+    end
+    return count
+end
+
+local function maxOwned(data, biz)
+    local max = biz.maxOwned
+    if data.hasBusinessTycoon then max = max + 1 end
+    return max
+end
+
+-- ── Remote: OpenBusiness ──────────────────────────────────────────────────────
+RE.OpenBusiness.OnServerEvent:Connect(function(player, bizId)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    local biz = findBizConfig(bizId)
+    if not biz then
+        RE.Notify:FireClient(player, "Invalid business type.", "error")
+        return
+    end
+
+    if countPlayerBusinesses(data, bizId) &gt;= maxOwned(data, biz) then
+        RE.Notify:FireClient(player, "You already own the maximum number of " .. biz.name .. "s.", "warn")
+        return
+    end
+
+    if data.cash &lt; biz.cost then
+        RE.Notify:FireClient(player, "Not enough cash! Need $" .. biz.cost, "warn")
+        return
+    end
+
+    _G.PlayerData.addCash(player, -biz.cost)
+
+    local bizEntry = {
+        type       = bizId,
+        businessId = player.UserId .. "_" .. bizId .. "_" .. os.time(),
+        open       = true,
+        revenue    = 0,
+    }
+    data.businesses[#data.businesses + 1] = bizEntry
+
+    RE.Notify:FireClient(player, "You opened a " .. biz.name .. "! (-$" .. biz.cost .. ")", "success")
+    print("[BusinessSystem]", player.Name, "opened", biz.name)
+end)
+
+-- ── Remote: CloseBusiness ──────────────────────────────────────────────────────
+RE.CloseBusiness.OnServerEvent:Connect(function(player, businessId)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    local foundIdx = nil
+    for i, entry in ipairs(data.businesses) do
+        if entry.businessId == businessId then
+            foundIdx = i
+            break
+        end
+    end
+
+    if not foundIdx then
+        RE.Notify:FireClient(player, "Business not found.", "error")
+        return
+    end
+
+    local entry  = table.remove(data.businesses, foundIdx)
+    local biz    = findBizConfig(entry.type)
+    -- Sell back at 60 % of purchase price
+    local refund = biz and math.floor(biz.cost * 0.6) or 0
+    _G.PlayerData.addCash(player, refund)
+
+    RE.Notify:FireClient(player, "Business closed. Refund: $" .. refund, "info")
+end)
+
+-- ── Remote: GetMyBusinesses ───────────────────────────────────────────────────
+RE.GetMyBusinesses.OnServerInvoke = function(player)
+    local data = _G.PlayerData.get(player)
+    if not data then return {} end
+    return data.businesses
+end
+
+-- ── Passive income loop ───────────────────────────────────────────────────────
+task.spawn(function()
+    while true do
+        task.wait(60)  -- pay out every 60 seconds
+        for _, player in ipairs(Players:GetPlayers()) do
+            local data = _G.PlayerData.get(player)
+            if data then
+                for _, entry in ipairs(data.businesses) do
+                    if entry.open then
+                        local biz = findBizConfig(entry.type)
+                        if biz then
+                            local income = biz.incomePerMin
+                            entry.revenue = (entry.revenue or 0) + income
+                            _G.PlayerData.addCash(player, income)
+                            RE.Notify:FireClient(player, biz.name .. " earned +$" .. income, "business")
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+print("[BusinessSystem] Initialized.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="RBX00000008">
+        <Properties>
+          <string name="Name">CityBuilder</string>
+          <ProtectedString name="Source">-- CityBuilder.server.lua
+-- ServerScriptService
+-- Procedurally builds the city map using BaseParts.
+-- Districts: Civic, Residential, Commercial, Industrial, Park, Dealership Row.
+
+-- ── Prevent characters from spawning until the world is fully built ───────────
+-- This MUST be the first action in any server script that builds geometry.
+-- CharacterAutoLoads is re-enabled at the bottom of this file after all parts
+-- have been created, then any waiting players are loaded immediately.
+local Players = game:GetService("Players")
+Players.CharacterAutoLoads = false
+
+local Workspace = game:GetService("Workspace")
+
+-- ── Utility ───────────────────────────────────────────────────────────────────
+local function makePart(props)
+    local p = Instance.new("BasePart" and props.class or "Part")
+    p.Anchored    = true
+    p.CanCollide  = true
+    p.CastShadow  = true
+    for k, v in pairs(props) do
+        if k ~= "class" and k ~= "parent" and k ~= "children" then
+            p[k] = v
+        end
+    end
+    if props.parent then p.Parent = props.parent end
+    return p
+end
+
+local function makeModel(name, parent)
+    local m  = Instance.new("Model")
+    m.Name   = name
+    m.Parent = parent
+    return m
+end
+
+local function addLabel(part, text)
+    local bg         = Instance.new("BillboardGui")
+    bg.Size          = UDim2.new(0, 200, 0, 50)
+    bg.StudsOffset   = Vector3.new(0, part.Size.Y / 2 + 3, 0)
+    bg.AlwaysOnTop   = false
+    bg.Parent        = part
+
+    local label      = Instance.new("TextLabel")
+    label.Size       = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text       = text
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextStrokeTransparency = 0
+    label.Font       = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.Parent     = bg
+end
+
+-- ── Map root folders ──────────────────────────────────────────────────────────
+local mapFolder   = makeModel("CityMap", Workspace)
+local plotsFolder = makeModel("PropertyPlots", Workspace)  -- needed by PropertySystem
+
+-- ── Ensure Baseplate exists ────────────────────────────────────────────────────
+-- Embedded in the RBXLX as static geometry, but always recreated dynamically
+-- here as a safety net in case the RBXLX version was not loaded correctly.
+-- This MUST happen before CharacterAutoLoads is re-enabled so the ground is
+-- always present when the first character spawns.
+local baseplate = Workspace:FindFirstChild("Baseplate")
+if not baseplate then
+    baseplate          = Instance.new("Part")
+    baseplate.Name     = "Baseplate"
+    baseplate.Size     = Vector3.new(2048, 4, 2048)
+    baseplate.CFrame   = CFrame.new(0, -2, 0)
+    baseplate.Anchored    = true
+    baseplate.CanCollide  = true
+    baseplate.BrickColor  = BrickColor.new("Bright green")
+    baseplate.Material    = Enum.Material.Grass
+    baseplate.Parent      = Workspace
+end
+
+-- ── Ensure SpawnLocation exists ────────────────────────────────────────────────
+-- Same pattern: prefer the static RBXLX version, fall back to a dynamic one.
+local spawnPart = Workspace:FindFirstChild("Spawn")
+if not spawnPart then
+    spawnPart             = Instance.new("SpawnLocation")
+    spawnPart.Name        = "Spawn"
+    spawnPart.Size        = Vector3.new(20, 1, 20)
+    spawnPart.CFrame      = CFrame.new(0, 1, 0)
+    spawnPart.BrickColor  = BrickColor.new("Bright green")
+    spawnPart.Material    = Enum.Material.SmoothPlastic
+    spawnPart.Neutral     = true
+    spawnPart.Duration    = 0
+    spawnPart.Anchored    = true
+    spawnPart.CanCollide  = true
+    spawnPart.Parent      = Workspace
+end
+
+-- ── Build the city inside pcall so any error never prevents characters loading ─
+local _buildOk, _buildErr = pcall(function()
+
+-- ── Road helper ───────────────────────────────────────────────────────────────
+local function road(x, z, sx, sz)
+    return makePart({
+        Name       = "Road",
+        Size       = Vector3.new(sx, 0.5, sz),
+        CFrame     = CFrame.new(x, 0.25, z),
+        BrickColor = BrickColor.new("Dark stone grey"),
+        Material   = Enum.Material.SmoothPlastic,
+        parent     = mapFolder,
+    })
+end
+
+-- ── Main roads ────────────────────────────────────────────────────────────────
+road(0,    0, 2048, 20)   -- East-West main road
+road(0,    0, 20, 2048)   -- North-South main road
+
+-- ── District builders ─────────────────────────────────────────────────────────
+
+-- Generic building
+local function building(folder, name, cx, cz, sx, sy, sz, color, material, label)
+    material  = material  or Enum.Material.SmoothPlastic
+    local m   = makeModel(name, folder)
+    local p   = makePart({
+        Name       = name .. "_Base",
+        Size       = Vector3.new(sx, sy, sz),
+        CFrame     = CFrame.new(cx, sy / 2, cz),
+        BrickColor = BrickColor.new(color),
+        Material   = material,
+        parent     = m,
+    })
+    m.PrimaryPart = p
+    if label then addLabel(p, label) end
+    return m
+end
+
+-- Windows stripe
+local function windows(folder, cx, cz, sx, sy, sz, floorH, offsetY)
+    for y = floorH, sy - floorH, floorH do
+        makePart({
+            Name        = "Window",
+            Size        = Vector3.new(sx + 0.2, 1.5, sz + 0.2),
+            CFrame      = CFrame.new(cx, offsetY + y, cz),
+            BrickColor  = BrickColor.new("Bright blue"),
+            Material    = Enum.Material.Glass,
+            Transparency = 0.4,
+            parent      = folder,
+        })
+    end
+end
+
+-- ── 1. CIVIC DISTRICT ─────────────────────────────────────────────────────────
+local civicFolder = makeModel("CivicDistrict", mapFolder)
+
+-- Fire Station
+local fsModel = building(civicFolder, "FireStation", -300, -300, 40, 20, 30, "Bright red", Enum.Material.SmoothPlastic, "🔥 Fire Station")
+building(civicFolder, "FireStation_Tower", -300, -300, 8, 40, 8, "Bright red", Enum.Material.SmoothPlastic)
+
+-- Police Station
+building(civicFolder, "PoliceStation", -200, -300, 40, 20, 30, "Bright blue", Enum.Material.SmoothPlastic, "🚓 Police Station")
+
+-- Hospital
+local hospModel = building(civicFolder, "Hospital", -100, -300, 50, 30, 40, "White", Enum.Material.SmoothPlastic, "🏥 Hospital")
+windows(civicFolder, -100, -300, 50, 30, 40, 5, 1)
+
+-- School
+building(civicFolder, "School", 50, -300, 60, 18, 50, "Bright yellow", Enum.Material.SmoothPlastic, "🏫 School")
+
+-- City Hall
+local hallModel = building(civicFolder, "CityHall", 200, -300, 50, 25, 40, "Light stone grey", Enum.Material.Marble, "🏛️ City Hall")
+
+-- Courthouse
+building(civicFolder, "Courthouse", 320, -300, 40, 22, 35, "Sand yellow", Enum.Material.Marble, "⚖️ Courthouse")
+
+-- ── 2. RESIDENTIAL DISTRICT ───────────────────────────────────────────────────
+local resFolder   = makeModel("ResidentialDistrict", mapFolder)
+local plotSeq     = 0
+
+local function residentialPlot(cx, cz, propType, model)
+    plotSeq = plotSeq + 1
+    local plotId = "plot_" .. plotSeq
+
+    local plot = makePart({
+        Name        = plotId,
+        Size        = Vector3.new(model.x, 0.3, model.z),
+        CFrame      = CFrame.new(cx, 0.15, cz),
+        BrickColor  = BrickColor.new("Bright green"),
+        Material    = Enum.Material.SmoothPlastic,
+        Transparency = 0.6,
+        parent       = plotsFolder,
+    })
+
+    local tv = Instance.new("StringValue")
+    tv.Name  = "PropertyType"
+    tv.Value = propType
+    tv.Parent = plot
+
+    local ov = Instance.new("StringValue")
+    ov.Name  = "Owned"
+    ov.Value = ""
+    ov.Parent = plot
+
+    return plot
+end
+
+-- Studio apartments (small blocks, 4-story)
+local function studio(cx, cz)
+    residentialPlot(cx, cz, "studio", {x=20, z=20})
+    building(resFolder, "Studio_"..plotSeq, cx, cz, 20, 16, 20, "Pastel brown", Enum.Material.SmoothPlastic)
+end
+
+-- Houses
+local function house(cx, cz)
+    residentialPlot(cx, cz, "house", {x=30, z=25})
+    building(resFolder, "House_"..plotSeq, cx, cz, 30, 12, 25, "Bright orange", Enum.Material.SmoothPlastic, "🏠 House")
+    -- Roof
+    makePart({
+        Name       = "Roof_"..plotSeq,
+        Size       = Vector3.new(34, 6, 29),
+        CFrame     = CFrame.new(cx, 12 + 3, cz) * CFrame.Angles(0, 0, math.rad(45)),
+        BrickColor = BrickColor.new("Dark orange"),
+        Material   = Enum.Material.SmoothPlastic,
+        parent     = resFolder,
+    })
+end
+
+-- Apartments (tall)
+local function apartment(cx, cz)
+    residentialPlot(cx, cz, "apartment", {x=25, z=25})
+    local h = 45
+    building(resFolder, "Apartment_"..plotSeq, cx, cz, 25, h, 25, "Light stone grey", Enum.Material.SmoothPlastic, "🏢 Apartment")
+    windows(resFolder, cx, cz, 25, h, 25, 5, 1)
+end
+
+-- Mansions (large)
+local function mansion(cx, cz)
+    residentialPlot(cx, cz, "mansion", {x=70, z=60})
+    building(resFolder, "Mansion_"..plotSeq, cx, cz, 70, 20, 60, "Pearl", Enum.Material.Marble, "🏰 Mansion")
+    -- Front pillars
+    for i = -2, 2 do
+        makePart({
+            Name   = "Pillar",
+            Size   = Vector3.new(3, 22, 3),
+            CFrame = CFrame.new(cx + i * 12, 11, cz - 32),
+            BrickColor = BrickColor.new("White"),
+            Material   = Enum.Material.Marble,
+            parent     = resFolder,
+        })
+    end
+end
+
+-- Lay out residential grid
+local startX, startZ = -600, 50
+for row = 0, 3 do
+    for col = 0, 5 do
+        local cx = startX + col * 55
+        local cz = startZ + row * 60
+        if row == 0 then studio(cx, cz)
+        elseif row == 1 then house(cx, cz)
+        elseif row == 2 then apartment(cx, cz)
+        else mansion(cx, cz) end
+    end
+end
+
+-- ── 3. COMMERCIAL DISTRICT ────────────────────────────────────────────────────
+local commFolder = makeModel("CommercialDistrict", mapFolder)
+
+local shops = {
+    { name="GroceryStore",   label="🛒 Grocery Store",   color="Medium green",     x=40, y=18, z=35 },
+    { name="Restaurant",     label="🍽️ Restaurant",      color="Bright red",       x=35, y=15, z=30 },
+    { name="CoffeeShop",     label="☕ Coffee Shop",      color="Reddish brown",    x=25, y=12, z=25 },
+    { name="ClothingStore",  label="👗 Clothing Store",   color="Hot pink",         x=30, y=14, z=28 },
+    { name="Pharmacy",       label="💊 Pharmacy",         color="White",            x=30, y=14, z=28 },
+    { name="Bank",           label="🏦 Bank",             color="Gold",             x=45, y=22, z=40 },
+    { name="Mall",           label="🛍️ Shopping Mall",   color="Linen",            x=80, y=25, z=70 },
+}
+
+for i, s in ipairs(shops) do
+    local cx = 100 + (i - 1) * 100
+    local cz = -50
+    building(commFolder, s.name, cx, cz, s.x, s.y, s.z, s.color, Enum.Material.SmoothPlastic, s.label)
+    road(cx, cz + s.z/2 + 10, s.x + 10, 20)
+end
+
+-- ── 4. INDUSTRIAL DISTRICT ────────────────────────────────────────────────────
+local indFolder  = makeModel("IndustrialDistrict", mapFolder)
+
+local function autoRepairShop(cx, cz, idx)
+    local bz = makeModel("AutoRepairShop_"..idx, indFolder)
+    makePart({ Name="Floor",  Size=Vector3.new(40,1,35), CFrame=CFrame.new(cx, 0.5, cz), BrickColor=BrickColor.new("Medium stone grey"), Material=Enum.Material.Concrete, parent=bz })
+    makePart({ Name="Walls",  Size=Vector3.new(40,15,35), CFrame=CFrame.new(cx, 8, cz), BrickColor=BrickColor.new("Dark stone grey"), Material=Enum.Material.Metal, Transparency=0, parent=bz })
+    makePart({ Name="Sign",   Size=Vector3.new(30,5,1),   CFrame=CFrame.new(cx, 16, cz-17), BrickColor=BrickColor.new("Bright red"),   Material=Enum.Material.Neon,   parent=bz })
+    addLabel(bz:FindFirstChildWhichIsA("BasePart", true), "🔧 Auto Repair Shop")
+end
+
+for i = 1, 4 do
+    autoRepairShop(-400 + (i-1)*90, 200, i)
+end
+
+-- Gas Stations
+for i = 1, 3 do
+    local cx = -400 + (i-1)*100
+    local cz = 320
+    local gs = makeModel("GasStation_"..i, indFolder)
+    makePart({ Name="Canopy",  Size=Vector3.new(30,4,20), CFrame=CFrame.new(cx, 10, cz), BrickColor=BrickColor.new("Bright yellow"), Material=Enum.Material.SmoothPlastic, parent=gs })
+    makePart({ Name="Building",Size=Vector3.new(12,8,10), CFrame=CFrame.new(cx, 4, cz),  BrickColor=BrickColor.new("White"),        Material=Enum.Material.SmoothPlastic, parent=gs })
+    makePart({ Name="Pump1",   Size=Vector3.new(2,5,1),   CFrame=CFrame.new(cx-8, 2.5, cz-5), BrickColor=BrickColor.new("Medium green"), Material=Enum.Material.Metal, parent=gs })
+    makePart({ Name="Pump2",   Size=Vector3.new(2,5,1),   CFrame=CFrame.new(cx+8, 2.5, cz-5), BrickColor=BrickColor.new("Medium green"), Material=Enum.Material.Metal, parent=gs })
+    addLabel(gs:FindFirstChildWhichIsA("BasePart", true), "⛽ Gas Station")
+end
+
+-- ── 5. CAR DEALERSHIP ROW ─────────────────────────────────────────────────────
+local dealFolder = makeModel("DealershipRow", mapFolder)
+
+local dealerships = {
+    { name="SpeedMotors",    color="Bright red",   label="🚗 Speed Motors" },
+    { name="LuxuryCars",     color="Gold",         label="🏎️ Luxury Cars" },
+    { name="FamilyAutos",    color="Bright blue",  label="🚙 Family Autos" },
+}
+
+for i, d in ipairs(dealerships) do
+    local cx = 400 + (i-1)*150
+    local cz = -200
+    local dm = makeModel(d.name, dealFolder)
+    -- Showroom
+    makePart({ Name="Showroom", Size=Vector3.new(60,16,50), CFrame=CFrame.new(cx, 8, cz), BrickColor=BrickColor.new(d.color), Material=Enum.Material.Glass, Transparency=0.3, parent=dm })
+    -- Lot
+    makePart({ Name="Lot",      Size=Vector3.new(120,0.5,80), CFrame=CFrame.new(cx, 0.25, cz+60), BrickColor=BrickColor.new("Dark stone grey"), Material=Enum.Material.Concrete, parent=dm })
+    addLabel(dm:FindFirstChildWhichIsA("BasePart", true), d.label)
+end
+
+-- ── 6. PARK DISTRICT ─────────────────────────────────────────────────────────
+local parkFolder = makeModel("ParkDistrict", mapFolder)
+
+-- Main park
+makePart({ Name="ParkGround", Size=Vector3.new(200,0.5,180), CFrame=CFrame.new(300, 0.25, 200), BrickColor=BrickColor.new("Bright green"), Material=Enum.Material.Grass, parent=parkFolder })
+
+-- Trees (cylinders + spheres)
+local function tree(cx, cz)
+    makePart({ Name="Trunk", Size=Vector3.new(3,10,3),  CFrame=CFrame.new(cx, 5, cz),  BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Wood,  Shape=Enum.PartType.Cylinder, parent=parkFolder })
+    makePart({ Name="Leaves",Size=Vector3.new(10,10,10), CFrame=CFrame.new(cx, 14, cz), BrickColor=BrickColor.new("Bright green"),  Material=Enum.Material.Grass, Shape=Enum.PartType.Ball,     parent=parkFolder })
+end
+
+local treePositions = {
+    {260,160},{340,160},{260,240},{340,240},{300,200},
+    {280,180},{320,180},{280,220},{320,220},{300,170},
+    {270,200},{330,200},{300,230},
+}
+for _, pos in ipairs(treePositions) do tree(pos[1], pos[2]) end
+
+-- Fountain
+makePart({ Name="FountainBase", Size=Vector3.new(12,2,12), CFrame=CFrame.new(300, 1, 200), BrickColor=BrickColor.new("Light stone grey"), Material=Enum.Material.Marble,    Shape=Enum.PartType.Cylinder, parent=parkFolder })
+makePart({ Name="FountainWater",Size=Vector3.new(8,1,8),   CFrame=CFrame.new(300, 2.5,200), BrickColor=BrickColor.new("Bright blue"),      Material=Enum.Material.Neon,     Transparency=0.3, Shape=Enum.PartType.Cylinder, parent=parkFolder })
+
+-- Park benches
+local function bench(cx, cz)
+    makePart({ Name="Bench_Seat", Size=Vector3.new(6,0.5,2),  CFrame=CFrame.new(cx, 1.5, cz), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Wood, parent=parkFolder })
+    makePart({ Name="Bench_Back", Size=Vector3.new(6,1.5,0.5),CFrame=CFrame.new(cx, 2.5, cz-0.8), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Wood, parent=parkFolder })
+end
+bench(280, 170) bench(320, 170) bench(280, 230) bench(320, 230)
+
+-- Playground
+makePart({ Name="PlaySurface", Size=Vector3.new(30,0.5,25), CFrame=CFrame.new(380, 0.25, 200), BrickColor=BrickColor.new("Sand yellow"), Material=Enum.Material.Sand, parent=parkFolder })
+-- Slide
+makePart({ Name="Slide", Size=Vector3.new(3,8,12), CFrame=CFrame.new(380, 4, 200) * CFrame.Angles(math.rad(30),0,0), BrickColor=BrickColor.new("Bright red"), Material=Enum.Material.SmoothPlastic, parent=parkFolder })
+
+-- Community garden
+makePart({ Name="GardenBed1", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 200), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
+makePart({ Name="GardenBed2", Size=Vector3.new(15,0.5,8), CFrame=CFrame.new(220, 0.25, 215), BrickColor=BrickColor.new("Reddish brown"), Material=Enum.Material.Mud, parent=parkFolder })
+
+-- ── 7. WELCOME SIGN ──────────────────────────────────────────────────────────
+addLabel(spawnPart, "🏙️ Welcome to CityLife!")
+
+-- ── 8. STREET LIGHTS ─────────────────────────────────────────────────────────
+local function streetLight(cx, cz)
+    local pole = makePart({ Name="Pole",   Size=Vector3.new(1,15,1),  CFrame=CFrame.new(cx, 7.5, cz), BrickColor=BrickColor.new("Dark stone grey"), Material=Enum.Material.Metal,        parent=mapFolder })
+    local bulb = makePart({ Name="Light",  Size=Vector3.new(2,2,2),   CFrame=CFrame.new(cx, 16, cz),  BrickColor=BrickColor.new("Bright yellow"),   Material=Enum.Material.Neon,         parent=mapFolder })
+    local pt   = Instance.new("PointLight")
+    pt.Range      = 30
+    pt.Brightness = 3
+    pt.Color      = Color3.new(1, 0.95, 0.8)
+    pt.Parent     = bulb
+end
+
+for i = -10, 10 do streetLight(i * 80, -12) end
+for i = -10, 10 do streetLight(i * 80,  12) end
+for i = -10, 10 do streetLight(-12, i * 80) end
+for i = -10, 10 do streetLight( 12, i * 80) end
+
+end) -- end pcall
+
+if _buildOk then
+    print("[CityBuilder] City generated.")
+else
+    warn("[CityBuilder] City build error (ground is still solid):", tostring(_buildErr))
+end
+
+-- ── Re-enable character loading now that the world is ready ───────────────────
+-- Any player who joined while the world was being built gets loaded now.
+-- Future players are handled by the PlayerAdded connection below.
+Players.CharacterAutoLoads = true
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if not player.Character then
+        player:LoadCharacter()
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player:LoadCharacter()
+end)
+
+print("[CityBuilder] Character loading enabled.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="RBX00000009">
+        <Properties>
+          <string name="Name">DataStore</string>
+          <ProtectedString name="Source">-- DataStore.server.lua
+-- ServerScriptService
+-- Persists and loads player data using DataStoreService.
+
+local Players          = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local RunService       = game:GetService("RunService")
+local RS               = game:GetService("ReplicatedStorage")
+
+-- During Studio testing DataStoreService can raise errors; guard gracefully.
+local playerStore = DataStoreService:GetDataStore("CityLife_v1")
+
+-- In-memory cache: [userId] = playerData table
+local cache = {}
+
+-- Default data template for new players
+local function defaultData()
+    return {
+        cash             = 5000,
+        job              = nil,
+        properties       = {},   -- list of { type, plotId }
+        businesses       = {},   -- list of { type, businessId, open }
+        lastTaxTime      = os.time(),
+        totalEarned      = 0,
+        totalSpent       = 0,
+        hasPremium       = false,
+        hasVIP           = false,
+        hasBusinessTycoon = false,
+    }
+end
+
+-- Safely load data for a player
+local function loadData(player)
+    local userId = tostring(player.UserId)
+    local ok, data = pcall(function()
+        return playerStore:GetAsync(userId)
+    end)
+    if ok and type(data) == "table" then
+        -- Merge defaults for any missing keys (handle version upgrades)
+        local def = defaultData()
+        for k, v in pairs(def) do
+            if data[k] == nil then
+                data[k] = v
+            end
+        end
+        cache[userId] = data
+    else
+        cache[userId] = defaultData()
+    end
+    return cache[userId]
+end
+
+-- Safely save data for a player
+local function saveData(player)
+    local userId = tostring(player.UserId)
+    local data   = cache[userId]
+    if not data then return end
+    local ok, err = pcall(function()
+        playerStore:SetAsync(userId, data)
+    end)
+    if not ok then
+        warn("[DataStore] Failed to save data for", player.Name, ":", err)
+    end
+end
+
+-- ── Public API (accessed via _G so other server scripts can use it) ──────────
+
+_G.PlayerData = {}
+
+function _G.PlayerData.get(player)
+    local userId = tostring(player.UserId)
+    return cache[userId]
+end
+
+function _G.PlayerData.save(player)
+    saveData(player)
+end
+
+function _G.PlayerData.addCash(player, amount)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+    data.cash = data.cash + amount
+    if amount &gt; 0 then
+        data.totalEarned = data.totalEarned + amount
+    else
+        data.totalSpent = data.totalSpent + math.abs(amount)
+    end
+    -- Notify client HUD
+    local RE = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+    RE.UpdateHUD:FireClient(player, { cash = data.cash })
+end
+
+function _G.PlayerData.getCash(player)
+    local data = _G.PlayerData.get(player)
+    return data and data.cash or 0
+end
+
+-- ── Player lifecycle ──────────────────────────────────────────────────────────
+
+Players.PlayerAdded:Connect(function(player)
+    local data = loadData(player)
+    -- Push initial HUD update after character loads
+    player.CharacterAdded:Connect(function()
+        task.wait(1)
+        local RE = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+        RE.UpdateHUD:FireClient(player, { cash = data.cash, job = data.job })
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    saveData(player)
+    cache[tostring(player.UserId)] = nil
+end)
+
+-- Auto-save every 60 seconds
+task.spawn(function()
+    while true do
+        task.wait(60)
+        for _, player in ipairs(Players:GetPlayers()) do
+            saveData(player)
+        end
+    end
+end)
+
+-- Bind to close (best effort save when server shuts down)
+game:BindToClose(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        saveData(player)
+    end
+end)
+
+print("[DataStore] Initialized.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="RBX00000010">
+        <Properties>
+          <string name="Name">JobSystem</string>
+          <ProtectedString name="Source">-- JobSystem.server.lua
+-- ServerScriptService
+-- Manages job assignment, salary, and Teams.
+
+local Players      = game:GetService("Players")
+local Teams        = game:GetService("Teams")
+local RS           = game:GetService("ReplicatedStorage")
+
+-- Wait for DataStore to initialise _G.PlayerData
+repeat task.wait(0.1) until _G.PlayerData
+
+local GameConfig   = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local RE           = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- ── Build Teams ───────────────────────────────────────────────────────────────
+local function getOrCreateTeam(job)
+    local team = Teams:FindFirstChild(job.name)
+    if not team then
+        team           = Instance.new("Team")
+        team.Name      = job.name
+        team.TeamColor = BrickColor.new(job.color)
+        team.AutoAssignable = false
+        team.Parent    = Teams
+    end
+    return team
+end
+
+-- Civilian team
+local civilianTeam = Teams:FindFirstChild("Civilian")
+if not civilianTeam then
+    civilianTeam = Instance.new("Team")
+    civilianTeam.Name      = "Civilian"
+    civilianTeam.TeamColor = BrickColor.new("Light stone grey")
+    civilianTeam.AutoAssignable = true
+    civilianTeam.Parent   = Teams
+end
+
+local jobTeams = {}
+for _, job in ipairs(GameConfig.Jobs) do
+    jobTeams[job.id] = getOrCreateTeam(job)
+end
+
+-- ── Helpers ───────────────────────────────────────────────────────────────────
+local function countJobMembers(jobId)
+    local count = 0
+    local team  = jobTeams[jobId]
+    if team then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Team == team then
+                count = count + 1
+            end
+        end
+    end
+    return count
+end
+
+local function findJobConfig(jobId)
+    for _, job in ipairs(GameConfig.Jobs) do
+        if job.id == jobId then return job end
+    end
+    return nil
+end
+
+-- ── Remote: AssignJob ─────────────────────────────────────────────────────────
+RE.AssignJob.OnServerEvent:Connect(function(player, jobId)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    local job = findJobConfig(jobId)
+    if not job then
+        RE.Notify:FireClient(player, "Unknown job: " .. tostring(jobId), "error")
+        return
+    end
+
+    if countJobMembers(jobId) &gt;= job.maxSlots then
+        RE.Notify:FireClient(player, "No slots available for " .. job.name, "warn")
+        return
+    end
+
+    -- Leave current job team first
+    if player.Team and player.Team ~= civilianTeam then
+        player.Team = civilianTeam
+    end
+
+    data.job    = jobId
+    player.Team = jobTeams[jobId]
+
+    RE.UpdateHUD:FireClient(player, { job = jobId })
+    RE.Notify:FireClient(player, "You are now a " .. job.name .. "!", "info")
+    print("[JobSystem]", player.Name, "assigned to", job.name)
+end)
+
+-- ── Remote: LeaveJob ──────────────────────────────────────────────────────────
+RE.LeaveJob.OnServerEvent:Connect(function(player)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    data.job    = nil
+    player.Team = civilianTeam
+
+    RE.UpdateHUD:FireClient(player, { job = nil })
+    RE.Notify:FireClient(player, "You left your job.", "info")
+end)
+
+-- ── Remote: GetJobInfo ────────────────────────────────────────────────────────
+RE.GetJobInfo.OnServerInvoke = function(player)
+    local list = {}
+    for _, job in ipairs(GameConfig.Jobs) do
+        list[#list + 1] = {
+            id       = job.id,
+            name     = job.name,
+            salary   = job.salary,
+            color    = job.color,
+            maxSlots = job.maxSlots,
+            current  = countJobMembers(job.id),
+        }
+    end
+    return list
+end
+
+-- ── Salary payment loop ───────────────────────────────────────────────────────
+task.spawn(function()
+    while true do
+        task.wait(GameConfig.SalaryInterval)
+        for _, player in ipairs(Players:GetPlayers()) do
+            local data = _G.PlayerData.get(player)
+            if data and data.job then
+                local job = findJobConfig(data.job)
+                if job then
+                    local multiplier = 1
+                    if data.hasPremium then multiplier = 2 end
+                    local pay = job.salary * multiplier
+                    _G.PlayerData.addCash(player, pay)
+                    RE.Notify:FireClient(player, "Salary: +$" .. pay, "salary")
+                end
+            end
+        end
+    end
+end)
+
+-- Restore team on rejoin
+Players.PlayerAdded:Connect(function(player)
+    task.wait(2)
+    local data = _G.PlayerData.get(player)
+    if data and data.job then
+        local team = jobTeams[data.job]
+        if team then
+            player.Team = team
+        end
+    end
+end)
+
+print("[JobSystem] Initialized.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="RBX00000011">
+        <Properties>
+          <string name="Name">Monetization</string>
+          <ProtectedString name="Source">-- Monetization.server.lua
+-- ServerScriptService
+-- Handles Roblox Developer Products (cash packs) and Game Passes.
+-- Replace the placeholder asset IDs in GameConfig with real IDs from the Creator Dashboard.
+
+local Players           = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local RS                = game:GetService("ReplicatedStorage")
+
+repeat task.wait(0.1) until _G.PlayerData
+
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local RE         = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- ── Build lookup tables ───────────────────────────────────────────────────────
+local productById  = {}
+for _, prod in ipairs(GameConfig.DevProducts) do
+    if prod.id ~= 0 then
+        productById[prod.id] = prod
+    end
+end
+
+local passById = {}
+for _, pass in ipairs(GameConfig.GamePasses) do
+    if pass.id ~= 0 then
+        passById[pass.id] = pass
+    end
+end
+
+-- ── Grant game pass benefits on join ─────────────────────────────────────────
+local function applyGamePasses(player)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    for passId, pass in pairs(passById) do
+        local ok, owns = pcall(function()
+            return MarketplaceService:UserOwnsGamePassAsync(player.UserId, passId)
+        end)
+        if ok and owns then
+            if pass.name == "Premium Citizen"  then data.hasPremium       = true end
+            if pass.name == "VIP Resident"     then data.hasVIP           = true end
+            if pass.name == "Business Tycoon"  then data.hasBusinessTycoon = true end
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    task.wait(2)  -- allow DataStore to load first
+    applyGamePasses(player)
+end)
+
+-- ── Process Developer Product receipts ───────────────────────────────────────
+-- Roblox calls this function when a purchase is confirmed.
+MarketplaceService.ProcessReceipt = function(receiptInfo)
+    local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+    if not player then
+        -- Player left; grant next session (simplified: log and PurchaseGranted)
+        return Enum.ProductPurchaseDecision.PurchaseGranted
+    end
+
+    local prod = productById[receiptInfo.ProductId]
+    if not prod then
+        warn("[Monetization] Unknown product ID:", receiptInfo.ProductId)
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
+
+    _G.PlayerData.addCash(player, prod.cash)
+    RE.Notify:FireClient(player, "Received +$" .. prod.cash .. " (" .. prod.name .. ")!", "success")
+    print("[Monetization]", player.Name, "purchased", prod.name, "+$" .. prod.cash)
+
+    return Enum.ProductPurchaseDecision.PurchaseGranted
+end
+
+print("[Monetization] Initialized.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="RBX00000012">
+        <Properties>
+          <string name="Name">PropertySystem</string>
+          <ProtectedString name="Source">-- PropertySystem.server.lua
+-- ServerScriptService
+-- Handles buying, selling, and tracking of residential properties and land.
+
+local Players   = game:GetService("Players")
+local RS        = game:GetService("ReplicatedStorage")
+
+repeat task.wait(0.1) until _G.PlayerData
+
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local RE         = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- Available plots are tagged parts in Workspace under the folder "PropertyPlots".
+-- Each Part should have a StringValue child "PropertyType" and a BoolValue "Owned".
+local Workspace     = game:GetService("Workspace")
+local plotsFolder   = Workspace:WaitForChild("PropertyPlots", 30)
+
+-- Registry: plotId -&gt; { ownerId, propertyType }
+local plotOwnership = {}
+
+-- Build initial registry from existing plots
+local function refreshRegistry()
+    if not plotsFolder then return end
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        local typeVal  = plot:FindFirstChild("PropertyType")
+        local ownedVal = plot:FindFirstChild("Owned")
+        if typeVal and ownedVal then
+            plotOwnership[plot.Name] = {
+                ownerId      = ownedVal.Value,
+                propertyType = typeVal.Value,
+                price        = 0,
+            }
+        end
+    end
+end
+refreshRegistry()
+
+-- ── Helpers ───────────────────────────────────────────────────────────────────
+local function findPropertyConfig(propId)
+    for _, p in ipairs(GameConfig.Properties) do
+        if p.id == propId then return p end
+    end
+    return nil
+end
+
+local function countPlayerProperties(data, propId)
+    local count = 0
+    for _, entry in ipairs(data.properties) do
+        if entry.type == propId then count = count + 1 end
+    end
+    return count
+end
+
+local function findPlayerPropertyIndex(data, plotId)
+    for i, entry in ipairs(data.properties) do
+        if entry.plotId == plotId then return i end
+    end
+    return nil
+end
+
+-- Tag a plot part as owned/unowned
+local function tagPlot(plotId, ownerId)
+    if not plotsFolder then return end
+    local plot    = plotsFolder:FindFirstChild(plotId)
+    if not plot then return end
+    local owned   = plot:FindFirstChild("Owned")
+    if owned then owned.Value = tostring(ownerId or "") end
+    -- Tint the plot so players can see it is taken
+    if plot:IsA("BasePart") then
+        plot.BrickColor = ownerId and BrickColor.new("Bright red") or BrickColor.new("Bright green")
+        plot.Transparency = ownerId and 0.4 or 0.6
+    end
+end
+
+-- ── Remote: BuyProperty ───────────────────────────────────────────────────────
+RE.BuyProperty.OnServerEvent:Connect(function(player, propertyId, plotId)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    local prop = findPropertyConfig(propertyId)
+    if not prop then
+        RE.Notify:FireClient(player, "Invalid property type.", "error")
+        return
+    end
+
+    -- Check plot availability
+    local ownership = plotOwnership[tostring(plotId)]
+    if ownership and ownership.ownerId ~= "" then
+        RE.Notify:FireClient(player, "This plot is already owned.", "warn")
+        return
+    end
+
+    -- Check ownership limit
+    if countPlayerProperties(data, propertyId) &gt;= prop.maxOwned then
+        RE.Notify:FireClient(player, "You already own the maximum number of " .. prop.name .. "s.", "warn")
+        return
+    end
+
+    -- Check funds
+    if data.cash &lt; prop.price then
+        RE.Notify:FireClient(player, "Not enough cash! Need $" .. prop.price, "warn")
+        return
+    end
+
+    _G.PlayerData.addCash(player, -prop.price)
+    data.properties[#data.properties + 1] = { type = propertyId, plotId = tostring(plotId) }
+    plotOwnership[tostring(plotId)] = { ownerId = tostring(player.UserId), propertyType = propertyId }
+    tagPlot(tostring(plotId), player.UserId)
+
+    RE.Notify:FireClient(player, "You bought a " .. prop.name .. "! (-$" .. prop.price .. ")", "success")
+    print("[PropertySystem]", player.Name, "bought", prop.name, "plot", plotId)
+end)
+
+-- ── Remote: SellProperty ──────────────────────────────────────────────────────
+RE.SellProperty.OnServerEvent:Connect(function(player, plotId)
+    local data = _G.PlayerData.get(player)
+    if not data then return end
+
+    local idx = findPlayerPropertyIndex(data, tostring(plotId))
+    if not idx then
+        RE.Notify:FireClient(player, "You don't own that property.", "error")
+        return
+    end
+
+    local entry    = data.properties[idx]
+    local prop     = findPropertyConfig(entry.type)
+    local sellPrice = prop and math.floor(prop.price * 0.7) or 0  -- 70 % resale value
+
+    table.remove(data.properties, idx)
+    plotOwnership[tostring(plotId)] = { ownerId = "", propertyType = entry.type }
+    tagPlot(tostring(plotId), nil)
+    _G.PlayerData.addCash(player, sellPrice)
+
+    RE.Notify:FireClient(player, "Property sold for $" .. sellPrice, "success")
+end)
+
+-- ── Remote: GetMyProperties ───────────────────────────────────────────────────
+RE.GetMyProperties.OnServerInvoke = function(player)
+    local data = _G.PlayerData.get(player)
+    if not data then return {} end
+    return data.properties
+end
+
+print("[PropertySystem] Initialized.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="RBX00000013">
+        <Properties>
+          <string name="Name">TaxSystem</string>
+          <ProtectedString name="Source">-- TaxSystem.server.lua
+-- ServerScriptService
+-- Collects periodic property and business taxes; evicts players who cannot pay.
+
+local Players   = game:GetService("Players")
+local RS        = game:GetService("ReplicatedStorage")
+
+repeat task.wait(0.1) until _G.PlayerData
+
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+local RE         = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- ── Helpers ───────────────────────────────────────────────────────────────────
+local function findPropertyConfig(propId)
+    for _, p in ipairs(GameConfig.Properties) do
+        if p.id == propId then return p end
+    end
+    return nil
+end
+
+local function findBizConfig(bizId)
+    for _, b in ipairs(GameConfig.Businesses) do
+        if b.id == bizId then return b end
+    end
+    return nil
+end
+
+-- ── Tax collection ────────────────────────────────────────────────────────────
+local function collectTaxes()
+    for _, player in ipairs(Players:GetPlayers()) do
+        local data = _G.PlayerData.get(player)
+        if not data then continue end
+
+        local totalTax = 0
+
+        -- Property taxes
+        for _, entry in ipairs(data.properties) do
+            local prop = findPropertyConfig(entry.type)
+            if prop then
+                totalTax = totalTax + math.ceil(prop.price * prop.taxRate)
+            end
+        end
+
+        -- Business taxes
+        for _, entry in ipairs(data.businesses) do
+            local biz = findBizConfig(entry.type)
+            if biz then
+                -- Tax based on one interval's worth of revenue
+                local intervalRevenue = biz.incomePerMin * (GameConfig.TaxInterval / 60)
+                totalTax = totalTax + math.ceil(intervalRevenue * biz.taxRate)
+            end
+        end
+
+        if totalTax == 0 then continue end
+
+        if data.cash &gt;= totalTax then
+            _G.PlayerData.addCash(player, -totalTax)
+            RE.Notify:FireClient(player, "Property/Business tax paid: -$" .. totalTax, "tax")
+        else
+            -- Cannot pay – forfeit last property or business (eviction)
+            local forfeited = false
+
+            -- Try forfeiting a business first
+            if #data.businesses &gt; 0 then
+                local entry = table.remove(data.businesses)
+                local biz   = findBizConfig(entry.type)
+                RE.Notify:FireClient(
+                    player,
+                    "Cannot pay taxes! Your " .. (biz and biz.name or "business") .. " was seized.",
+                    "eviction"
+                )
+                forfeited = true
+            elseif #data.properties &gt; 0 then
+                local entry = table.remove(data.properties)
+                local prop  = findPropertyConfig(entry.type)
+                RE.Notify:FireClient(
+                    player,
+                    "Cannot pay taxes! Your " .. (prop and prop.name or "property") .. " was seized.",
+                    "eviction"
+                )
+                forfeited = true
+            end
+
+            if not forfeited then
+                -- No assets to forfeit – deduct whatever cash remains
+                _G.PlayerData.addCash(player, -data.cash)
+                RE.Notify:FireClient(player, "You were fined for unpaid taxes!", "eviction")
+            end
+        end
+
+        data.lastTaxTime = os.time()
+    end
+end
+
+-- ── Tax loop ──────────────────────────────────────────────────────────────────
+task.spawn(function()
+    while true do
+        task.wait(GameConfig.TaxInterval)
+        collectTaxes()
+        print("[TaxSystem] Tax cycle completed.")
+    end
+end)
+
+print("[TaxSystem] Initialized.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+          <token name="RunContext">0</token>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="ReplicatedStorage" referent="RBX00000014">
+      <Properties>
+        <string name="Name">ReplicatedStorage</string>
+      </Properties>
+      <Item class="Folder" referent="RBX00000015">
+        <Properties>
+          <string name="Name">Modules</string>
+        </Properties>
+        <Item class="ModuleScript" referent="RBX00000016">
+          <Properties>
+            <string name="Name">GameConfig</string>
+            <ProtectedString name="Source">-- GameConfig.lua
+-- ReplicatedStorage &gt; Modules &gt; GameConfig
+-- Central configuration for all game systems.
+
+local GameConfig = {}
+
+-- ──────────────────────────────────────────────
+-- ECONOMY
+-- ──────────────────────────────────────────────
+GameConfig.StartingCash   = 5000          -- Cash given to brand‑new players
+GameConfig.SalaryInterval = 60            -- Seconds between salary payments
+GameConfig.TaxInterval    = 300           -- Seconds between tax collection cycles
+
+-- ──────────────────────────────────────────────
+-- JOBS
+-- ──────────────────────────────────────────────
+-- salary: cash awarded every SalaryInterval seconds
+-- color:  team / uniform BrickColor name
+GameConfig.Jobs = {
+    {
+        id       = "firefighter",
+        name     = "Firefighter",
+        salary   = 150,
+        color    = "Bright red",
+        maxSlots = 10,
+        tools    = {"FireHose"},
+    },
+    {
+        id       = "police",
+        name     = "Police Officer",
+        salary   = 175,
+        color    = "Bright blue",
+        maxSlots = 10,
+        tools    = {"Handcuffs", "Radio"},
+    },
+    {
+        id       = "construction",
+        name     = "Construction Worker",
+        salary   = 120,
+        color    = "Bright yellow",
+        maxSlots = 15,
+        tools    = {"Hammer"},
+    },
+    {
+        id       = "mechanic",
+        name     = "Mechanic",
+        salary   = 140,
+        color    = "Medium stone grey",
+        maxSlots = 12,
+        tools    = {"Wrench"},
+    },
+    {
+        id       = "plumber",
+        name     = "Plumber",
+        salary   = 130,
+        color    = "White",
+        maxSlots = 10,
+        tools    = {"Plunger"},
+    },
+    {
+        id       = "deputy",
+        name     = "Deputy Sheriff",
+        salary   = 160,
+        color    = "Reddish brown",
+        maxSlots = 8,
+        tools    = {"Handcuffs"},
+    },
+    {
+        id       = "doctor",
+        name     = "Doctor",
+        salary   = 250,
+        color    = "White",
+        maxSlots = 8,
+        tools    = {"MedKit"},
+    },
+    {
+        id       = "teacher",
+        name     = "Teacher",
+        salary   = 145,
+        color    = "Medium green",
+        maxSlots = 8,
+        tools    = {},
+    },
+    {
+        id       = "chef",
+        name     = "Chef",
+        salary   = 135,
+        color    = "White",
+        maxSlots = 10,
+        tools    = {},
+    },
+    {
+        id       = "mayor",
+        name     = "Mayor",
+        salary   = 400,
+        color    = "Dark orange",
+        maxSlots = 1,
+        tools    = {},
+    },
+}
+
+-- ──────────────────────────────────────────────
+-- PROPERTIES  (homes)
+-- ──────────────────────────────────────────────
+-- price:    purchase price
+-- taxRate:  fraction of price collected each TaxInterval
+-- maxOwned: how many of this type a single player may own
+GameConfig.Properties = {
+    {
+        id       = "studio",
+        name     = "Studio Apartment",
+        price    = 10000,
+        taxRate  = 0.02,
+        maxOwned = 3,
+    },
+    {
+        id       = "apartment",
+        name     = "Apartment",
+        price    = 50000,
+        taxRate  = 0.018,
+        maxOwned = 3,
+    },
+    {
+        id       = "house",
+        name     = "House",
+        price    = 150000,
+        taxRate  = 0.015,
+        maxOwned = 2,
+    },
+    {
+        id       = "mansion",
+        name     = "Mansion",
+        price    = 500000,
+        taxRate  = 0.012,
+        maxOwned = 1,
+    },
+    {
+        id       = "land",
+        name     = "Land Plot",
+        price    = 25000,
+        taxRate  = 0.01,
+        maxOwned = 5,
+    },
+}
+
+-- ──────────────────────────────────────────────
+-- BUSINESSES
+-- ──────────────────────────────────────────────
+-- cost:        upfront purchase price
+-- incomePerMin: passive income each minute the business is open
+-- taxRate:     fraction of incomePerMin * 60 collected per TaxInterval
+GameConfig.Businesses = {
+    {
+        id          = "autorepair",
+        name        = "Auto Repair Shop",
+        cost        = 75000,
+        incomePerMin = 250,
+        taxRate     = 0.05,
+        maxOwned    = 2,
+    },
+    {
+        id          = "dealership",
+        name        = "Car Dealership",
+        cost        = 200000,
+        incomePerMin = 600,
+        taxRate     = 0.06,
+        maxOwned    = 1,
+    },
+    {
+        id          = "restaurant",
+        name        = "Restaurant",
+        cost        = 100000,
+        incomePerMin = 350,
+        taxRate     = 0.05,
+        maxOwned    = 2,
+    },
+    {
+        id          = "gasstation",
+        name        = "Gas Station",
+        cost        = 80000,
+        incomePerMin = 280,
+        taxRate     = 0.05,
+        maxOwned    = 2,
+    },
+    {
+        id          = "grocery",
+        name        = "Grocery Store",
+        cost        = 120000,
+        incomePerMin = 400,
+        taxRate     = 0.055,
+        maxOwned    = 2,
+    },
+    {
+        id          = "realestate",
+        name        = "Real Estate Agency",
+        cost        = 160000,
+        incomePerMin = 500,
+        taxRate     = 0.06,
+        maxOwned    = 1,
+    },
+}
+
+-- ──────────────────────────────────────────────
+-- MONETIZATION  (Developer Products &amp; Game Passes)
+-- ──────────────────────────────────────────────
+-- NOTE: Replace 0 placeholders with real asset IDs from the Roblox Creator Dashboard.
+GameConfig.DevProducts = {
+    { id = 0, name = "Cash Pack Small",  cash = 5000,   price = 75  },
+    { id = 0, name = "Cash Pack Medium", cash = 15000,  price = 175 },
+    { id = 0, name = "Cash Pack Large",  cash = 50000,  price = 499 },
+    { id = 0, name = "Cash Pack Mega",   cash = 150000, price = 999 },
+}
+
+GameConfig.GamePasses = {
+    { id = 0, name = "Premium Citizen",  description = "Double salary income",        salaryMultiplier = 2 },
+    { id = 0, name = "VIP Resident",     description = "Access to VIP Mansion District and gold name tag", salaryMultiplier = 1 },
+    { id = 0, name = "Business Tycoon",  description = "Reduced business tax (50%) and +1 extra business slot", salaryMultiplier = 1 },
+}
+
+-- ──────────────────────────────────────────────
+-- AUCTION
+-- ──────────────────────────────────────────────
+GameConfig.AuctionDuration    = 120   -- seconds an auction listing stays active
+GameConfig.AuctionMinBidRaise = 0.05  -- minimum raise fraction over current bid (5 %)
+
+return GameConfig
+</ProtectedString>
+            <bool name="Disabled">false</bool>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="RBX00000017">
+          <Properties>
+            <string name="Name">RemoteEvents</string>
+            <ProtectedString name="Source">-- RemoteEvents.lua
+-- ReplicatedStorage &gt; Modules &gt; RemoteEvents
+-- Creates (server) or retrieves (client) all RemoteEvents and RemoteFunctions.
+-- Usage:  local RE = require(game.ReplicatedStorage.Modules.RemoteEvents)
+--         RE.BuyProperty:FireServer(propertyId, plotId)
+
+local RunService = game:GetService("RunService")
+local RS         = game:GetService("ReplicatedStorage")
+
+local isServer = RunService:IsServer()
+
+-- Folder that holds all remotes
+local function getOrCreate(parent, className, name)
+    local obj = parent:FindFirstChild(name)
+    if not obj then
+        if isServer then
+            obj = Instance.new(className)
+            obj.Name = name
+            obj.Parent = parent
+        else
+            obj = parent:WaitForChild(name, 15)
+        end
+    end
+    return obj
+end
+
+local folder = getOrCreate(RS, "Folder", "Remotes")
+
+local RemoteEvents = {}
+
+-- ── Job System ──────────────────────────────────
+RemoteEvents.AssignJob         = getOrCreate(folder, "RemoteEvent",    "AssignJob")
+RemoteEvents.LeaveJob          = getOrCreate(folder, "RemoteEvent",    "LeaveJob")
+RemoteEvents.GetJobInfo        = getOrCreate(folder, "RemoteFunction", "GetJobInfo")
+
+-- ── Property System ──────────────────────────────
+RemoteEvents.BuyProperty       = getOrCreate(folder, "RemoteEvent",    "BuyProperty")
+RemoteEvents.SellProperty      = getOrCreate(folder, "RemoteEvent",    "SellProperty")
+RemoteEvents.GetMyProperties   = getOrCreate(folder, "RemoteFunction", "GetMyProperties")
+
+-- ── Business System ──────────────────────────────
+RemoteEvents.OpenBusiness      = getOrCreate(folder, "RemoteEvent",    "OpenBusiness")
+RemoteEvents.CloseBusiness     = getOrCreate(folder, "RemoteEvent",    "CloseBusiness")
+RemoteEvents.GetMyBusinesses   = getOrCreate(folder, "RemoteFunction", "GetMyBusinesses")
+
+-- ── Auction System ──────────────────────────────
+RemoteEvents.ListAuction       = getOrCreate(folder, "RemoteEvent",    "ListAuction")
+RemoteEvents.PlaceBid          = getOrCreate(folder, "RemoteEvent",    "PlaceBid")
+RemoteEvents.ClaimAuction      = getOrCreate(folder, "RemoteEvent",    "ClaimAuction")
+RemoteEvents.GetAuctions       = getOrCreate(folder, "RemoteFunction", "GetAuctions")
+
+-- ── Economy / HUD ────────────────────────────────
+RemoteEvents.UpdateHUD         = getOrCreate(folder, "RemoteEvent",    "UpdateHUD")
+RemoteEvents.Notify            = getOrCreate(folder, "RemoteEvent",    "Notify")
+
+-- ── Monetization ────────────────────────────────
+RemoteEvents.PurchaseProduct   = getOrCreate(folder, "RemoteEvent",    "PurchaseProduct")
+
+return RemoteEvents
+</ProtectedString>
+            <bool name="Disabled">false</bool>
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+    <Item class="StarterGui" referent="RBX00000018">
+      <Properties>
+        <string name="Name">StarterGui</string>
+      </Properties>
+      <Item class="LocalScript" referent="RBX00000019">
+        <Properties>
+          <string name="Name">AuctionMenu</string>
+          <ProtectedString name="Source">-- AuctionMenu.client.lua
+-- StarterGui
+-- Browse active auctions, place bids, list items for auction, and claim winnings.
+
+local Players   = game:GetService("Players")
+local RS        = game:GetService("ReplicatedStorage")
+
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local RE        = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+local gui           = Instance.new("ScreenGui")
+gui.Name            = "AuctionMenu"
+gui.ResetOnSpawn    = false
+gui.DisplayOrder    = 20
+gui.Enabled         = false
+gui.Parent          = playerGui
+
+local window        = Instance.new("Frame")
+window.Size         = UDim2.new(0, 580, 0, 580)
+window.Position     = UDim2.new(0.5, -290, 0.5, -290)
+window.BackgroundColor3 = Color3.fromRGB(25, 20, 40)
+window.BackgroundTransparency = 0.05
+window.BorderSizePixel = 0
+window.Parent       = gui
+Instance.new("UICorner").Parent = window
+
+local title         = Instance.new("TextLabel")
+title.Size          = UDim2.new(1, -44, 0, 50)
+title.BackgroundTransparency = 1
+title.Text          = "🔨 Auction House"
+title.TextColor3    = Color3.new(1,1,1)
+title.Font          = Enum.Font.GothamBold
+title.TextScaled    = true
+title.Parent        = window
+
+local closeBtn      = Instance.new("TextButton")
+closeBtn.Size       = UDim2.new(0, 36, 0, 36)
+closeBtn.Position   = UDim2.new(1, -42, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Text       = "✕"
+closeBtn.Font       = Enum.Font.GothamBold
+closeBtn.TextScaled = true
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent     = window
+Instance.new("UICorner").Parent = closeBtn
+closeBtn.MouseButton1Click:Connect(function() gui.Enabled = false end)
+
+-- Tabs
+local function makeTab(text, posX)
+    local btn = Instance.new("TextButton")
+    btn.Size  = UDim2.new(0, 130, 0, 34)
+    btn.Position = UDim2.new(0, posX, 0, 52)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    btn.Text  = text
+    btn.Font  = Enum.Font.GothamBold
+    btn.TextScaled = true
+    btn.BorderSizePixel = 0
+    btn.Parent = window
+    Instance.new("UICorner").Parent = btn
+    return btn
+end
+
+local tabBrowse = makeTab("Browse", 5)
+local tabList   = makeTab("List Item", 140)
+tabBrowse.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+
+local scroll    = Instance.new("ScrollingFrame")
+scroll.Size     = UDim2.new(1, -10, 1, -100)
+scroll.Position = UDim2.new(0, 5, 0, 92)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 5
+scroll.BorderSizePixel = 0
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.Parent   = window
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 6)
+listLayout.Parent  = scroll
+
+local pad = Instance.new("UIPadding")
+pad.PaddingLeft = UDim.new(0,6) pad.PaddingRight = UDim.new(0,6)
+pad.Parent      = scroll
+
+-- List form (hidden by default)
+local listForm  = Instance.new("Frame")
+listForm.Size   = UDim2.new(1, -10, 1, -100)
+listForm.Position = UDim2.new(0, 5, 0, 92)
+listForm.BackgroundTransparency = 1
+listForm.Visible = false
+listForm.Parent  = window
+
+local function makeInput(placeholder, posY)
+    local box = Instance.new("TextBox")
+    box.Size  = UDim2.new(1, -10, 0, 40)
+    box.Position = UDim2.new(0, 5, 0, posY)
+    box.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+    box.PlaceholderText = placeholder
+    box.Text  = ""
+    box.TextColor3 = Color3.new(1,1,1)
+    box.PlaceholderColor3 = Color3.fromRGB(130,130,130)
+    box.Font  = Enum.Font.Gotham
+    box.TextScaled = true
+    box.BorderSizePixel = 0
+    box.ClearTextOnFocus = true
+    box.Parent = listForm
+    Instance.new("UICorner").Parent = box
+    return box
+end
+
+local itemTypeBox   = makeInput("Item type: property or business", 10)
+local itemRefBox    = makeInput("Item ID (plotId or businessId)", 60)
+local startPriceBox = makeInput("Starting price ($)", 110)
+
+local submitListBtn = Instance.new("TextButton")
+submitListBtn.Size  = UDim2.new(0, 160, 0, 44)
+submitListBtn.Position = UDim2.new(0.5, -80, 0, 162)
+submitListBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+submitListBtn.Text  = "List Auction"
+submitListBtn.Font  = Enum.Font.GothamBold
+submitListBtn.TextScaled = true
+submitListBtn.BorderSizePixel = 0
+submitListBtn.Parent = listForm
+Instance.new("UICorner").Parent = submitListBtn
+
+submitListBtn.MouseButton1Click:Connect(function()
+    RE.ListAuction:FireServer(itemTypeBox.Text, itemRefBox.Text, tonumber(startPriceBox.Text) or 100)
+    itemTypeBox.Text = "" itemRefBox.Text = "" startPriceBox.Text = ""
+end)
+
+local currentTab = "browse"
+
+local function clearScroll()
+    for _, c in ipairs(scroll:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+end
+
+-- ── Browse tab ────────────────────────────────────────────────────────────────
+local function buildBrowseTab()
+    clearScroll()
+    local aucs = RE.GetAuctions:InvokeServer()
+    if not aucs or #aucs == 0 then
+        local lbl = Instance.new("TextLabel")
+        lbl.Size  = UDim2.new(1, 0, 0, 60)
+        lbl.BackgroundTransparency = 1
+        lbl.Text  = "No active auctions."
+        lbl.TextColor3 = Color3.fromRGB(180,180,180)
+        lbl.Font  = Enum.Font.Gotham
+        lbl.TextScaled = true
+        lbl.Parent = scroll
+        return
+    end
+    for _, auc in ipairs(aucs) do
+        local card = Instance.new("Frame")
+        card.Size  = UDim2.new(1, 0, 0, 100)
+        card.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        card.BorderSizePixel = 0
+        card.Parent = scroll
+        Instance.new("UICorner").Parent = card
+
+        local infoLbl = Instance.new("TextLabel")
+        infoLbl.Size  = UDim2.new(0.55, 0, 1, 0)
+        infoLbl.Position = UDim2.new(0, 8, 0, 0)
+        infoLbl.BackgroundTransparency = 1
+        infoLbl.Text  = "[" .. auc.itemType .. "] " .. tostring(auc.itemData.plotId or auc.itemData.businessId or "?") ..
+                         "\nBid: $" .. auc.currentBid .. "  |  ⏱ " .. math.ceil(auc.timeLeft) .. "s"
+        infoLbl.TextColor3 = Color3.new(1,1,1)
+        infoLbl.Font  = Enum.Font.Gotham
+        infoLbl.TextScaled = true
+        infoLbl.TextWrapped = true
+        infoLbl.TextXAlignment = Enum.TextXAlignment.Left
+        infoLbl.Parent = card
+
+        local bidBox = Instance.new("TextBox")
+        bidBox.Size  = UDim2.new(0, 100, 0, 34)
+        bidBox.Position = UDim2.new(1, -220, 0.15, 0)
+        bidBox.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+        bidBox.PlaceholderText = "Amount"
+        bidBox.Text  = ""
+        bidBox.TextColor3 = Color3.new(1,1,1)
+        bidBox.Font  = Enum.Font.Gotham
+        bidBox.TextScaled = true
+        bidBox.BorderSizePixel = 0
+        bidBox.Parent = card
+        Instance.new("UICorner").Parent = bidBox
+
+        local bidBtn = Instance.new("TextButton")
+        bidBtn.Size  = UDim2.new(0, 80, 0, 34)
+        bidBtn.Position = UDim2.new(1, -110, 0.15, 0)
+        bidBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 220)
+        bidBtn.Text  = "Bid"
+        bidBtn.Font  = Enum.Font.GothamBold
+        bidBtn.TextScaled = true
+        bidBtn.BorderSizePixel = 0
+        bidBtn.Parent = card
+        Instance.new("UICorner").Parent = bidBtn
+
+        local claimBtn = Instance.new("TextButton")
+        claimBtn.Size  = UDim2.new(0, 90, 0, 34)
+        claimBtn.Position = UDim2.new(1, -98, 0.6, 0)
+        claimBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+        claimBtn.Text  = "Claim"
+        claimBtn.Font  = Enum.Font.GothamBold
+        claimBtn.TextScaled = true
+        claimBtn.BorderSizePixel = 0
+        claimBtn.Parent = card
+        Instance.new("UICorner").Parent = claimBtn
+
+        local aucId = auc.id
+        bidBtn.MouseButton1Click:Connect(function()
+            local amount = tonumber(bidBox.Text)
+            if amount then RE.PlaceBid:FireServer(aucId, amount) end
+        end)
+        claimBtn.MouseButton1Click:Connect(function()
+            RE.ClaimAuction:FireServer(aucId)
+            task.wait(0.5)
+            buildBrowseTab()
+        end)
+    end
+end
+
+tabBrowse.MouseButton1Click:Connect(function()
+    currentTab = "browse"
+    tabBrowse.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+    tabList.BackgroundColor3   = Color3.fromRGB(40, 40, 60)
+    scroll.Visible    = true
+    listForm.Visible  = false
+    buildBrowseTab()
+end)
+
+tabList.MouseButton1Click:Connect(function()
+    currentTab = "list"
+    tabList.BackgroundColor3   = Color3.fromRGB(50, 120, 200)
+    tabBrowse.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    scroll.Visible   = false
+    listForm.Visible = true
+end)
+
+gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if gui.Enabled and currentTab == "browse" then buildBrowseTab() end
+end)
+
+print("[AuctionMenu] Loaded.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="RBX00000020">
+        <Properties>
+          <string name="Name">BusinessMenu</string>
+          <ProtectedString name="Source">-- BusinessMenu.client.lua
+-- StarterGui
+-- Browse, open, and close businesses.
+
+local Players   = game:GetService("Players")
+local RS        = game:GetService("ReplicatedStorage")
+
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local RE         = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+
+local gui           = Instance.new("ScreenGui")
+gui.Name            = "BusinessMenu"
+gui.ResetOnSpawn    = false
+gui.DisplayOrder    = 20
+gui.Enabled         = false
+gui.Parent          = playerGui
+
+local window        = Instance.new("Frame")
+window.Size         = UDim2.new(0, 540, 0, 560)
+window.Position     = UDim2.new(0.5, -270, 0.5, -280)
+window.BackgroundColor3 = Color3.fromRGB(20, 25, 40)
+window.BackgroundTransparency = 0.05
+window.BorderSizePixel = 0
+window.Parent       = gui
+Instance.new("UICorner").Parent = window
+
+local title         = Instance.new("TextLabel")
+title.Size          = UDim2.new(1, -44, 0, 50)
+title.BackgroundTransparency = 1
+title.Text          = "🏪 Business Market"
+title.TextColor3    = Color3.new(1,1,1)
+title.Font          = Enum.Font.GothamBold
+title.TextScaled    = true
+title.Parent        = window
+
+local closeBtn      = Instance.new("TextButton")
+closeBtn.Size       = UDim2.new(0, 36, 0, 36)
+closeBtn.Position   = UDim2.new(1, -42, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Text       = "✕"
+closeBtn.Font       = Enum.Font.GothamBold
+closeBtn.TextScaled = true
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent     = window
+Instance.new("UICorner").Parent = closeBtn
+closeBtn.MouseButton1Click:Connect(function() gui.Enabled = false end)
+
+-- Tabs
+local tabOpen   = Instance.new("TextButton")
+tabOpen.Size    = UDim2.new(0.5, -3, 0, 36)
+tabOpen.Position = UDim2.new(0, 3, 0, 53)
+tabOpen.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+tabOpen.Text    = "Open Business"
+tabOpen.Font    = Enum.Font.GothamBold
+tabOpen.TextScaled = true
+tabOpen.BorderSizePixel = 0
+tabOpen.Parent  = window
+Instance.new("UICorner").Parent = tabOpen
+
+local tabMine   = Instance.new("TextButton")
+tabMine.Size    = UDim2.new(0.5, -3, 0, 36)
+tabMine.Position = UDim2.new(0.5, 0, 0, 53)
+tabMine.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+tabMine.Text    = "My Businesses"
+tabMine.Font    = Enum.Font.GothamBold
+tabMine.TextScaled = true
+tabMine.BorderSizePixel = 0
+tabMine.Parent  = window
+Instance.new("UICorner").Parent = tabMine
+
+local scroll    = Instance.new("ScrollingFrame")
+scroll.Size     = UDim2.new(1, -10, 1, -100)
+scroll.Position = UDim2.new(0, 5, 0, 94)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 5
+scroll.BorderSizePixel = 0
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.Parent   = window
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 6)
+listLayout.Parent  = scroll
+
+local pad = Instance.new("UIPadding")
+pad.PaddingLeft  = UDim.new(0,6) pad.PaddingRight = UDim.new(0,6)
+pad.Parent       = scroll
+
+local currentTab = "open"
+
+local function clearScroll()
+    for _, c in ipairs(scroll:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+end
+
+local function buildOpenTab()
+    clearScroll()
+    for _, biz in ipairs(GameConfig.Businesses) do
+        local card = Instance.new("Frame")
+        card.Size  = UDim2.new(1, 0, 0, 90)
+        card.BackgroundColor3 = Color3.fromRGB(30, 35, 55)
+        card.BorderSizePixel = 0
+        card.Parent = scroll
+        Instance.new("UICorner").Parent = card
+
+        local nl = Instance.new("TextLabel")
+        nl.Size  = UDim2.new(0.62, 0, 0.45, 0)
+        nl.Position = UDim2.new(0, 8, 0, 4)
+        nl.BackgroundTransparency = 1
+        nl.Text  = biz.name
+        nl.TextColor3 = Color3.new(1,1,1)
+        nl.Font  = Enum.Font.GothamBold
+        nl.TextScaled = true
+        nl.TextXAlignment = Enum.TextXAlignment.Left
+        nl.Parent = card
+
+        local il = Instance.new("TextLabel")
+        il.Size  = UDim2.new(0.62, 0, 0.5, 0)
+        il.Position = UDim2.new(0, 8, 0.48, 0)
+        il.BackgroundTransparency = 1
+        il.Text  = "Cost: $"..biz.cost.."  |  📈 +$"..biz.incomePerMin.."/min  |  Tax: "..math.floor(biz.taxRate*100).."%"
+        il.TextColor3 = Color3.fromRGB(180, 230, 180)
+        il.Font  = Enum.Font.Gotham
+        il.TextScaled = true
+        il.TextXAlignment = Enum.TextXAlignment.Left
+        il.Parent = card
+
+        local openBtn = Instance.new("TextButton")
+        openBtn.Size  = UDim2.new(0, 100, 0, 40)
+        openBtn.Position = UDim2.new(1, -108, 0.5, -20)
+        openBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+        openBtn.Text  = "Open"
+        openBtn.Font  = Enum.Font.GothamBold
+        openBtn.TextScaled = true
+        openBtn.BorderSizePixel = 0
+        openBtn.Parent = card
+        Instance.new("UICorner").Parent = openBtn
+
+        openBtn.MouseButton1Click:Connect(function()
+            RE.OpenBusiness:FireServer(biz.id)
+        end)
+    end
+end
+
+local function buildMineTab()
+    clearScroll()
+    local businesses = RE.GetMyBusinesses:InvokeServer()
+    if not businesses or #businesses == 0 then
+        local lbl = Instance.new("TextLabel")
+        lbl.Size  = UDim2.new(1, 0, 0, 60)
+        lbl.BackgroundTransparency = 1
+        lbl.Text  = "You don't own any businesses yet."
+        lbl.TextColor3 = Color3.fromRGB(180,180,180)
+        lbl.Font  = Enum.Font.Gotham
+        lbl.TextScaled = true
+        lbl.Parent = scroll
+        return
+    end
+    for _, entry in ipairs(businesses) do
+        local card = Instance.new("Frame")
+        card.Size  = UDim2.new(1, 0, 0, 70)
+        card.BackgroundColor3 = Color3.fromRGB(30, 35, 55)
+        card.BorderSizePixel = 0
+        card.Parent = scroll
+        Instance.new("UICorner").Parent = card
+
+        local nl = Instance.new("TextLabel")
+        nl.Size  = UDim2.new(0.6, 0, 1, 0)
+        nl.Position = UDim2.new(0, 8, 0, 0)
+        nl.BackgroundTransparency = 1
+        nl.Text  = entry.type .. " | Revenue: $" .. (entry.revenue or 0)
+        nl.TextColor3 = Color3.new(1,1,1)
+        nl.Font  = Enum.Font.Gotham
+        nl.TextScaled = true
+        nl.TextXAlignment = Enum.TextXAlignment.Left
+        nl.Parent = card
+
+        local closeBusinessBtn = Instance.new("TextButton")
+        closeBusinessBtn.Size  = UDim2.new(0, 90, 0, 36)
+        closeBusinessBtn.Position = UDim2.new(1, -98, 0.5, -18)
+        closeBusinessBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        closeBusinessBtn.Text  = "Close (60%)"
+        closeBusinessBtn.Font  = Enum.Font.GothamBold
+        closeBusinessBtn.TextScaled = true
+        closeBusinessBtn.BorderSizePixel = 0
+        closeBusinessBtn.Parent = card
+        Instance.new("UICorner").Parent = closeBusinessBtn
+
+        closeBusinessBtn.MouseButton1Click:Connect(function()
+            RE.CloseBusiness:FireServer(entry.businessId)
+            buildMineTab()
+        end)
+    end
+end
+
+tabOpen.MouseButton1Click:Connect(function()
+    currentTab = "open"
+    tabOpen.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+    tabMine.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    buildOpenTab()
+end)
+tabMine.MouseButton1Click:Connect(function()
+    currentTab = "mine"
+    tabMine.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+    tabOpen.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    buildMineTab()
+end)
+
+gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if gui.Enabled then
+        if currentTab == "open" then buildOpenTab() else buildMineTab() end
+    end
+end)
+
+print("[BusinessMenu] Loaded.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="RBX00000021">
+        <Properties>
+          <string name="Name">JobMenu</string>
+          <ProtectedString name="Source">-- JobMenu.client.lua
+-- StarterGui
+-- Shows a list of available jobs; player can join or leave a job.
+
+local Players = game:GetService("Players")
+local RS      = game:GetService("ReplicatedStorage")
+
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local RE        = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- ── Screen Gui ────────────────────────────────────────────────────────────────
+local gui           = Instance.new("ScreenGui")
+gui.Name            = "JobMenu"
+gui.ResetOnSpawn    = false
+gui.DisplayOrder    = 20
+gui.Enabled         = false
+gui.Parent          = playerGui
+
+-- ── Main window ───────────────────────────────────────────────────────────────
+local window        = Instance.new("Frame")
+window.Name         = "Window"
+window.Size         = UDim2.new(0, 500, 0, 520)
+window.Position     = UDim2.new(0.5, -250, 0.5, -260)
+window.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
+window.BackgroundTransparency = 0.05
+window.BorderSizePixel = 0
+window.Parent       = gui
+
+local corner        = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent       = window
+
+-- Title bar
+local title         = Instance.new("TextLabel")
+title.Size          = UDim2.new(1, -40, 0, 50)
+title.Position      = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text          = "💼 Choose Your Job"
+title.TextColor3    = Color3.new(1,1,1)
+title.Font          = Enum.Font.GothamBold
+title.TextScaled    = true
+title.Parent        = window
+
+-- Close button
+local closeBtn      = Instance.new("TextButton")
+closeBtn.Size       = UDim2.new(0, 36, 0, 36)
+closeBtn.Position   = UDim2.new(1, -42, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Text       = "✕"
+closeBtn.Font       = Enum.Font.GothamBold
+closeBtn.TextScaled = true
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent     = window
+Instance.new("UICorner").Parent = closeBtn
+closeBtn.MouseButton1Click:Connect(function() gui.Enabled = false end)
+
+-- Scroll frame for job cards
+local scroll        = Instance.new("ScrollingFrame")
+scroll.Size         = UDim2.new(1, -10, 1, -60)
+scroll.Position     = UDim2.new(0, 5, 0, 55)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 5
+scroll.BorderSizePixel = 0
+scroll.CanvasSize   = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.Parent       = window
+
+local listLayout    = Instance.new("UIListLayout")
+listLayout.Padding  = UDim.new(0, 6)
+listLayout.Parent   = scroll
+
+local padding       = Instance.new("UIPadding")
+padding.PaddingLeft  = UDim.new(0, 6)
+padding.PaddingRight = UDim.new(0, 6)
+padding.Parent       = scroll
+
+-- ── Populate jobs ──────────────────────────────────────────────────────────────
+local function buildJobCards(jobList)
+    -- Clear existing cards
+    for _, child in ipairs(scroll:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
+
+    for _, job in ipairs(jobList) do
+        local card      = Instance.new("Frame")
+        card.Size       = UDim2.new(1, 0, 0, 68)
+        card.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+        card.BorderSizePixel = 0
+        card.Parent     = scroll
+        Instance.new("UICorner").Parent = card
+
+        local nameLbl   = Instance.new("TextLabel")
+        nameLbl.Size    = UDim2.new(0.55, 0, 0.5, 0)
+        nameLbl.Position = UDim2.new(0, 8, 0, 4)
+        nameLbl.BackgroundTransparency = 1
+        nameLbl.Text    = job.name
+        nameLbl.TextColor3 = Color3.new(1,1,1)
+        nameLbl.Font    = Enum.Font.GothamBold
+        nameLbl.TextScaled = true
+        nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+        nameLbl.Parent  = card
+
+        local salaryLbl = Instance.new("TextLabel")
+        salaryLbl.Size  = UDim2.new(0.55, 0, 0.45, 0)
+        salaryLbl.Position = UDim2.new(0, 8, 0.5, 0)
+        salaryLbl.BackgroundTransparency = 1
+        salaryLbl.Text  = "💵 $" .. job.salary .. "/min  |  " .. job.current .. "/" .. job.maxSlots .. " slots"
+        salaryLbl.TextColor3 = Color3.fromRGB(160,220,160)
+        salaryLbl.Font  = Enum.Font.Gotham
+        salaryLbl.TextScaled = true
+        salaryLbl.TextXAlignment = Enum.TextXAlignment.Left
+        salaryLbl.Parent = card
+
+        local joinBtn   = Instance.new("TextButton")
+        joinBtn.Size    = UDim2.new(0, 90, 0, 36)
+        joinBtn.Position = UDim2.new(1, -98, 0.5, -18)
+        joinBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+        joinBtn.Text    = "Join"
+        joinBtn.Font    = Enum.Font.GothamBold
+        joinBtn.TextScaled = true
+        joinBtn.BorderSizePixel = 0
+        joinBtn.Parent  = card
+        Instance.new("UICorner").Parent = joinBtn
+
+        joinBtn.MouseButton1Click:Connect(function()
+            RE.AssignJob:FireServer(job.id)
+            gui.Enabled = false
+        end)
+    end
+end
+
+-- Leave job button at bottom
+local leaveBtn      = Instance.new("TextButton")
+leaveBtn.Size       = UDim2.new(0, 140, 0, 38)
+leaveBtn.Position   = UDim2.new(0.5, -70, 1, -46)
+leaveBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+leaveBtn.Text       = "Leave Current Job"
+leaveBtn.Font       = Enum.Font.GothamBold
+leaveBtn.TextScaled = true
+leaveBtn.BorderSizePixel = 0
+leaveBtn.Parent     = window
+Instance.new("UICorner").Parent = leaveBtn
+leaveBtn.MouseButton1Click:Connect(function()
+    RE.LeaveJob:FireServer()
+    gui.Enabled = false
+end)
+
+-- Refresh job list when menu opens
+gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if gui.Enabled then
+        task.spawn(function()
+            local jobs = RE.GetJobInfo:InvokeServer()
+            if jobs then buildJobCards(jobs) end
+        end)
+    end
+end)
+
+print("[JobMenu] Loaded.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="RBX00000022">
+        <Properties>
+          <string name="Name">MainHUD</string>
+          <ProtectedString name="Source">-- MainHUD.client.lua
+-- StarterGui
+-- Displays the player's cash, job, and quick-access buttons.
+
+local Players      = game:GetService("Players")
+local RS           = game:GetService("ReplicatedStorage")
+
+local player       = Players.LocalPlayer
+local playerGui    = player:WaitForChild("PlayerGui")
+
+local RE           = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+
+-- ── Build ScreenGui ───────────────────────────────────────────────────────────
+local screenGui        = Instance.new("ScreenGui")
+screenGui.Name         = "MainHUD"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 10
+screenGui.Parent       = playerGui
+
+-- ── Notification queue ────────────────────────────────────────────────────────
+local notifQueue = {}
+local notifActive = false
+
+local notifColors = {
+    info      = Color3.fromRGB(60, 120, 200),
+    warn      = Color3.fromRGB(220, 160, 0),
+    error     = Color3.fromRGB(200, 50, 50),
+    success   = Color3.fromRGB(50, 190, 80),
+    salary    = Color3.fromRGB(50, 200, 150),
+    business  = Color3.fromRGB(150, 80, 200),
+    tax       = Color3.fromRGB(200, 100, 50),
+    eviction  = Color3.fromRGB(200, 30, 30),
+}
+
+local function showNextNotif()
+    if #notifQueue == 0 then notifActive = false return end
+    notifActive = true
+
+    local entry = table.remove(notifQueue, 1)
+    local bg    = Instance.new("Frame")
+    bg.Size     = UDim2.new(0, 320, 0, 48)
+    bg.Position = UDim2.new(0.5, -160, 0, -55)
+    bg.BackgroundColor3 = notifColors[entry.kind] or notifColors.info
+    bg.BackgroundTransparency = 0.15
+    bg.BorderSizePixel = 0
+    bg.Parent   = screenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = bg
+
+    local lbl   = Instance.new("TextLabel")
+    lbl.Size    = UDim2.new(1, -10, 1, 0)
+    lbl.Position = UDim2.new(0, 5, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text    = entry.text
+    lbl.TextColor3 = Color3.new(1, 1, 1)
+    lbl.Font    = Enum.Font.GothamSemibold
+    lbl.TextScaled = true
+    lbl.Parent  = bg
+
+    -- Slide in
+    bg:TweenPosition(UDim2.new(0.5, -160, 0, 20), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.3, true)
+    task.wait(2.5)
+    bg:TweenPosition(UDim2.new(0.5, -160, 0, -55), Enum.EasingDirection.In, Enum.EasingStyle.Quart, 0.3, true)
+    task.wait(0.35)
+    bg:Destroy()
+
+    task.spawn(showNextNotif)
+end
+
+local function pushNotif(text, kind)
+    notifQueue[#notifQueue + 1] = { text = text, kind = kind or "info" }
+    if not notifActive then
+        task.spawn(showNextNotif)
+    end
+end
+
+-- ── Top bar ────────────────────────────────────────────────────────────────────
+local topBar        = Instance.new("Frame")
+topBar.Name         = "TopBar"
+topBar.Size         = UDim2.new(1, 0, 0, 50)
+topBar.Position     = UDim2.new(0, 0, 0, 0)
+topBar.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+topBar.BackgroundTransparency = 0.2
+topBar.BorderSizePixel = 0
+topBar.Parent       = screenGui
+
+local cashLabel     = Instance.new("TextLabel")
+cashLabel.Name      = "CashLabel"
+cashLabel.Size      = UDim2.new(0, 200, 1, 0)
+cashLabel.Position  = UDim2.new(0, 10, 0, 0)
+cashLabel.BackgroundTransparency = 1
+cashLabel.Text      = "💰 $5,000"
+cashLabel.TextColor3 = Color3.fromRGB(80, 255, 120)
+cashLabel.Font      = Enum.Font.GothamBold
+cashLabel.TextScaled = true
+cashLabel.TextXAlignment = Enum.TextXAlignment.Left
+cashLabel.Parent    = topBar
+
+local jobLabel      = Instance.new("TextLabel")
+jobLabel.Name       = "JobLabel"
+jobLabel.Size       = UDim2.new(0, 220, 1, 0)
+jobLabel.Position   = UDim2.new(0.5, -110, 0, 0)
+jobLabel.BackgroundTransparency = 1
+jobLabel.Text       = "👤 Civilian"
+jobLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+jobLabel.Font       = Enum.Font.GothamSemibold
+jobLabel.TextScaled = true
+jobLabel.Parent     = topBar
+
+-- ── Side menu buttons ──────────────────────────────────────────────────────────
+local sideBar       = Instance.new("Frame")
+sideBar.Name        = "SideBar"
+sideBar.Size        = UDim2.new(0, 60, 0, 280)
+sideBar.Position    = UDim2.new(1, -70, 0.5, -140)
+sideBar.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+sideBar.BackgroundTransparency = 0.3
+sideBar.BorderSizePixel = 0
+sideBar.Parent      = screenGui
+
+local sideCorner    = Instance.new("UICorner")
+sideCorner.CornerRadius = UDim.new(0, 10)
+sideCorner.Parent   = sideBar
+
+local layout        = Instance.new("UIListLayout")
+layout.Padding      = UDim.new(0, 6)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment   = Enum.VerticalAlignment.Top
+layout.Parent       = sideBar
+
+local function makeMenuBtn(icon, guiName)
+    local btn = Instance.new("TextButton")
+    btn.Size  = UDim2.new(0, 48, 0, 48)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    btn.Text  = icon
+    btn.Font  = Enum.Font.GothamBold
+    btn.TextScaled = true
+    btn.BorderSizePixel = 0
+    local c   = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent  = btn
+    btn.Parent = sideBar
+
+    btn.MouseButton1Click:Connect(function()
+        local gui = playerGui:FindFirstChild(guiName)
+        if gui then gui.Enabled = not gui.Enabled end
+    end)
+    return btn
+end
+
+makeMenuBtn("💼", "JobMenu")
+makeMenuBtn("🏠", "PropertyMenu")
+makeMenuBtn("🏪", "BusinessMenu")
+makeMenuBtn("🔨", "AuctionMenu")
+makeMenuBtn("🛒", "ShopMenu")
+
+-- ── Update HUD from server ─────────────────────────────────────────────────────
+RE.UpdateHUD.OnClientEvent:Connect(function(data)
+    if data.cash ~= nil then
+        cashLabel.Text = "💰 $" .. string.format("%d", math.floor(data.cash))
+    end
+    if data.job ~= nil then
+        local jobName = data.job or "Civilian"
+        -- Capitalise first letter
+        jobName = jobName:sub(1,1):upper() .. jobName:sub(2)
+        jobLabel.Text = "👤 " .. jobName
+    end
+end)
+
+RE.Notify.OnClientEvent:Connect(function(text, kind)
+    pushNotif(text, kind)
+end)
+
+print("[MainHUD] Loaded.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="RBX00000023">
+        <Properties>
+          <string name="Name">PropertyMenu</string>
+          <ProtectedString name="Source">-- PropertyMenu.client.lua
+-- StarterGui
+-- Browse available property types, buy or sell.
+
+local Players   = game:GetService("Players")
+local RS        = game:GetService("ReplicatedStorage")
+
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local RE         = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+
+-- ── Screen Gui ────────────────────────────────────────────────────────────────
+local gui           = Instance.new("ScreenGui")
+gui.Name            = "PropertyMenu"
+gui.ResetOnSpawn    = false
+gui.DisplayOrder    = 20
+gui.Enabled         = false
+gui.Parent          = playerGui
+
+local window        = Instance.new("Frame")
+window.Size         = UDim2.new(0, 540, 0, 560)
+window.Position     = UDim2.new(0.5, -270, 0.5, -280)
+window.BackgroundColor3 = Color3.fromRGB(20, 25, 40)
+window.BackgroundTransparency = 0.05
+window.BorderSizePixel = 0
+window.Parent       = gui
+Instance.new("UICorner").Parent = window
+
+local title         = Instance.new("TextLabel")
+title.Size          = UDim2.new(1, -44, 0, 50)
+title.BackgroundTransparency = 1
+title.Text          = "🏠 Real Estate Market"
+title.TextColor3    = Color3.new(1,1,1)
+title.Font          = Enum.Font.GothamBold
+title.TextScaled    = true
+title.Parent        = window
+
+local closeBtn      = Instance.new("TextButton")
+closeBtn.Size       = UDim2.new(0, 36, 0, 36)
+closeBtn.Position   = UDim2.new(1, -42, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Text       = "✕"
+closeBtn.Font       = Enum.Font.GothamBold
+closeBtn.TextScaled = true
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent     = window
+Instance.new("UICorner").Parent = closeBtn
+closeBtn.MouseButton1Click:Connect(function() gui.Enabled = false end)
+
+-- Tabs: Buy | My Properties
+local tabBuy    = Instance.new("TextButton")
+tabBuy.Size     = UDim2.new(0.5, -3, 0, 36)
+tabBuy.Position = UDim2.new(0, 3, 0, 53)
+tabBuy.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+tabBuy.Text     = "Buy"
+tabBuy.Font     = Enum.Font.GothamBold
+tabBuy.TextScaled = true
+tabBuy.BorderSizePixel = 0
+tabBuy.Parent   = window
+Instance.new("UICorner").Parent = tabBuy
+
+local tabOwned  = Instance.new("TextButton")
+tabOwned.Size   = UDim2.new(0.5, -3, 0, 36)
+tabOwned.Position = UDim2.new(0.5, 0, 0, 53)
+tabOwned.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+tabOwned.Text   = "My Properties"
+tabOwned.Font   = Enum.Font.GothamBold
+tabOwned.TextScaled = true
+tabOwned.BorderSizePixel = 0
+tabOwned.Parent = window
+Instance.new("UICorner").Parent = tabOwned
+
+local scroll    = Instance.new("ScrollingFrame")
+scroll.Size     = UDim2.new(1, -10, 1, -100)
+scroll.Position = UDim2.new(0, 5, 0, 94)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 5
+scroll.BorderSizePixel = 0
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.Parent   = window
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 6)
+listLayout.Parent  = scroll
+
+local pad = Instance.new("UIPadding")
+pad.PaddingLeft  = UDim.new(0,6) pad.PaddingRight = UDim.new(0,6)
+pad.Parent       = scroll
+
+local currentTab = "buy"
+
+local function clearScroll()
+    for _, c in ipairs(scroll:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+end
+
+-- ── Buy tab ───────────────────────────────────────────────────────────────────
+local function buildBuyTab()
+    clearScroll()
+    for _, prop in ipairs(GameConfig.Properties) do
+        local card = Instance.new("Frame")
+        card.Size  = UDim2.new(1, 0, 0, 80)
+        card.BackgroundColor3 = Color3.fromRGB(30, 35, 55)
+        card.BorderSizePixel = 0
+        card.Parent = scroll
+        Instance.new("UICorner").Parent = card
+
+        local nl = Instance.new("TextLabel")
+        nl.Size  = UDim2.new(0.6, 0, 0.45, 0)
+        nl.Position = UDim2.new(0, 8, 0, 4)
+        nl.BackgroundTransparency = 1
+        nl.Text  = prop.name
+        nl.TextColor3 = Color3.new(1,1,1)
+        nl.Font  = Enum.Font.GothamBold
+        nl.TextScaled = true
+        nl.TextXAlignment = Enum.TextXAlignment.Left
+        nl.Parent = card
+
+        local pl = Instance.new("TextLabel")
+        pl.Size  = UDim2.new(0.6, 0, 0.45, 0)
+        pl.Position = UDim2.new(0, 8, 0.5, 0)
+        pl.BackgroundTransparency = 1
+        pl.Text  = "💰 $" .. prop.price .. "  |  Tax: " .. math.floor(prop.taxRate*100) .. "% per cycle"
+        pl.TextColor3 = Color3.fromRGB(180, 230, 180)
+        pl.Font  = Enum.Font.Gotham
+        pl.TextScaled = true
+        pl.TextXAlignment = Enum.TextXAlignment.Left
+        pl.Parent = card
+
+        local buyBtn = Instance.new("TextButton")
+        buyBtn.Size  = UDim2.new(0, 100, 0, 40)
+        buyBtn.Position = UDim2.new(1, -108, 0.5, -20)
+        buyBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+        buyBtn.Text  = "Buy"
+        buyBtn.Font  = Enum.Font.GothamBold
+        buyBtn.TextScaled = true
+        buyBtn.BorderSizePixel = 0
+        buyBtn.Parent = card
+        Instance.new("UICorner").Parent = buyBtn
+
+        buyBtn.MouseButton1Click:Connect(function()
+            -- Use plot_1 as a default (real integration uses nearby plot detection)
+            RE.BuyProperty:FireServer(prop.id, "plot_1")
+        end)
+    end
+end
+
+-- ── My Properties tab ─────────────────────────────────────────────────────────
+local function buildOwnedTab()
+    clearScroll()
+    local owned = RE.GetMyProperties:InvokeServer()
+    if not owned or #owned == 0 then
+        local lbl = Instance.new("TextLabel")
+        lbl.Size  = UDim2.new(1, 0, 0, 60)
+        lbl.BackgroundTransparency = 1
+        lbl.Text  = "You don't own any properties yet."
+        lbl.TextColor3 = Color3.fromRGB(180,180,180)
+        lbl.Font  = Enum.Font.Gotham
+        lbl.TextScaled = true
+        lbl.Parent = scroll
+        return
+    end
+    for _, entry in ipairs(owned) do
+        local card = Instance.new("Frame")
+        card.Size  = UDim2.new(1, 0, 0, 70)
+        card.BackgroundColor3 = Color3.fromRGB(30, 35, 55)
+        card.BorderSizePixel = 0
+        card.Parent = scroll
+        Instance.new("UICorner").Parent = card
+
+        local nl = Instance.new("TextLabel")
+        nl.Size  = UDim2.new(0.6, 0, 1, 0)
+        nl.Position = UDim2.new(0, 8, 0, 0)
+        nl.BackgroundTransparency = 1
+        nl.Text  = entry.type .. " – Plot " .. entry.plotId
+        nl.TextColor3 = Color3.new(1,1,1)
+        nl.Font  = Enum.Font.Gotham
+        nl.TextScaled = true
+        nl.TextXAlignment = Enum.TextXAlignment.Left
+        nl.Parent = card
+
+        local sellBtn = Instance.new("TextButton")
+        sellBtn.Size  = UDim2.new(0, 90, 0, 36)
+        sellBtn.Position = UDim2.new(1, -98, 0.5, -18)
+        sellBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        sellBtn.Text  = "Sell (70%)"
+        sellBtn.Font  = Enum.Font.GothamBold
+        sellBtn.TextScaled = true
+        sellBtn.BorderSizePixel = 0
+        sellBtn.Parent = card
+        Instance.new("UICorner").Parent = sellBtn
+
+        sellBtn.MouseButton1Click:Connect(function()
+            RE.SellProperty:FireServer(entry.plotId)
+            buildOwnedTab()
+        end)
+    end
+end
+
+tabBuy.MouseButton1Click:Connect(function()
+    currentTab = "buy"
+    tabBuy.BackgroundColor3    = Color3.fromRGB(50, 120, 200)
+    tabOwned.BackgroundColor3  = Color3.fromRGB(40, 40, 60)
+    buildBuyTab()
+end)
+
+tabOwned.MouseButton1Click:Connect(function()
+    currentTab = "owned"
+    tabOwned.BackgroundColor3  = Color3.fromRGB(50, 120, 200)
+    tabBuy.BackgroundColor3    = Color3.fromRGB(40, 40, 60)
+    buildOwnedTab()
+end)
+
+gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if gui.Enabled then
+        if currentTab == "buy" then buildBuyTab() else buildOwnedTab() end
+    end
+end)
+
+print("[PropertyMenu] Loaded.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="RBX00000024">
+        <Properties>
+          <string name="Name">ShopMenu</string>
+          <ProtectedString name="Source">-- ShopMenu.client.lua
+-- StarterGui
+-- Robux store: buy cash packs and game passes.
+
+local Players            = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local RS                 = game:GetService("ReplicatedStorage")
+
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local GameConfig = require(RS:WaitForChild("Modules"):WaitForChild("GameConfig"))
+
+local gui           = Instance.new("ScreenGui")
+gui.Name            = "ShopMenu"
+gui.ResetOnSpawn    = false
+gui.DisplayOrder    = 20
+gui.Enabled         = false
+gui.Parent          = playerGui
+
+local window        = Instance.new("Frame")
+window.Size         = UDim2.new(0, 520, 0, 560)
+window.Position     = UDim2.new(0.5, -260, 0.5, -280)
+window.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
+window.BackgroundTransparency = 0.05
+window.BorderSizePixel = 0
+window.Parent       = gui
+Instance.new("UICorner").Parent = window
+
+local title         = Instance.new("TextLabel")
+title.Size          = UDim2.new(1, -44, 0, 50)
+title.BackgroundTransparency = 1
+title.Text          = "🛒 Robux Store"
+title.TextColor3    = Color3.new(1,1,1)
+title.Font          = Enum.Font.GothamBold
+title.TextScaled    = true
+title.Parent        = window
+
+local closeBtn      = Instance.new("TextButton")
+closeBtn.Size       = UDim2.new(0, 36, 0, 36)
+closeBtn.Position   = UDim2.new(1, -42, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Text       = "✕"
+closeBtn.Font       = Enum.Font.GothamBold
+closeBtn.TextScaled = true
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent     = window
+Instance.new("UICorner").Parent = closeBtn
+closeBtn.MouseButton1Click:Connect(function() gui.Enabled = false end)
+
+-- Section: Cash Packs
+local sectionLbl    = Instance.new("TextLabel")
+sectionLbl.Size     = UDim2.new(1, -10, 0, 30)
+sectionLbl.Position = UDim2.new(0, 5, 0, 52)
+sectionLbl.BackgroundTransparency = 1
+sectionLbl.Text     = "💰 Cash Packs"
+sectionLbl.TextColor3 = Color3.fromRGB(80, 220, 130)
+sectionLbl.Font     = Enum.Font.GothamBold
+sectionLbl.TextScaled = true
+sectionLbl.TextXAlignment = Enum.TextXAlignment.Left
+sectionLbl.Parent   = window
+
+local scroll        = Instance.new("ScrollingFrame")
+scroll.Size         = UDim2.new(1, -10, 1, -100)
+scroll.Position     = UDim2.new(0, 5, 0, 86)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 5
+scroll.BorderSizePixel = 0
+scroll.CanvasSize   = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.Parent       = window
+
+local listLayout    = Instance.new("UIListLayout")
+listLayout.Padding  = UDim.new(0, 6)
+listLayout.Parent   = scroll
+
+local pad = Instance.new("UIPadding")
+pad.PaddingLeft  = UDim.new(0,6) pad.PaddingRight = UDim.new(0,6)
+pad.Parent       = scroll
+
+-- Cash pack cards
+for _, prod in ipairs(GameConfig.DevProducts) do
+    local card = Instance.new("Frame")
+    card.Size  = UDim2.new(1, 0, 0, 68)
+    card.BackgroundColor3 = Color3.fromRGB(30, 35, 55)
+    card.BorderSizePixel = 0
+    card.Parent = scroll
+    Instance.new("UICorner").Parent = card
+
+    local nl = Instance.new("TextLabel")
+    nl.Size  = UDim2.new(0.55, 0, 0.5, 0)
+    nl.Position = UDim2.new(0, 8, 0, 4)
+    nl.BackgroundTransparency = 1
+    nl.Text  = prod.name
+    nl.TextColor3 = Color3.new(1,1,1)
+    nl.Font  = Enum.Font.GothamBold
+    nl.TextScaled = true
+    nl.TextXAlignment = Enum.TextXAlignment.Left
+    nl.Parent = card
+
+    local il = Instance.new("TextLabel")
+    il.Size  = UDim2.new(0.55, 0, 0.45, 0)
+    il.Position = UDim2.new(0, 8, 0.5, 0)
+    il.BackgroundTransparency = 1
+    il.Text  = "+$" .. prod.cash .. " in-game cash"
+    il.TextColor3 = Color3.fromRGB(180, 240, 180)
+    il.Font  = Enum.Font.Gotham
+    il.TextScaled = true
+    il.TextXAlignment = Enum.TextXAlignment.Left
+    il.Parent = card
+
+    local buyBtn = Instance.new("TextButton")
+    buyBtn.Size  = UDim2.new(0, 110, 0, 40)
+    buyBtn.Position = UDim2.new(1, -118, 0.5, -20)
+    buyBtn.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+    buyBtn.Text  = "R$ " .. prod.price
+    buyBtn.Font  = Enum.Font.GothamBold
+    buyBtn.TextScaled = true
+    buyBtn.BorderSizePixel = 0
+    buyBtn.Parent = card
+    Instance.new("UICorner").Parent = buyBtn
+
+    local prodId = prod.id
+    buyBtn.MouseButton1Click:Connect(function()
+        if prodId == 0 then
+            -- Placeholder: show message until real IDs are set
+            print("[ShopMenu] Purchase attempted for placeholder product:", prod.name)
+        else
+            MarketplaceService:PromptProductPurchase(player, prodId)
+        end
+    end)
+end
+
+-- Separator
+local sep = Instance.new("Frame")
+sep.Size  = UDim2.new(1, 0, 0, 2)
+sep.BackgroundColor3 = Color3.fromRGB(60,60,80)
+sep.BorderSizePixel = 0
+sep.Parent = scroll
+
+-- Game Pass section header
+local passHeader = Instance.new("TextLabel")
+passHeader.Size  = UDim2.new(1, 0, 0, 30)
+passHeader.BackgroundTransparency = 1
+passHeader.Text  = "⭐ Game Passes"
+passHeader.TextColor3 = Color3.fromRGB(255, 200, 50)
+passHeader.Font  = Enum.Font.GothamBold
+passHeader.TextScaled = true
+passHeader.TextXAlignment = Enum.TextXAlignment.Left
+passHeader.Parent = scroll
+
+-- Game pass cards
+for _, pass in ipairs(GameConfig.GamePasses) do
+    local card = Instance.new("Frame")
+    card.Size  = UDim2.new(1, 0, 0, 80)
+    card.BackgroundColor3 = Color3.fromRGB(35, 30, 50)
+    card.BorderSizePixel = 0
+    card.Parent = scroll
+    Instance.new("UICorner").Parent = card
+
+    local nl = Instance.new("TextLabel")
+    nl.Size  = UDim2.new(0.65, 0, 0.45, 0)
+    nl.Position = UDim2.new(0, 8, 0, 4)
+    nl.BackgroundTransparency = 1
+    nl.Text  = pass.name
+    nl.TextColor3 = Color3.fromRGB(255, 220, 80)
+    nl.Font  = Enum.Font.GothamBold
+    nl.TextScaled = true
+    nl.TextXAlignment = Enum.TextXAlignment.Left
+    nl.Parent = card
+
+    local dl = Instance.new("TextLabel")
+    dl.Size  = UDim2.new(0.65, 0, 0.45, 0)
+    dl.Position = UDim2.new(0, 8, 0.5, 0)
+    dl.BackgroundTransparency = 1
+    dl.Text  = pass.description
+    dl.TextColor3 = Color3.fromRGB(200,200,200)
+    dl.Font  = Enum.Font.Gotham
+    dl.TextScaled = true
+    dl.TextXAlignment = Enum.TextXAlignment.Left
+    dl.Parent = card
+
+    local buyBtn = Instance.new("TextButton")
+    buyBtn.Size  = UDim2.new(0, 90, 0, 40)
+    buyBtn.Position = UDim2.new(1, -98, 0.5, -20)
+    buyBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    buyBtn.Text  = "Get Pass"
+    buyBtn.Font  = Enum.Font.GothamBold
+    buyBtn.TextColor3 = Color3.fromRGB(30, 20, 0)
+    buyBtn.TextScaled = true
+    buyBtn.BorderSizePixel = 0
+    buyBtn.Parent = card
+    Instance.new("UICorner").Parent = buyBtn
+
+    local passId = pass.id
+    buyBtn.MouseButton1Click:Connect(function()
+        if passId == 0 then
+            print("[ShopMenu] Game pass purchase attempted for placeholder:", pass.name)
+        else
+            MarketplaceService:PromptGamePassPurchase(player, passId)
+        end
+    end)
+end
+
+print("[ShopMenu] Loaded.")
+</ProtectedString>
+          <bool name="Disabled">false</bool>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="StarterPlayer" referent="RBX00000025">
+      <Properties>
+        <string name="Name">StarterPlayer</string>
+      </Properties>
+      <Item class="StarterPlayerScripts" referent="RBX00000026">
+        <Properties>
+          <string name="Name">StarterPlayerScripts</string>
+        </Properties>
+        <Item class="LocalScript" referent="RBX00000027">
+          <Properties>
+            <string name="Name">PlayerController</string>
+            <ProtectedString name="Source">-- PlayerController.client.lua
+-- StarterPlayer &gt; StarterPlayerScripts
+-- Client-side character controller: nameplate, interactions, key bindings.
+
+local Players            = game:GetService("Players")
+local UserInputService   = game:GetService("UserInputService")
+local RunService         = game:GetService("RunService")
+local RS                 = game:GetService("ReplicatedStorage")
+
+local player    = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local camera    = workspace.CurrentCamera
+
+-- ── Nameplate cash display ─────────────────────────────────────────────────────
+-- Attach a BillboardGui above the character's head showing the player's name.
+local function attachNameplate(char)
+    local head = char:WaitForChild("Head", 10)
+    if not head then return end
+
+    -- Remove any existing nameplate
+    local existing = head:FindFirstChild("CityNameplate")
+    if existing then existing:Destroy() end
+
+    local bg         = Instance.new("BillboardGui")
+    bg.Name          = "CityNameplate"
+    bg.Size          = UDim2.new(0, 180, 0, 30)
+    bg.StudsOffset   = Vector3.new(0, 2.5, 0)
+    bg.AlwaysOnTop   = false
+    bg.ResetOnSpawn  = false
+    bg.Parent        = head
+
+    local lbl        = Instance.new("TextLabel")
+    lbl.Name         = "Label"
+    lbl.Size         = UDim2.new(1, 0, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text         = player.Name
+    lbl.TextColor3   = Color3.new(1, 1, 1)
+    lbl.TextStrokeTransparency = 0.5
+    lbl.Font         = Enum.Font.GothamBold
+    lbl.TextScaled   = true
+    lbl.Parent       = bg
+end
+
+attachNameplate(character)
+player.CharacterAdded:Connect(attachNameplate)
+
+-- ── Camera FOV and bobbing ──────────────────────────────────────────────────────
+camera.FieldOfView = 70
+
+-- ── Proximity interaction prompt (press E near objects) ────────────────────────
+-- When a player walks close to a building labelled "FireStation", "PoliceStation",
+-- etc., they get a prompt to apply for the job.
+local INTERACT_RANGE = 20
+local promptGui      = player.PlayerGui:WaitForChild("MainHUD", 10)
+local interactLabel  = nil   -- created lazily
+
+local jobTriggers = {
+    FireStation    = "firefighter",
+    PoliceStation  = "police",
+    Hospital       = "doctor",
+    School         = "teacher",
+    CityHall       = "mayor",
+    Courthouse     = "deputy",
+}
+
+local function getCharPos()
+    if not character then return nil end
+    local root = character:FindFirstChild("HumanoidRootPart")
+    return root and root.Position or nil
+end
+
+local function findNearestTrigger()
+    local pos = getCharPos()
+    if not pos then return nil, nil end
+    local best, bestDist, bestJob = nil, INTERACT_RANGE + 1, nil
+    for modelName, jobId in pairs(jobTriggers) do
+        local model = workspace:FindFirstChild("CityMap", true)
+        if model then
+            local part = model:FindFirstChild(modelName, true)
+            if part and part:IsA("BasePart") then
+                local d = (part.Position - pos).Magnitude
+                if d &lt; bestDist then
+                    bestDist = d
+                    best     = part
+                    bestJob  = jobId
+                end
+            end
+        end
+    end
+    return best, bestJob
+end
+
+-- Simple on-screen prompt label
+local function ensureInteractLabel()
+    if interactLabel then return interactLabel end
+    local hud = player.PlayerGui:FindFirstChild("MainHUD")
+    if not hud then return nil end
+    local lbl = Instance.new("TextLabel")
+    lbl.Name  = "InteractPrompt"
+    lbl.Size  = UDim2.new(0, 300, 0, 40)
+    lbl.Position = UDim2.new(0.5, -150, 0.8, 0)
+    lbl.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    lbl.BackgroundTransparency = 0.3
+    lbl.BorderSizePixel = 0
+    lbl.Text  = ""
+    lbl.TextColor3 = Color3.new(1,1,1)
+    lbl.Font  = Enum.Font.GothamBold
+    lbl.TextScaled = true
+    lbl.Visible = false
+    lbl.Parent  = hud
+    Instance.new("UICorner").Parent = lbl
+    interactLabel = lbl
+    return lbl
+end
+
+local nearbyJob = nil
+
+RunService.Heartbeat:Connect(function()
+    local _, job = findNearestTrigger()
+    nearbyJob    = job
+    local lbl    = ensureInteractLabel()
+    if lbl then
+        if job then
+            lbl.Text    = "[E] Apply for job"
+            lbl.Visible = true
+        else
+            lbl.Visible = false
+        end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.E and nearbyJob then
+        local RE = require(RS:WaitForChild("Modules"):WaitForChild("RemoteEvents"))
+        RE.AssignJob:FireServer(nearbyJob)
+    end
+end)
+
+print("[PlayerController] Loaded.")
+</ProtectedString>
+            <bool name="Disabled">false</bool>
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+    <Item class="Teams" referent="RBX00000028">
+      <Properties>
+        <string name="Name">Teams</string>
+      </Properties>
+    </Item>
+    <Item class="Lighting" referent="RBX00000029">
+      <Properties>
+        <string name="Name">Lighting</string>
+        <bool name="GlobalShadows">true</bool>
+        <int name="ClockTime">10</int>
+      </Properties>
+      <Item class="Atmosphere" referent="RBX00000030">
+        <Properties>
+          <string name="Name">Atmosphere</string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+</roblox>
