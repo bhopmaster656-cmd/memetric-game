@@ -222,6 +222,8 @@ def build_tree():
     prop_string(pw, "Name", "Workspace")
     prop_bool(pw,   "FilteringEnabled", True)
     prop_bool(pw,   "StreamingEnabled", False)
+    # Gravity default 196.2 – set explicitly so Studio never reads 0.
+    prop_float(pw,  "Gravity", 196.2)
     # Keep fallen parts well below ground so the baseplate is never destroyed.
     prop_float(pw,  "FallenPartsDestroyHeight", -500.0)
 

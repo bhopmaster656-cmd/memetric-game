@@ -12,6 +12,7 @@
         <string name="Name">Workspace</string>
         <bool name="FilteringEnabled">true</bool>
         <bool name="StreamingEnabled">false</bool>
+        <float name="Gravity">196.2</float>
         <float name="FallenPartsDestroyHeight">-500.0</float>
       </Properties>
       <Item class="Part" referent="RBX00000003">
@@ -539,10 +540,26 @@ end
 local mapFolder   = makeModel("CityMap", Workspace)
 local plotsFolder = makeModel("PropertyPlots", Workspace)  -- needed by PropertySystem
 
--- Locate or create the SpawnLocation.
--- It is embedded as static geometry in the RBXLX; if for any reason it is not
--- present (e.g. older RBXLX format not recognised by the client), we create it
--- dynamically here before any player character is loaded.
+-- ── Ensure Baseplate exists ────────────────────────────────────────────────────
+-- Embedded in the RBXLX as static geometry, but always recreated dynamically
+-- here as a safety net in case the RBXLX version was not loaded correctly.
+-- This MUST happen before CharacterAutoLoads is re-enabled so the ground is
+-- always present when the first character spawns.
+local baseplate = Workspace:FindFirstChild("Baseplate")
+if not baseplate then
+    baseplate          = Instance.new("Part")
+    baseplate.Name     = "Baseplate"
+    baseplate.Size     = Vector3.new(2048, 4, 2048)
+    baseplate.CFrame   = CFrame.new(0, -2, 0)
+    baseplate.Anchored    = true
+    baseplate.CanCollide  = true
+    baseplate.BrickColor  = BrickColor.new("Bright green")
+    baseplate.Material    = Enum.Material.Grass
+    baseplate.Parent      = Workspace
+end
+
+-- ── Ensure SpawnLocation exists ────────────────────────────────────────────────
+-- Same pattern: prefer the static RBXLX version, fall back to a dynamic one.
 local spawnPart = Workspace:FindFirstChild("Spawn")
 if not spawnPart then
     spawnPart             = Instance.new("SpawnLocation")
@@ -557,6 +574,9 @@ if not spawnPart then
     spawnPart.CanCollide  = true
     spawnPart.Parent      = Workspace
 end
+
+-- ── Build the city inside pcall so any error never prevents characters loading ─
+local _buildOk, _buildErr = pcall(function()
 
 -- ── Road helper ───────────────────────────────────────────────────────────────
 local function road(x, z, sx, sz)
@@ -846,7 +866,13 @@ for i = -10, 10 do streetLight(i * 80,  12) end
 for i = -10, 10 do streetLight(-12, i * 80) end
 for i = -10, 10 do streetLight( 12, i * 80) end
 
-print("[CityBuilder] City generated.")
+end) -- end pcall
+
+if _buildOk then
+    print("[CityBuilder] City generated.")
+else
+    warn("[CityBuilder] City build error (ground is still solid):", tostring(_buildErr))
+end
 
 -- ── Re-enable character loading now that the world is ready ───────────────────
 -- Any player who joined while the world was being built gets loaded now.
