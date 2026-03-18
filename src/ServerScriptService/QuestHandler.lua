@@ -1,9 +1,9 @@
 --[[
-    QuestHandler.server.lua
+    QuestHandler.lua  (ModuleScript)
     Tracks and completes quests for every player.
 
     Called by FishingHandler after each catch.
-    Called by MainHandler on player join to send initial quest state.
+    Listens to PlayerAdded to send initial quest state on join.
 --]]
 
 local Players           = game:GetService("Players")
@@ -21,7 +21,7 @@ local function RE(name) return reFolder:WaitForChild(name) end
 
 local QuestHandler = {}
 
--- Reset daily quests if the 24h window has elapsed ───────────────────────────
+-- ─── Reset daily quests if 24-h window has elapsed ───────────────────────────
 local function checkDailyReset(data)
     local now  = os.time()
     local diff = now - (data.LastDailyReset or 0)
@@ -38,14 +38,14 @@ local function checkDailyReset(data)
     end
 end
 
--- Send updated quest state to client ─────────────────────────────────────────
+-- ─── Send updated quest state to client ──────────────────────────────────────
 local function syncQuests(player)
     local data = DataStore.Get(player.UserId)
     if not data then return end
     RE(RemoteNames.UpdateQuests):FireClient(player, data.Quests)
 end
 
--- Advance progress on matching quests ────────────────────────────────────────
+-- ─── Advance progress on matching quests ─────────────────────────────────────
 function QuestHandler.OnCatch(player, brainrotId, rarityName, coinsEarned)
     local data = DataStore.Get(player.UserId)
     if not data then return end
@@ -60,7 +60,6 @@ function QuestHandler.OnCatch(player, brainrotId, rarityName, coinsEarned)
         end
 
         if not qd.Completed then
-            -- Increment based on quest type
             local increment = 0
             if q.Type == "catch_total" then
                 increment = 1
@@ -94,7 +93,7 @@ function QuestHandler.OnCatch(player, brainrotId, rarityName, coinsEarned)
     syncQuests(player)
 end
 
--- Send quests on join ─────────────────────────────────────────────────────────
+-- ─── Send quests on join ──────────────────────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
     task.wait(0.5)  -- wait for DataStore cache to be populated
     local data = DataStore.Get(player.UserId)

@@ -9,7 +9,11 @@ local Players           = game:GetService("Players")
 
 local Modules         = ReplicatedStorage:WaitForChild("Modules")
 local EventNames      = require(Modules.RemoteEvents)
-local GameConfig      = require(Modules.GameConfig)
+local GameConfig      = require(Modules.GameConfig)  -- luacheck: ignore
+
+-- Require DataStore at top level so its PlayerAdded listener is registered
+-- before any player can join (Scripts run before PlayerAdded fires).
+local DataStore = require(script.Parent.DataStore)
 
 -- Ensure the RemoteEvents folder exists
 local reFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
@@ -27,10 +31,9 @@ end
 
 -- Leaderstats (visible in the Roblox players list)
 Players.PlayerAdded:Connect(function(player)
-    -- Wait for DataStore to populate the cache (it loads on PlayerAdded too)
+    -- Wait for DataStore cache to be populated (DataStore.PlayerAdded fires first)
     task.wait(0.1)
 
-    local DataStore = require(script.Parent.DataStore)
     local stats = Instance.new("Folder")
     stats.Name   = "leaderstats"
     stats.Parent = player

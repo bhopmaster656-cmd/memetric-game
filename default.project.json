@@ -9,8 +9,7 @@
         "$path": "src/ReplicatedStorage/Modules"
       },
       "RemoteEvents": {
-        "$className": "Folder",
-        "$path": "src/ReplicatedStorage/RemoteEvents"
+        "$className": "Folder"
       }
     },
     "ServerScriptService": {

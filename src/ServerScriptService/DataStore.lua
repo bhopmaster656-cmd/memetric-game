@@ -1,19 +1,20 @@
 --[[
-    DataStore.server.lua
+    DataStore.lua  (ModuleScript)
     Handles loading and saving all player data via DataStoreService.
+    Required by every server handler that needs to read or write player data.
 
     Data schema:
     {
-        Coins        = number,
-        TotalCaught  = number,
-        TotalEarned  = number,
-        RebirthLevel = number,
-        Inventory    = { [{brainrotId}_{rarityName}] = count, ... },
-        Quests       = { [questId] = { Progress=N, Completed=bool, LastReset=tick } },
-        LastSpin     = tick (os.time),
-        LastDailyReset = tick (os.time),
-        Boosts       = { { BoostType=string, Multiplier=number, ExpiresAt=tick } },
-        OwnedPacks   = { [packId] = true },
+        Coins          = number,
+        TotalCaught    = number,
+        TotalEarned    = number,
+        RebirthLevel   = number,
+        Inventory      = { [{brainrotId}_{rarityName}] = count, ... },
+        Quests         = { [questId] = { Progress=N, Completed=bool, LastReset=tick } },
+        LastSpin       = os.time(),
+        LastDailyReset = os.time(),
+        Boosts         = { { BoostType=string, Multiplier=number, ExpiresAt=tick } },
+        OwnedPacks     = { [packId] = true },
     }
 --]]
 
@@ -80,7 +81,7 @@ local function saveData(userId)
     end
 end
 
--- Public API ─────────────────────────────────────────────────────────────────
+-- ─── Public API ──────────────────────────────────────────────────────────────
 
 local DataStore = {}
 
@@ -92,7 +93,7 @@ function DataStore.Save(userId)
     saveData(userId)
 end
 
--- Player lifecycle ────────────────────────────────────────────────────────────
+-- ─── Player lifecycle ────────────────────────────────────────────────────────
 
 Players.PlayerAdded:Connect(function(player)
     local data = loadData(player.UserId)
@@ -105,10 +106,6 @@ Players.PlayerRemoving:Connect(function(player)
 end)
 
 -- Auto-save every 60 seconds
-game:GetService("RunService").Heartbeat:Connect(function()
-    -- Use a simple timer approach
-end)
-
 local function autoSaveLoop()
     while true do
         task.wait(60)
@@ -119,7 +116,7 @@ local function autoSaveLoop()
 end
 task.spawn(autoSaveLoop)
 
--- Bind-to-close safety save
+-- Safety save when the server shuts down
 game:BindToClose(function()
     for userId in pairs(cache) do
         saveData(userId)

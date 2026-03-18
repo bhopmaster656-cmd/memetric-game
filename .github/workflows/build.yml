@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Aftman
+        uses: ok-borg/aftman-action@v1
+
+      - name: Install tools (Rojo)
+        run: aftman install
+
+      - name: Build place file
+        run: rojo build default.project.json -o MemetricFishing.rbxlx
+
+      - name: Upload place file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MemetricFishing
+          path: MemetricFishing.rbxlx
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Aftman
+        uses: ok-borg/aftman-action@v1
+
+      - name: Install tools (Rojo)
+        run: aftman install
+
+      - name: Build place file
+        run: rojo build default.project.json -o MemetricFishing.rbxlx
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: MemetricFishing.rbxlx

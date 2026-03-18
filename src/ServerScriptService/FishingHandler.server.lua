@@ -19,6 +19,7 @@ local FishingSystem  = require(Modules.FishingSystem)
 local GameConfig     = require(Modules.GameConfig)
 
 local DataStore      = require(script.Parent.DataStore)
+local QuestHandler   = require(script.Parent.QuestHandler)
 
 local reFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
 
@@ -87,7 +88,6 @@ local function rewardCatch(player, result)
     RE(RemoteNames.UpdateInventory):FireClient(player, data.Inventory)
 
     -- Quest progress
-    local QuestHandler = require(script.Parent.QuestHandler)
     QuestHandler.OnCatch(player, result.brainrot.Id, result.rarity.Name, result.coins)
 end
 
