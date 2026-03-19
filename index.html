@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neon Gravity</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="wrapper">
+    <canvas id="canvas"></canvas>
+
+    <!-- ── MAIN MENU ── -->
+    <div id="screen-menu" class="overlay active">
+      <h1 class="neon-title">NEON<br><span class="accent-cyan">GRAVITY</span></h1>
+      <p class="sub">Cyberpunk Gravity Runner</p>
+      <div class="controls-box">
+        <div class="ctrl-row"><kbd>↑</kbd> / <kbd>Space</kbd> Jump</div>
+        <div class="ctrl-row"><kbd>Shift</kbd> / <kbd>Z</kbd> Flip Gravity</div>
+        <div class="ctrl-row"><kbd>X</kbd> / <kbd>Q</kbd> Throw / Activate Anchor</div>
+        <div class="ctrl-row"><kbd>R</kbd> Restart Level</div>
+      </div>
+      <button id="btn-play"   class="neon-btn">▶ PLAY</button>
+    </div>
+
+    <!-- ── DEATH SCREEN ── -->
+    <div id="screen-dead" class="overlay">
+      <h1 class="neon-title red">SYSTEM<br><span>FAILURE</span></h1>
+      <p id="death-msg" class="sub"></p>
+      <button id="btn-retry"    class="neon-btn">↺ RETRY</button>
+      <button id="btn-menu-d"   class="neon-btn secondary">☰ MENU</button>
+    </div>
+
+    <!-- ── LEVEL COMPLETE ── -->
+    <div id="screen-win" class="overlay">
+      <h1 class="neon-title blue">LEVEL<br><span>CLEAR</span></h1>
+      <p id="win-msg" class="sub"></p>
+      <button id="btn-next"     class="neon-btn">▶ NEXT LEVEL</button>
+      <button id="btn-menu-w"   class="neon-btn secondary">☰ MENU</button>
+    </div>
+
+    <!-- ── GAME COMPLETE ── -->
+    <div id="screen-complete" class="overlay">
+      <h1 class="neon-title green">MISSION<br><span>COMPLETE</span></h1>
+      <p class="sub">Кей добрался до сестры!</p>
+      <p class="sub" style="font-size:12px;opacity:0.6;">Kay reached his sister!</p>
+      <button id="btn-restart"  class="neon-btn">↺ PLAY AGAIN</button>
+    </div>
+
+    <!-- ── HUD ── -->
+    <div id="hud" class="hidden">
+      <div id="hud-left">
+        <div id="grav-widget">
+          <span class="hud-lbl">GRAVITY</span>
+          <div id="grav-arrow">↓</div>
+        </div>
+        <div id="anchor-widget">
+          <span class="hud-lbl">ANCHORS</span>
+          <div id="anchor-dots">
+            <div class="adot" id="adot0"></div>
+            <div class="adot" id="adot1"></div>
+          </div>
+        </div>
+      </div>
+      <div id="hud-center">
+        <span id="level-label"></span>
+      </div>
+      <div id="hud-right">
+        <span id="hud-tip"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/game.js"></script>
+</body>
+</html>
