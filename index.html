@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memetric — Play &amp; Win</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- ──────────────── HEADER ──────────────── -->
+  <header class="header">
+    <div class="header__left">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="logo">
+        <span class="logo__icon">🐉</span>
+        <span class="logo__text">Memetric</span>
+      </div>
+    </div>
+
+    <nav class="header__nav">
+      <button class="nav-btn active" data-page="lobby">🎮 Лобби</button>
+      <button class="nav-btn" data-page="crash">📈 Краш</button>
+      <button class="nav-btn" data-page="mines">💣 Мины</button>
+      <button class="nav-btn" data-page="coinflip">🪙 Монетка</button>
+      <button class="nav-btn" data-page="wheel">🎡 Колесо</button>
+    </nav>
+
+    <div class="header__right">
+      <div class="balance-widget">
+        <span class="balance-icon">💰</span>
+        <span class="balance-amount" id="headerBalance">1 000</span>
+        <span class="balance-currency">₽</span>
+      </div>
+      <button class="btn btn--deposit" id="depositBtn">+ Пополнить</button>
+      <div class="user-avatar" id="userAvatar">
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=memetric" alt="avatar" />
+        <span class="user-level">Lv.5</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ──────────────── SIDEBAR ──────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__section">
+      <p class="sidebar__label">ИГРЫ</p>
+      <button class="sidebar__item active" data-page="lobby">
+        <span class="sidebar__icon">🏠</span> Лобби
+      </button>
+      <button class="sidebar__item" data-page="crash">
+        <span class="sidebar__icon">📈</span> Краш
+      </button>
+      <button class="sidebar__item" data-page="mines">
+        <span class="sidebar__icon">💣</span> Мины
+      </button>
+      <button class="sidebar__item" data-page="coinflip">
+        <span class="sidebar__icon">🪙</span> Монетка
+      </button>
+      <button class="sidebar__item" data-page="wheel">
+        <span class="sidebar__icon">🎡</span> Колесо
+      </button>
+    </div>
+    <div class="sidebar__section">
+      <p class="sidebar__label">АККАУНТ</p>
+      <div class="sidebar__balance-card">
+        <p class="sidebar__balance-label">Баланс</p>
+        <p class="sidebar__balance-value"><span id="sidebarBalance">1 000</span> ₽</p>
+        <button class="btn btn--deposit btn--sm" id="depositBtnSide">+ Пополнить</button>
+      </div>
+    </div>
+    <div class="sidebar__section">
+      <p class="sidebar__label">СТАТИСТИКА</p>
+      <div class="sidebar__stat"><span>Побед</span><span id="statWins">0</span></div>
+      <div class="sidebar__stat"><span>Поражений</span><span id="statLosses">0</span></div>
+      <div class="sidebar__stat"><span>Прибыль</span><span id="statProfit" class="profit-positive">0 ₽</span></div>
+    </div>
+  </aside>
+
+  <!-- ──────────────── MAIN ──────────────── -->
+  <main class="main" id="mainContent">
+
+    <!-- ===== LOBBY ===== -->
+    <section class="page active" id="page-lobby">
+      <div class="lobby-hero">
+        <h1>Добро пожаловать в <span class="gradient-text">Memetric</span></h1>
+        <p>Играй честно. Выигрывай реально.</p>
+      </div>
+      <div class="game-grid">
+        <div class="game-card" data-page="crash">
+          <div class="game-card__badge hot">🔥 ХИТ</div>
+          <div class="game-card__graphic crash-graphic">
+            <canvas id="lobbyCrashPreview" width="200" height="100"></canvas>
+          </div>
+          <div class="game-card__info">
+            <h3>Краш</h3>
+            <p>Успей вывести до краша!</p>
+            <span class="game-card__rtp">RTP 97%</span>
+          </div>
+          <button class="btn btn--play">Играть</button>
+        </div>
+
+        <div class="game-card" data-page="mines">
+          <div class="game-card__badge">💎 ТОП</div>
+          <div class="game-card__graphic mines-graphic">
+            <div class="mines-preview">
+              <div class="mp gem">💎</div><div class="mp mine">💣</div><div class="mp gem">💎</div>
+              <div class="mp gem">💎</div><div class="mp gem">💎</div><div class="mp mine">💣</div>
+              <div class="mp gem">💎</div><div class="mp gem">💎</div><div class="mp gem">💎</div>
+            </div>
+          </div>
+          <div class="game-card__info">
+            <h3>Мины</h3>
+            <p>Найди алмазы, избегай мин</p>
+            <span class="game-card__rtp">RTP 96%</span>
+          </div>
+          <button class="btn btn--play">Играть</button>
+        </div>
+
+        <div class="game-card" data-page="coinflip">
+          <div class="game-card__graphic coinflip-graphic">
+            <div class="coin-preview" id="coinPreview">🪙</div>
+          </div>
+          <div class="game-card__info">
+            <h3>Монетка</h3>
+            <p>50/50 — твоя удача?</p>
+            <span class="game-card__rtp">RTP 98%</span>
+          </div>
+          <button class="btn btn--play">Играть</button>
+        </div>
+
+        <div class="game-card" data-page="wheel">
+          <div class="game-card__graphic wheel-graphic">
+            <div class="wheel-mini" id="wheelMini">🎡</div>
+          </div>
+          <div class="game-card__info">
+            <h3>Колесо удачи</h3>
+            <p>Крути и выигрывай!</p>
+            <span class="game-card__rtp">RTP 95%</span>
+          </div>
+          <button class="btn btn--play">Играть</button>
+        </div>
+      </div>
+
+      <!-- Live feed -->
+      <div class="live-feed">
+        <h2>🎲 Живая лента</h2>
+        <div class="live-feed__list" id="liveFeed"></div>
+      </div>
+    </section>
+
+    <!-- ===== CRASH ===== -->
+    <section class="page" id="page-crash">
+      <div class="game-layout">
+        <div class="game-panel">
+          <h2 class="game-title">📈 Краш</h2>
+          <div class="crash-canvas-wrap">
+            <canvas id="crashCanvas" width="700" height="360"></canvas>
+            <div class="crash-multiplier" id="crashMultiplier">1.00×</div>
+            <div class="crash-status" id="crashStatus">Ожидание ставок…</div>
+          </div>
+          <div class="crash-history" id="crashHistory"></div>
+        </div>
+        <div class="bet-panel">
+          <div class="bet-panel__section">
+            <label>Ставка (₽)</label>
+            <div class="bet-input-row">
+              <input type="number" id="crashBet" class="bet-input" value="100" min="1" />
+              <button class="btn btn--half" onclick="halveBet('crashBet')">½</button>
+              <button class="btn btn--double" onclick="doubleBet('crashBet')">×2</button>
+            </div>
+            <div class="quick-bets">
+              <button class="qb" onclick="setQuickBet('crashBet',50)">50</button>
+              <button class="qb" onclick="setQuickBet('crashBet',100)">100</button>
+              <button class="qb" onclick="setQuickBet('crashBet',250)">250</button>
+              <button class="qb" onclick="setQuickBet('crashBet',500)">500</button>
+            </div>
+          </div>
+          <div class="bet-panel__section">
+            <label>Авто вывод (×)</label>
+            <input type="number" id="crashAutoOut" class="bet-input" value="2.00" min="1.01" step="0.1" />
+          </div>
+          <button class="btn btn--primary btn--lg" id="crashBetBtn">Поставить</button>
+          <button class="btn btn--danger btn--lg hidden" id="crashCashoutBtn">Вывести <span id="crashCashoutVal"></span></button>
+          <div class="bet-panel__info">
+            <div class="info-row"><span>Потенциальный выигрыш</span><span id="crashPotential">200 ₽</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MINES ===== -->
+    <section class="page" id="page-mines">
+      <div class="game-layout">
+        <div class="game-panel">
+          <h2 class="game-title">💣 Мины</h2>
+          <div class="mines-info-bar">
+            <span>Мины: <strong id="minesCount">3</strong></span>
+            <span>Открыто: <strong id="minesOpened">0</strong></span>
+            <span>Множитель: <strong id="minesMultiplier">1.00×</strong></span>
+          </div>
+          <div class="mines-grid" id="minesGrid"></div>
+        </div>
+        <div class="bet-panel">
+          <div class="bet-panel__section">
+            <label>Ставка (₽)</label>
+            <div class="bet-input-row">
+              <input type="number" id="minesBet" class="bet-input" value="100" min="1" />
+              <button class="btn btn--half" onclick="halveBet('minesBet')">½</button>
+              <button class="btn btn--double" onclick="doubleBet('minesBet')">×2</button>
+            </div>
+            <div class="quick-bets">
+              <button class="qb" onclick="setQuickBet('minesBet',50)">50</button>
+              <button class="qb" onclick="setQuickBet('minesBet',100)">100</button>
+              <button class="qb" onclick="setQuickBet('minesBet',250)">250</button>
+              <button class="qb" onclick="setQuickBet('minesBet',500)">500</button>
+            </div>
+          </div>
+          <div class="bet-panel__section">
+            <label>Количество мин</label>
+            <select id="minesCountSelect" class="bet-input">
+              <option value="1">1 мина</option>
+              <option value="3" selected>3 мины</option>
+              <option value="5">5 мин</option>
+              <option value="10">10 мин</option>
+              <option value="15">15 мин</option>
+            </select>
+          </div>
+          <button class="btn btn--primary btn--lg" id="minesStartBtn">Начать игру</button>
+          <button class="btn btn--success btn--lg hidden" id="minesCashoutBtn">Забрать <span id="minesCashoutVal">100 ₽</span></button>
+          <div class="bet-panel__info">
+            <div class="info-row"><span>Текущий выигрыш</span><span id="minesCurrentWin">0 ₽</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== COINFLIP ===== -->
+    <section class="page" id="page-coinflip">
+      <div class="game-layout coinflip-layout">
+        <div class="game-panel coinflip-panel">
+          <h2 class="game-title">🪙 Монетка</h2>
+          <div class="coin-arena">
+            <div class="coin-3d" id="coinEl">
+              <div class="coin-face front">👑</div>
+              <div class="coin-face back">🐉</div>
+            </div>
+          </div>
+          <div class="coinflip-result" id="coinflipResult"></div>
+          <div class="coinflip-streak">Серия: <strong id="coinStreak">0</strong></div>
+        </div>
+        <div class="bet-panel">
+          <div class="bet-panel__section">
+            <label>Ставка (₽)</label>
+            <div class="bet-input-row">
+              <input type="number" id="coinBet" class="bet-input" value="100" min="1" />
+              <button class="btn btn--half" onclick="halveBet('coinBet')">½</button>
+              <button class="btn btn--double" onclick="doubleBet('coinBet')">×2</button>
+            </div>
+            <div class="quick-bets">
+              <button class="qb" onclick="setQuickBet('coinBet',50)">50</button>
+              <button class="qb" onclick="setQuickBet('coinBet',100)">100</button>
+              <button class="qb" onclick="setQuickBet('coinBet',250)">250</button>
+              <button class="qb" onclick="setQuickBet('coinBet',500)">500</button>
+            </div>
+          </div>
+          <div class="bet-panel__section">
+            <label>Выберите сторону</label>
+            <div class="side-select">
+              <button class="side-btn active" id="sideHeads" data-side="heads">👑 Орёл</button>
+              <button class="side-btn" id="sideTails" data-side="tails">🐉 Решка</button>
+            </div>
+          </div>
+          <button class="btn btn--primary btn--lg" id="coinFlipBtn">Подбросить</button>
+          <div class="bet-panel__info">
+            <div class="info-row"><span>Выигрыш при победе</span><span id="coinPotential">200 ₽</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== WHEEL ===== -->
+    <section class="page" id="page-wheel">
+      <div class="game-layout wheel-layout">
+        <div class="game-panel wheel-panel">
+          <h2 class="game-title">🎡 Колесо удачи</h2>
+          <div class="wheel-arena">
+            <div class="wheel-pointer">▼</div>
+            <canvas id="wheelCanvas" width="420" height="420"></canvas>
+          </div>
+          <div class="wheel-result" id="wheelResult"></div>
+        </div>
+        <div class="bet-panel">
+          <div class="bet-panel__section">
+            <label>Ставка (₽)</label>
+            <div class="bet-input-row">
+              <input type="number" id="wheelBet" class="bet-input" value="100" min="1" />
+              <button class="btn btn--half" onclick="halveBet('wheelBet')">½</button>
+              <button class="btn btn--double" onclick="doubleBet('wheelBet')">×2</button>
+            </div>
+            <div class="quick-bets">
+              <button class="qb" onclick="setQuickBet('wheelBet',50)">50</button>
+              <button class="qb" onclick="setQuickBet('wheelBet',100)">100</button>
+              <button class="qb" onclick="setQuickBet('wheelBet',250)">250</button>
+              <button class="qb" onclick="setQuickBet('wheelBet',500)">500</button>
+            </div>
+          </div>
+          <div class="bet-panel__section wheel-segments-info">
+            <label>Секции колеса</label>
+            <div class="segment-list" id="segmentList"></div>
+          </div>
+          <button class="btn btn--primary btn--lg" id="wheelSpinBtn">Крутить!</button>
+          <div class="bet-panel__info">
+            <div class="info-row"><span>Максимальный выигрыш</span><span id="wheelMaxWin">—</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ──────────────── DEPOSIT MODAL ──────────────── -->
+  <div class="modal-overlay hidden" id="depositModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3>💰 Пополнение баланса</h3>
+        <button class="modal__close" id="modalClose">✕</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__note">Это демо-версия. Баланс пополняется виртуально.</p>
+        <div class="deposit-amounts">
+          <button class="dep-btn" onclick="deposit(500)">500 ₽</button>
+          <button class="dep-btn" onclick="deposit(1000)">1 000 ₽</button>
+          <button class="dep-btn" onclick="deposit(2500)">2 500 ₽</button>
+          <button class="dep-btn" onclick="deposit(5000)">5 000 ₽</button>
+          <button class="dep-btn dep-btn--gold" onclick="deposit(10000)">10 000 ₽</button>
+        </div>
+        <div class="deposit-custom">
+          <input type="number" id="customDeposit" placeholder="Своя сумма" min="1" class="bet-input" />
+          <button class="btn btn--primary" onclick="depositCustom()">Пополнить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────── TOAST ──────────────── -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/app.js"></script>
+  <script src="js/crash.js"></script>
+  <script src="js/mines.js"></script>
+  <script src="js/coinflip.js"></script>
+  <script src="js/wheel.js"></script>
+</body>
+</html>
