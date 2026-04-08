@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memetric Casino</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- ========== SIDEBAR ========== -->
+    <aside id="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-icon">🎰</span>
+            <span class="logo-text">MEMETRIC</span>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-btn active" data-page="lobby">
+                <span class="nav-icon">🏠</span> Лобби
+            </button>
+            <button class="nav-btn" data-page="slots">
+                <span class="nav-icon">🎰</span> Слоты
+            </button>
+            <button class="nav-btn" data-page="roulette">
+                <span class="nav-icon">🎡</span> Рулетка
+            </button>
+            <button class="nav-btn" data-page="blackjack">
+                <span class="nav-icon">🃏</span> Блэкджек
+            </button>
+            <button class="nav-btn" data-page="crash">
+                <span class="nav-icon">📈</span> Краш
+            </button>
+            <button class="nav-btn" data-page="mines">
+                <span class="nav-icon">💣</span> Мины
+            </button>
+            <button class="nav-btn" data-page="dice">
+                <span class="nav-icon">🎲</span> Кости
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <p>© 2026 Memetric Casino</p>
+            <p class="disclaimer">Виртуальная валюта</p>
+        </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main id="main-content">
+        <!-- Top Bar -->
+        <header id="top-bar">
+            <button id="sidebar-toggle" class="mobile-only">☰</button>
+            <div class="balance-display">
+                <span class="balance-label">Баланс:</span>
+                <span id="balance" class="balance-amount">10,000</span>
+                <span class="balance-currency">💎</span>
+            </div>
+            <button id="add-balance-btn" class="btn-accent">+ Пополнить</button>
+        </header>
+
+        <!-- Pages -->
+        <section id="page-lobby" class="page active">
+            <h1 class="page-title">Добро пожаловать в <span class="accent">Memetric Casino</span></h1>
+            <p class="page-subtitle">Выбери игру и испытай удачу!</p>
+            <div class="game-grid">
+                <div class="game-card" data-page="slots">
+                    <div class="game-card-icon">🎰</div>
+                    <h3>Слоты</h3>
+                    <p>Крути барабаны и выигрывай!</p>
+                </div>
+                <div class="game-card" data-page="roulette">
+                    <div class="game-card-icon">🎡</div>
+                    <h3>Рулетка</h3>
+                    <p>Классическая рулетка</p>
+                </div>
+                <div class="game-card" data-page="blackjack">
+                    <div class="game-card-icon">🃏</div>
+                    <h3>Блэкджек</h3>
+                    <p>Обыграй дилера!</p>
+                </div>
+                <div class="game-card" data-page="crash">
+                    <div class="game-card-icon">📈</div>
+                    <h3>Краш</h3>
+                    <p>Успей забрать до краша!</p>
+                </div>
+                <div class="game-card" data-page="mines">
+                    <div class="game-card-icon">💣</div>
+                    <h3>Мины</h3>
+                    <p>Открывай ячейки, избегай мин!</p>
+                </div>
+                <div class="game-card" data-page="dice">
+                    <div class="game-card-icon">🎲</div>
+                    <h3>Кости</h3>
+                    <p>Угадай число!</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-slots" class="page">
+            <h2 class="page-title">🎰 Слоты</h2>
+            <div class="game-container slots-container">
+                <div class="slot-machine">
+                    <div class="slot-reels">
+                        <div class="slot-reel" id="reel-0"><div class="reel-inner">🍒</div></div>
+                        <div class="slot-reel" id="reel-1"><div class="reel-inner">🍋</div></div>
+                        <div class="slot-reel" id="reel-2"><div class="reel-inner">🍊</div></div>
+                    </div>
+                    <div class="slot-result" id="slot-result"></div>
+                </div>
+                <div class="game-controls">
+                    <div class="bet-control">
+                        <label>Ставка:</label>
+                        <button class="bet-btn" data-action="half">½</button>
+                        <input type="number" id="slot-bet" value="100" min="10" max="100000">
+                        <button class="bet-btn" data-action="double">2×</button>
+                    </div>
+                    <button id="spin-btn" class="btn-play">🎰 КРУТИТЬ</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-roulette" class="page">
+            <h2 class="page-title">🎡 Рулетка</h2>
+            <div class="game-container roulette-container">
+                <div class="roulette-wheel-wrapper">
+                    <canvas id="roulette-canvas" width="340" height="340"></canvas>
+                    <div class="roulette-number" id="roulette-number">-</div>
+                </div>
+                <div class="roulette-bets">
+                    <div class="bet-type-row">
+                        <button class="roulette-bet-btn color-red" data-bet="red">Красное (2×)</button>
+                        <button class="roulette-bet-btn color-black" data-bet="black">Чёрное (2×)</button>
+                        <button class="roulette-bet-btn color-green" data-bet="green">Зелёное (14×)</button>
+                    </div>
+                    <div class="bet-type-row">
+                        <button class="roulette-bet-btn" data-bet="odd">Нечёт (2×)</button>
+                        <button class="roulette-bet-btn" data-bet="even">Чёт (2×)</button>
+                    </div>
+                    <div class="bet-type-row">
+                        <button class="roulette-bet-btn" data-bet="1-12">1-12 (3×)</button>
+                        <button class="roulette-bet-btn" data-bet="13-24">13-24 (3×)</button>
+                        <button class="roulette-bet-btn" data-bet="25-36">25-36 (3×)</button>
+                    </div>
+                    <div class="roulette-number-grid" id="roulette-number-grid"></div>
+                </div>
+                <div class="game-controls">
+                    <div class="bet-control">
+                        <label>Ставка:</label>
+                        <button class="bet-btn" data-action="half">½</button>
+                        <input type="number" id="roulette-bet" value="100" min="10" max="100000">
+                        <button class="bet-btn" data-action="double">2×</button>
+                    </div>
+                    <div id="roulette-active-bets" class="active-bets"></div>
+                    <button id="roulette-spin-btn" class="btn-play">🎡 КРУТИТЬ</button>
+                </div>
+                <div class="roulette-result" id="roulette-result"></div>
+            </div>
+        </section>
+
+        <section id="page-blackjack" class="page">
+            <h2 class="page-title">🃏 Блэкджек</h2>
+            <div class="game-container blackjack-container">
+                <div class="bj-table">
+                    <div class="bj-hand">
+                        <h3>Дилер <span id="dealer-score"></span></h3>
+                        <div id="dealer-cards" class="card-row"></div>
+                    </div>
+                    <div class="bj-divider"></div>
+                    <div class="bj-hand">
+                        <h3>Ваши карты <span id="player-score"></span></h3>
+                        <div id="player-cards" class="card-row"></div>
+                    </div>
+                </div>
+                <div id="bj-result" class="bj-result"></div>
+                <div class="game-controls">
+                    <div class="bet-control" id="bj-bet-controls">
+                        <label>Ставка:</label>
+                        <button class="bet-btn" data-action="half">½</button>
+                        <input type="number" id="bj-bet" value="100" min="10" max="100000">
+                        <button class="bet-btn" data-action="double">2×</button>
+                    </div>
+                    <div class="bj-actions">
+                        <button id="bj-deal-btn" class="btn-play">🃏 РАЗДАТЬ</button>
+                        <button id="bj-hit-btn" class="btn-secondary" disabled>ЕЩЁ</button>
+                        <button id="bj-stand-btn" class="btn-secondary" disabled>СТОП</button>
+                        <button id="bj-double-btn" class="btn-secondary" disabled>УДВОИТЬ</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-crash" class="page">
+            <h2 class="page-title">📈 Краш</h2>
+            <div class="game-container crash-container">
+                <div class="crash-graph-wrapper">
+                    <canvas id="crash-canvas" width="600" height="300"></canvas>
+                    <div class="crash-multiplier" id="crash-multiplier">1.00×</div>
+                </div>
+                <div class="crash-history" id="crash-history"></div>
+                <div class="game-controls">
+                    <div class="bet-control">
+                        <label>Ставка:</label>
+                        <button class="bet-btn" data-action="half">½</button>
+                        <input type="number" id="crash-bet" value="100" min="10" max="100000">
+                        <button class="bet-btn" data-action="double">2×</button>
+                    </div>
+                    <button id="crash-play-btn" class="btn-play">📈 ИГРАТЬ</button>
+                    <button id="crash-cashout-btn" class="btn-accent" style="display:none;">💰 ЗАБРАТЬ</button>
+                </div>
+                <div class="crash-result" id="crash-result"></div>
+            </div>
+        </section>
+
+        <section id="page-mines" class="page">
+            <h2 class="page-title">💣 Мины</h2>
+            <div class="game-container mines-container">
+                <div class="mines-info">
+                    <span>Множитель: <strong id="mines-multiplier">1.00×</strong></span>
+                    <span>Найдено: <strong id="mines-found">0</strong></span>
+                </div>
+                <div class="mines-grid" id="mines-grid"></div>
+                <div class="game-controls">
+                    <div class="bet-control">
+                        <label>Ставка:</label>
+                        <button class="bet-btn" data-action="half">½</button>
+                        <input type="number" id="mines-bet" value="100" min="10" max="100000">
+                        <button class="bet-btn" data-action="double">2×</button>
+                    </div>
+                    <div class="bet-control">
+                        <label>Мин:</label>
+                        <select id="mines-count">
+                            <option value="1">1</option>
+                            <option value="3" selected>3</option>
+                            <option value="5">5</option>
+                            <option value="7">7</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+                    <button id="mines-play-btn" class="btn-play">💣 ИГРАТЬ</button>
+                    <button id="mines-cashout-btn" class="btn-accent" style="display:none;">💰 ЗАБРАТЬ</button>
+                </div>
+                <div class="mines-result" id="mines-result"></div>
+            </div>
+        </section>
+
+        <section id="page-dice" class="page">
+            <h2 class="page-title">🎲 Кости</h2>
+            <div class="game-container dice-container">
+                <div class="dice-display">
+                    <div class="dice-slider-wrapper">
+                        <input type="range" id="dice-slider" min="1" max="99" value="50" class="dice-slider">
+                        <div class="dice-labels">
+                            <span>1</span>
+                            <span id="dice-target-label">50</span>
+                            <span>99</span>
+                        </div>
+                    </div>
+                    <div class="dice-info-row">
+                        <div class="dice-info-box">
+                            <span class="dice-info-label">Шанс</span>
+                            <span class="dice-info-value" id="dice-chance">50%</span>
+                        </div>
+                        <div class="dice-info-box">
+                            <span class="dice-info-label">Множитель</span>
+                            <span class="dice-info-value" id="dice-payout">1.96×</span>
+                        </div>
+                    </div>
+                    <div class="dice-roll-result" id="dice-roll-result"></div>
+                </div>
+                <div class="dice-mode-toggle">
+                    <button class="dice-mode-btn active" data-mode="under">Меньше</button>
+                    <button class="dice-mode-btn" data-mode="over">Больше</button>
+                </div>
+                <div class="game-controls">
+                    <div class="bet-control">
+                        <label>Ставка:</label>
+                        <button class="bet-btn" data-action="half">½</button>
+                        <input type="number" id="dice-bet" value="100" min="10" max="100000">
+                        <button class="bet-btn" data-action="double">2×</button>
+                    </div>
+                    <button id="dice-roll-btn" class="btn-play">🎲 БРОСИТЬ</button>
+                </div>
+                <div class="dice-result" id="dice-result"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add Balance Modal -->
+    <div id="balance-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>Пополнить баланс</h3>
+            <p>Выберите сумму пополнения (виртуальная валюта)</p>
+            <div class="modal-btns">
+                <button class="modal-amount-btn" data-amount="1000">+1,000 💎</button>
+                <button class="modal-amount-btn" data-amount="5000">+5,000 💎</button>
+                <button class="modal-amount-btn" data-amount="10000">+10,000 💎</button>
+                <button class="modal-amount-btn" data-amount="50000">+50,000 💎</button>
+            </div>
+            <button id="modal-close" class="btn-secondary">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="js/balance.js"></script>
+    <script src="js/slots.js"></script>
+    <script src="js/roulette.js"></script>
+    <script src="js/blackjack.js"></script>
+    <script src="js/crash.js"></script>
+    <script src="js/mines.js"></script>
+    <script src="js/dice.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
