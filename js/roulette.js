@@ -7,6 +7,12 @@
         22, 18, 29, 7, 28, 12, 35, 3, 26
     ];
 
+    const BET_LABELS = {
+        red: 'Красное', black: 'Чёрное', green: 'Зелёное',
+        odd: 'Нечёт', even: 'Чёт',
+        '1-12': '1-12', '13-24': '13-24', '25-36': '25-36'
+    };
+
     let selectedBets = {};
     let isSpinning = false;
     let wheelAngle = 0;
@@ -116,8 +122,7 @@
         } else {
             activeBetsEl.textContent = 'Ставки: ' + keys.map(k => {
                 if (k.startsWith('number-')) return '#' + k.split('-')[1];
-                const labels = { red: 'Красное', black: 'Чёрное', green: 'Зелёное', odd: 'Нечёт', even: 'Чёт', '1-12': '1-12', '13-24': '13-24', '25-36': '25-36' };
-                return labels[k] || k;
+                return BET_LABELS[k] || k;
             }).join(', ');
         }
 
